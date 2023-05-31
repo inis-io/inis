@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1">
+    <!--让IE使用最新的渲染模式，支持CSS3-->
+    <meta http-equiv="X-UA-Compatible" content="IE-edge,chrome=1">
+
+    <title>Title {{.title}}</title>
+    <script>
+        globalThis.inis = JSON.parse('{{.INIS}}')
+        console.log(inis)
+    </script>
+    <!-- favicon.ico -->
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <script src="https://api.inis.cn/admin/utils/helper.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue-router@4.0.15/dist/vue-router.global.js"></script>
+</head>
+<body>
+
+<div id="app">
+    <h1>{{.title}} 1</h1>
+</div>
+</body>
+</html>
