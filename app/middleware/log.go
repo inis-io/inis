@@ -53,8 +53,7 @@ func GinRecovery(debug ...bool) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				// Check for a broken connection, as it is not really a
-				// condition that warrants a panic stack trace.
+
 				var broken bool
 				if network, ok := err.(*net.OpError); ok {
 					if system, ok := network.Err.(*os.SyscallError); ok {
@@ -70,8 +69,7 @@ func GinRecovery(debug ...bool) gin.HandlerFunc {
 						"path":    ctx.Request.URL.Path,
 						"request": string(request),
 					}, "middleware")
-					// If the connection is dead, we can't write a status to it.
-					ctx.Error(err.(error)) // nolint: errcheck
+					ctx.Error(err.(error))
 					ctx.Abort()
 					return
 				}

@@ -46,18 +46,24 @@ func Method() gin.HandlerFunc {
 			}
 
 			uid := jwt.Data["uid"]
-			cacheName := fmt.Sprintf("user[%v]", uid)
+			cacheName  := fmt.Sprintf("user[%v]", uid)
+			cacheState := cast.ToBool(facade.CacheToml.Get("open"))
 
-			// 用户缓存不存在 - 从数据库中获取 - 并写入缓存
-			if !facade.Cache.Has(cacheName) {
+			// 如果开启了缓存 - 且缓存存在 - 直接从缓存中获取
+			if cacheState && facade.Cache.Has(cacheName) {
 
-				item := facade.DB.Model(&model.Users{}).Find(uid)
-				facade.Cache.Set(cacheName, item, time.Duration(jwt.Valid)*time.Second)
-				ctx.Set("user", item)
+				ctx.Set("user", facade.Cache.Get(cacheName))
 
 			} else {
 
-				ctx.Set("user", facade.Cache.Get(cacheName))
+				item := facade.DB.Model(&model.Users{}).Find(uid)
+				ctx.Set("user", item)
+
+				go func() {
+					if cacheState {
+						facade.Cache.Set(cacheName, item, time.Duration(jwt.Valid)*time.Second)
+					}
+				}()
 			}
 		}
 

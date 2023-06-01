@@ -32,14 +32,15 @@ func Install() gin.HandlerFunc {
 				return
 			}
 
+			// 安装引导没完成之前，禁止访问API应用
 			if strings.HasPrefix(path, "/api/") {
 				ctx.JSON(200, map[string]any{ "code": 412, "msg": "安装引导未完成，禁止访问！", "data": nil })
 				ctx.Abort()
 				return
 			}
-
 		} else {
 
+			// 安装引导完成之后，禁止访问安装引导程序
 			if strings.HasPrefix(path, "/dev/install") {
 				ctx.JSON(200, map[string]any{ "code": 412, "msg": "程序已完成安装，禁止访问！", "data": nil })
 				ctx.Abort()

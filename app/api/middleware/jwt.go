@@ -41,20 +41,22 @@ func Jwt() gin.HandlerFunc {
 		}
 
 		var user map[string]any
-		cacheName := fmt.Sprintf("user[%v]", jwt.Data["uid"])
+		cacheName  := fmt.Sprintf("user[%v]", jwt.Data["uid"])
+		cacheState := cast.ToBool(facade.CacheToml.Get("open"))
 
-		// 用户缓存不存在 - 从数据库中获取 - 并写入缓存
-		if !facade.Cache.Has(cacheName) {
+		// 如果开启了缓存 - 且缓存存在 - 直接从缓存中获取
+		if cacheState && facade.Cache.Has(cacheName) {
+
+			user = cast.ToStringMap(facade.Cache.Get(cacheName))
+
+		}  else {
 
 			user = facade.DB.Model(&model.Users{}).Find(jwt.Data["uid"])
 			go func() {
-				if cast.ToBool(facade.CacheToml.Get("open")) {
+				if cacheState {
 					facade.Cache.Set(cacheName, user, time.Duration(jwt.Valid)*time.Second)
 				}
 			}()
-		} else {
-
-			user = cast.ToStringMap(facade.Cache.Get(cacheName))
 		}
 
 		// 密码发生变化 - 强制退出

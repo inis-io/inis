@@ -14,7 +14,7 @@ import (
 
 var (
 	// QoSPoint - 单接口限流器
-	QoSPoint = make(map[string]*rate.Limiter)
+	QoSPoint  = make(map[string]*rate.Limiter)
 	// QoSGlobal - 全局接口限流器
 	QoSGlobal = make(map[string]*rate.Limiter)
 	// mutex - 互斥锁
@@ -31,9 +31,11 @@ func QpsPoint() gin.HandlerFunc {
 
 		var config map[string]any
 
-		cacheName := "config[SYSTEM_QPS]"
+		cacheName  := "config[SYSTEM_QPS]"
+		cacheState := cast.ToBool(facade.CacheToml.Get("open"))
+
 		// 检查缓存是否存在
-		if facade.Cache.Has(cacheName) {
+		if cacheState && facade.Cache.Has(cacheName) {
 
 			config = cast.ToStringMap(facade.Cache.Get(cacheName))
 
@@ -42,7 +44,7 @@ func QpsPoint() gin.HandlerFunc {
 			config = facade.DB.Model(&model.Config{}).Where("key", "SYSTEM_QPS").Find()
 			// 存储到缓存中
 			go func() {
-				if cast.ToBool(facade.CacheToml.Get("open")) {
+				if cacheState {
 					facade.Cache.Set(cacheName, config)
 				}
 			}()
@@ -90,9 +92,11 @@ func QpsGlobal() gin.HandlerFunc {
 
 		var config map[string]any
 
-		cacheName := "config[SYSTEM_QPS]"
+		cacheName  := "config[SYSTEM_QPS]"
+		cacheState := cast.ToBool(facade.CacheToml.Get("open"))
+
 		// 检查缓存是否存在
-		if facade.Cache.Has(cacheName) {
+		if cacheState && facade.Cache.Has(cacheName) {
 
 			config = cast.ToStringMap(facade.Cache.Get(cacheName))
 
@@ -101,7 +105,7 @@ func QpsGlobal() gin.HandlerFunc {
 			config = facade.DB.Model(&model.Config{}).Where("key", "SYSTEM_QPS").Find()
 			// 存储到缓存中
 			go func() {
-				if cast.ToBool(facade.CacheToml.Get("open")) {
+				if cacheState {
 					facade.Cache.Set(cacheName, config)
 				}
 			}()
