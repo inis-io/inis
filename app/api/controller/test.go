@@ -95,6 +95,29 @@ func (this *Test) INDEX(ctx *gin.Context) {
 
 	params := this.params(ctx)
 
+	// table := model.Users{}
+	// // 查询
+	// user  := facade.DB.Model(&table).Where("id", 1).Find()
+	// // 添加
+	// item  := facade.DB.Model(&table).Create(model.Users{
+	// 	Nickname: "兔子",
+	// })
+	// // 修改 1
+	// item  = facade.DB.Model(&table).Where("id", 1).Update(model.Users{
+	// 	Nickname: "兔子",
+	// })
+	// // 修改 2
+	// // item  := facade.DB.Model(&table).Where("id", 1).Update(map[string]any{
+	// // 	"nickname": "兔子",
+	// // })
+	// // 删除
+	// item  = facade.DB.Model(&table).Where("id", 1).Delete()
+	//
+	// if item.Error != nil {
+	// 	this.json(ctx, nil, item.Error.Error(), 400)
+	// 	return
+	// }
+
 	this.json(ctx, params, facade.Lang(ctx, "好的！"), 200)
 }
 
