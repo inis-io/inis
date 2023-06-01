@@ -40,6 +40,7 @@ func InitTable() {
 		InitPlacard,
 		InitTags,
 		InitUsers,
+		InitPages,
 	}
 
 	for _, val := range allow {
@@ -122,4 +123,3 @@ func DomainTemp2() (replace map[string]any) {
 
 	return replace
 }
-

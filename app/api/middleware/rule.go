@@ -55,7 +55,7 @@ func Rule() gin.HandlerFunc {
 
 		// 获取用户权限
 		rules := model.UserRules(user.Id)
-		name  := fmt.Sprintf("[%v][%v]", strings.ToUpper(ctx.Request.Method), ctx.Request.URL.Path)
+		name := fmt.Sprintf("[%v][%v]", strings.ToUpper(ctx.Request.Method), ctx.Request.URL.Path)
 
 		// 判断是否有权限
 		if !utils.InArray[any](name, rules) {
@@ -88,29 +88,31 @@ func users(ctx *gin.Context) (result model.Users) {
 // 获取规则
 func rules(ctx *gin.Context) (result map[string]any) {
 
-	cacheRule := fmt.Sprintf("rule[%v][%v]", strings.ToUpper(ctx.Request.Method), ctx.Request.URL.Path)
+	// 缓存状态
+	cacheState := cast.ToBool(facade.CacheToml.Get("open"))
+	// 缓存名字
+	cacheName := fmt.Sprintf("rule[%v][%v]", strings.ToUpper(ctx.Request.Method), ctx.Request.URL.Path)
+
+	// 如果开启了缓存 - 且缓存存在 - 直接返回缓存
+	if cacheState && facade.Cache.Has(cacheName) {
+		return cast.ToStringMap(facade.Cache.Get(cacheName))
+	}
 
 	// 规则缓存不存在 - 从数据库中获取 - 并写入缓存
-	if !facade.Cache.Has(cacheRule) {
+	var table model.AuthRules
 
-		var table model.AuthRules
+	// 规则列表
+	result = facade.DB.Model(&table).Where([]any{
+		[]any{"route", "=", ctx.Request.URL.Path},
+		[]any{"method", "=", strings.ToUpper(ctx.Request.Method)},
+	}).Find()
 
-		// 规则列表
-		result = facade.DB.Model(&table).Where([]any{
-			[]any{"route", "=", ctx.Request.URL.Path},
-			[]any{"method", "=", strings.ToUpper(ctx.Request.Method)},
-		}).Find()
-
-		// 规则列表写入缓存
-		go func() {
-			if !utils.Is.Empty(result) && cast.ToBool(facade.CacheToml.Get("api")) {
-				facade.Cache.Set(cacheRule, result, 0)
-			}
-		}()
-	} else {
-
-		result = cast.ToStringMap(facade.Cache.Get(cacheRule))
-	}
+	// 规则列表写入缓存
+	go func() {
+		if !utils.Is.Empty(result) && cacheState {
+			facade.Cache.Set(cacheName, result, 0)
+		}
+	}()
 
 	return result
 }

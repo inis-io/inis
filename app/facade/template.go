@@ -17,7 +17,7 @@ token_name  = "INIS_LOGIN_TOKEN"
 # jwt密钥
 secret   = "${jwt.secret}"
 # 过期时间(秒)
-expire   = 604800
+expire   = "7 * 24 * 60 * 60"
 `
 
 // TempDatabase - 数据库配置模板
@@ -52,14 +52,9 @@ migrate 	 = ${mysql.migrate}
 const TempCache = `# ======== 缓存配置 ========
 
 # 是否开启API缓存
-api		   = ${api}
+open	   = ${open}
 # 默认缓存驱动
 default    = "${default}"
-
-# 本地缓存配置 - 不推荐使用本地缓存 - 各方面没有redis好用
-[local]
-# 过期时间(秒) - 本地缓存不建议缓存过长时间
-expire     = ${local.expire}
 
 # redis配置
 [redis]

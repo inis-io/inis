@@ -12,13 +12,13 @@ import (
 	"time"
 )
 
-type Links struct {
+type Pages struct {
 	// 继承
 	base
 }
 
 // IGET - GET请求本体
-func (this *Links) IGET(ctx *gin.Context) {
+func (this *Pages) IGET(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
@@ -37,14 +37,13 @@ func (this *Links) IGET(ctx *gin.Context) {
 }
 
 // IPOST - POST请求本体
-func (this *Links) IPOST(ctx *gin.Context) {
+func (this *Pages) IPOST(ctx *gin.Context) {
 
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
 	allow := map[string]any{
 		"save":   this.save,
-		"apply":  this.apply,
 		"create": this.create,
 	}
 	err := this.call(allow, method, ctx)
@@ -59,7 +58,7 @@ func (this *Links) IPOST(ctx *gin.Context) {
 }
 
 // IPUT - PUT请求本体
-func (this *Links) IPUT(ctx *gin.Context) {
+func (this *Pages) IPUT(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
@@ -79,7 +78,7 @@ func (this *Links) IPUT(ctx *gin.Context) {
 }
 
 // IDEL - DELETE请求本体
-func (this *Links) IDEL(ctx *gin.Context) {
+func (this *Pages) IDEL(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
@@ -100,18 +99,18 @@ func (this *Links) IDEL(ctx *gin.Context) {
 }
 
 // INDEX - GET请求本体
-func (this *Links) INDEX(ctx *gin.Context) {
+func (this *Pages) INDEX(ctx *gin.Context) {
 	this.json(ctx, nil, facade.Lang(ctx, "没什么用！"), 202)
 }
 
 // 删除缓存
-func (this *Links) delCache() {
+func (this *Pages) delCache() {
 	// 删除缓存
-	facade.Cache.DelTags([]any{"<GET>", "links"})
+	facade.Cache.DelTags([]any{"<GET>", "pages"})
 }
 
 // one 获取指定数据
-func (this *Links) one(ctx *gin.Context) {
+func (this *Pages) one(ctx *gin.Context) {
 
 	code := 204
 	msg := []string{"无数据！", ""}
@@ -121,9 +120,9 @@ func (this *Links) one(ctx *gin.Context) {
 	params := this.params(ctx)
 
 	// 表数据结构体
-	table := model.Links{}
+	table := model.Pages{}
 	// 允许查询的字段
-	allow := []any{"id"}
+	allow := []any{"id", "key"}
 	// 动态给结构体赋值
 	for key, val := range params {
 		// 防止恶意传入字段
@@ -165,7 +164,7 @@ func (this *Links) one(ctx *gin.Context) {
 }
 
 // all 获取全部数据
-func (this *Links) all(ctx *gin.Context) {
+func (this *Pages) all(ctx *gin.Context) {
 
 	code := 204
 	msg := []string{"无数据！", ""}
@@ -179,7 +178,7 @@ func (this *Links) all(ctx *gin.Context) {
 	})
 
 	// 表数据结构体
-	table := model.Links{}
+	table := model.Pages{}
 	// 允许查询的字段
 	var allow []any
 	// 动态给结构体赋值
@@ -192,8 +191,8 @@ func (this *Links) all(ctx *gin.Context) {
 
 	page := cast.ToInt(params["page"])
 	limit := cast.ToInt(params["limit"])
-	var result []model.Links
-	mold := facade.DB.Model(&result).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
+	var result []model.Pages
+	mold := facade.DB.Model(&result).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"]).WithoutField("content")
 	mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 	count := mold.Where(table).Count()
 
@@ -233,7 +232,7 @@ func (this *Links) all(ctx *gin.Context) {
 }
 
 // save 保存数据 - 包含创建和更新
-func (this *Links) save(ctx *gin.Context) {
+func (this *Pages) save(ctx *gin.Context) {
 
 	// 获取请求参数
 	params := this.params(ctx)
@@ -246,12 +245,12 @@ func (this *Links) save(ctx *gin.Context) {
 }
 
 // create 创建数据
-func (this *Links) create(ctx *gin.Context) {
+func (this *Pages) create(ctx *gin.Context) {
 
 	// 获取请求参数
 	params := this.params(ctx)
 	// 验证器
-	err := validator.NewValid("links", params)
+	err := validator.NewValid("pages", params)
 
 	// 参数校验不通过
 	if err != nil {
@@ -266,8 +265,8 @@ func (this *Links) create(ctx *gin.Context) {
 	}
 
 	// 表数据结构体
-	table := model.Links{Uid: uid, CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
-	allow := []any{"nickname", "description", "url", "avatar", "target", "group", "state", "remark", "json", "text"}
+	table := model.Pages{Uid: uid, CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix(), LastUpdate: time.Now().Unix()}
+	allow := []any{"key", "title", "content", "remark", "json", "text"}
 
 	// 动态给结构体赋值
 	for key, val := range params {
@@ -291,7 +290,7 @@ func (this *Links) create(ctx *gin.Context) {
 }
 
 // update 更新数据
-func (this *Links) update(ctx *gin.Context) {
+func (this *Pages) update(ctx *gin.Context) {
 
 	// 获取请求参数
 	params := this.params(ctx)
@@ -302,7 +301,7 @@ func (this *Links) update(ctx *gin.Context) {
 	}
 
 	// 验证器
-	err := validator.NewValid("links", params)
+	err := validator.NewValid("pages", params)
 
 	// 参数校验不通过
 	if err != nil {
@@ -311,8 +310,8 @@ func (this *Links) update(ctx *gin.Context) {
 	}
 
 	// 表数据结构体
-	table := model.Links{}
-	allow := []any{"nickname", "description", "url", "avatar", "target", "group", "state", "remark", "json", "text"}
+	table := model.Pages{}
+	allow := []any{"key", "title", "content", "remark", "json", "text"}
 	async := utils.Async[map[string]any]()
 
 	// 动态给结构体赋值
@@ -323,8 +322,11 @@ func (this *Links) update(ctx *gin.Context) {
 		}
 	}
 
-	// 更新数据
-	tx := facade.DB.Model(&table).WithTrashed().Where("id", params["id"]).Update(async.Result())
+	// 更新时间
+	async.Set("last_update", time.Now().Unix())
+
+	// 更新数据 - Scan() 方法用于将数据扫描到结构体中，使用的位置很重要
+	tx := facade.DB.Model(&table).WithTrashed().Where("id", params["id"]).Scan(&table).Update(async.Result())
 
 	if tx.Error != nil {
 		this.json(ctx, nil, tx.Error.Error(), 400)
@@ -337,10 +339,10 @@ func (this *Links) update(ctx *gin.Context) {
 }
 
 // count 统计数据
-func (this *Links) count(ctx *gin.Context) {
+func (this *Pages) count(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.Links{}
+	table := model.Pages{}
 	// 获取请求参数
 	params := this.params(ctx)
 
@@ -351,10 +353,10 @@ func (this *Links) count(ctx *gin.Context) {
 }
 
 // column 获取单列数据
-func (this *Links) column(ctx *gin.Context) {
+func (this *Pages) column(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.Links{}
+	table := model.Pages{}
 	// 获取请求参数
 	params := this.params(ctx, map[string]any{
 		"field": "*",
@@ -386,10 +388,10 @@ func (this *Links) column(ctx *gin.Context) {
 }
 
 // remove 软删除
-func (this *Links) remove(ctx *gin.Context) {
+func (this *Pages) remove(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.Links{}
+	table := model.Pages{}
 	// 获取请求参数
 	params := this.params(ctx)
 
@@ -413,10 +415,10 @@ func (this *Links) remove(ctx *gin.Context) {
 }
 
 // delete 真实删除
-func (this *Links) delete(ctx *gin.Context) {
+func (this *Pages) delete(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.Links{}
+	table := model.Pages{}
 	// 获取请求参数
 	params := this.params(ctx)
 
@@ -440,10 +442,10 @@ func (this *Links) delete(ctx *gin.Context) {
 }
 
 // clear 清空回收站
-func (this *Links) clear(ctx *gin.Context) {
+func (this *Pages) clear(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.Links{}
+	table := model.Pages{}
 
 	// 找到所有软删除的数据
 	tx := facade.DB.Model(&table).OnlyTrashed().Force().Delete()
@@ -457,10 +459,10 @@ func (this *Links) clear(ctx *gin.Context) {
 }
 
 // restore 恢复数据
-func (this *Links) restore(ctx *gin.Context) {
+func (this *Pages) restore(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.Links{}
+	table := model.Pages{}
 	// 获取请求参数
 	params := this.params(ctx)
 
@@ -481,64 +483,4 @@ func (this *Links) restore(ctx *gin.Context) {
 	}
 
 	this.json(ctx, nil, facade.Lang(ctx, "恢复成功！"), 200)
-}
-
-// apply 申请友链
-func (this *Links) apply(ctx *gin.Context) {
-
-	// 获取请求参数
-	params := this.params(ctx)
-	// 验证器
-	err := validator.NewValid("links", params)
-
-	// 参数校验不通过
-	if err != nil {
-		this.json(ctx, nil, err.Error(), 400)
-		return
-	}
-
-	user := this.user(ctx)
-	if user.Id == 0 {
-		this.json(ctx, nil, "请先登录！", 400)
-		return
-	}
-
-	// 如果没有传昵称，则使用当前登录用户的昵称
-	if utils.Is.Empty(params["nickname"]) {
-		params["nickname"] = user.Nickname
-	}
-
-	// 如果没有传头像，则使用当前登录用户的头像
-	if utils.Is.Empty(params["avatar"]) {
-		params["avatar"] = user.Avatar
-	}
-
-	// 如果没有描述，则使用当前登录用户的描述
-	if utils.Is.Empty(params["description"]) {
-		params["description"] = user.Description
-	}
-
-	// 表数据结构体
-	table := model.Links{Uid: user.Id, State: "check", CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
-	allow := []any{"nickname", "description", "url", "avatar", "target", "group", "json", "text"}
-
-	// 动态给结构体赋值
-	for key, val := range params {
-		// 防止恶意传入字段
-		if utils.In.Array(key, allow) {
-			utils.Struct.Set(&table, key, val)
-		}
-	}
-
-	// 添加数据
-	tx := facade.DB.Model(&table).Create(&table)
-
-	if tx.Error != nil {
-		this.json(ctx, nil, tx.Error.Error(), 400)
-		return
-	}
-
-	this.json(ctx, map[string]any{
-		"id": table.Id,
-	}, facade.Lang(ctx, "申请提交成功！"), 200)
 }

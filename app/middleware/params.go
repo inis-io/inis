@@ -181,7 +181,7 @@ func domain(ctx *gin.Context) (result string) {
 
 	// 存储到缓存中
 	go func() {
-		if cast.ToBool(facade.CacheToml.Get("api")) {
+		if cast.ToBool(facade.CacheToml.Get("open")) {
 			facade.Cache.Set("domain", result, 0)
 		}
 		// 存储到上下文中

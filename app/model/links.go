@@ -9,11 +9,13 @@ import (
 
 type Links struct {
 	Id          int    `gorm:"type:int(32); comment:主键;" json:"id"`
+	Uid         int    `gorm:"type:int(32); comment:用户ID; default:0;" json:"uid"`
 	Nickname    string `gorm:"size:32; comment:昵称; default:Null;" json:"nickname"`
 	Description string `gorm:"comment:描述; default:Null;" json:"description"`
 	Url         string `gorm:"size:256; comment:链接; default:Null;" json:"url"`
 	Avatar      string `gorm:"size:256; comment:头像; default:Null;" json:"avatar"`
 	Target      string `gorm:"size:32; comment:打开方式; default:'_blank';" json:"target"`
+	State       string `gorm:"size:32; comment:状态; default:'ok';" json:"state"`
 	Remark      string `gorm:"comment:备注; default:Null;" json:"remark"`
 	Group       int    `gorm:"size:32; comment:分组; default:0;" json:"group"`
 	// 以下为公共字段
@@ -70,13 +72,13 @@ func (this *Links) AfterFind(tx *gorm.DB) (err error) {
 	group := map[string]any{
 		"id":          0,
 		"name":        "默认分组",
-		"avatar": 	   "",
+		"avatar":      "",
 		"description": "默认分组",
 	}
 
 	if this.Group != 0 {
 		allow := []any{"id", "avatar", "name", "description"}
-		item  := facade.DB.Model(&LinksGroup{}).Find(this.Group)
+		item := facade.DB.Model(&LinksGroup{}).Find(this.Group)
 		if !utils.Is.Empty(item) {
 			// 过滤字段
 			for key := range item {

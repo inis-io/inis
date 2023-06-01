@@ -27,7 +27,7 @@ func Security() gin.HandlerFunc {
 			open = cast.ToBool(item["value"])
 			// 设置缓存
 			go func() {
-				if cast.ToBool(facade.CacheToml.Get("api")) {
+				if cast.ToBool(facade.CacheToml.Get("open")) {
 					// 存储到缓存中
 					facade.Cache.Set(cacheKey, open)
 				}
@@ -66,7 +66,7 @@ func Security() gin.HandlerFunc {
 			keys = cast.ToStringSlice(facade.DB.Model(&model.ApiKeys{}).Column("value"))
 			// 设置缓存
 			go func() {
-				if cast.ToBool(facade.CacheToml.Get("api")) {
+				if cast.ToBool(facade.CacheToml.Get("open")) {
 					// 存储到缓存中
 					facade.Cache.Set(cacheColumn, keys)
 				}

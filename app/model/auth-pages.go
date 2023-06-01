@@ -53,20 +53,22 @@ func InitAuthPages() {
 
 	// 页面列表
 	pages := []AuthPages{
-		{ Name: "撰写文章", Icon: "article", Path: "/admin/article/write"},
-		{ Name: "文章列表", Icon: "article", Path: "/admin/article"},
-		{ Name: "文章分组", Icon: "group",   Path: "/admin/article/group", Size: "14px"},
-		{ Name: "用户",    Icon: "user",    Path: "/admin/users" },
-		{ Name: "评论",    Icon: "comment", Path: "/admin/comment" },
-		{ Name: "公告",    Icon: "bell",    Path: "/admin/placard" },
-		{ Name: "轮播",    Icon: "banner",  Path: "/admin/banner" },
-		{ Name: "标签",    Icon: "tag",     Path: "/admin/tags" },
-		{ Name: "友链",    Icon: "link",    Path: "/admin/links" },
-		{ Name: "友链分组", Icon: "group",   Path: "/admin/links/group", Size: "14px" },
-		{ Name: "权限规则", Icon: "rule",    Path: "/admin/auth/rules",  Size: "17px" },
-		{ Name: "权限分组", Icon: "group",   Path: "/admin/auth/group",  Size: "14px" },
-		{ Name: "页面权限", Icon: "open",    Path: "/admin/auth/pages",  Size: "17px" },
-		{ Name: "接口密钥", Icon: "key",     Path: "/admin/api/keys",    Size: "14px" },
+		{Name: "撰写文章", Icon: "article", Path: "/admin/article/write"},
+		{Name: "文章列表", Icon: "article", Path: "/admin/article"},
+		{Name: "文章分组", Icon: "group", Path: "/admin/article/group", Size: "14px"},
+		{Name: "用户", Icon: "user", Path: "/admin/users"},
+		{Name: "评论", Icon: "comment", Path: "/admin/comment"},
+		{Name: "公告", Icon: "bell", Path: "/admin/placard"},
+		{Name: "轮播", Icon: "banner", Path: "/admin/banner"},
+		{Name: "标签", Icon: "tag", Path: "/admin/tags"},
+		{Name: "友链", Icon: "link", Path: "/admin/links"},
+		{Name: "页面列表", Icon: "open", Path: "/admin/pages", Size: "17px"},
+		{Name: "撰写页面", Icon: "article", Path: "/admin/pages/write"},
+		{Name: "友链分组", Icon: "group", Path: "/admin/links/group", Size: "14px"},
+		{Name: "权限规则", Icon: "rule", Path: "/admin/auth/rules", Size: "17px"},
+		{Name: "权限分组", Icon: "group", Path: "/admin/auth/group", Size: "14px"},
+		{Name: "页面权限", Icon: "open", Path: "/admin/auth/pages", Size: "17px"},
+		{Name: "接口密钥", Icon: "key", Path: "/admin/api/keys", Size: "14px"},
 	}
 
 	wg := sync.WaitGroup{}

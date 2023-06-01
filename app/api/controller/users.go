@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
@@ -106,7 +107,7 @@ func (this *Users) INDEX(ctx *gin.Context) {
 // 删除缓存
 func (this *Users) delCache() {
 	// 删除缓存
-	facade.Cache.DelTags([]any{"<GET>","users"})
+	facade.Cache.DelTags([]any{"<GET>", "users"})
 }
 
 // one 获取指定数据
@@ -180,9 +181,9 @@ func (this *Users) all(ctx *gin.Context) {
 
 	// 获取请求参数
 	params := this.params(ctx, map[string]any{
-		"page":        1,
-		"limit":       5,
-		"order":       "create_time desc",
+		"page":  1,
+		"limit": 5,
+		"order": "create_time desc",
 	})
 
 	// 表数据结构体
@@ -197,10 +198,10 @@ func (this *Users) all(ctx *gin.Context) {
 		}
 	}
 
-	page  := cast.ToInt(params["page"])
+	page := cast.ToInt(params["page"])
 	limit := cast.ToInt(params["limit"])
 	var result []model.Users
-	mold  := facade.DB.Model(&result).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
+	mold := facade.DB.Model(&result).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
 	mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 	count := mold.Where(table).Count()
 
@@ -215,7 +216,7 @@ func (this *Users) all(ctx *gin.Context) {
 	} else {
 
 		// 从数据库中获取数据
-		item  := mold.Where(table).Limit(limit).Page(page).Order(params["order"]).Select()
+		item := mold.Where(table).Limit(limit).Page(page).Order(params["order"]).Select()
 
 		rules := model.UserRules(this.user(ctx).Id)
 		// 删除指定字段
@@ -279,36 +280,11 @@ func (this *Users) create(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Users{CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
-	allow := []any{"account", "password", "nickname", "email", "phone", "avatar", "description", "source", "pages", "remark"}
+	allow := []any{"account", "password", "nickname", "email", "phone", "avatar", "description", "source", "pages", "remark", "title", "json", "text"}
 
 	if utils.Is.Empty(params["email"]) {
 		this.json(ctx, nil, facade.Lang(ctx, "邮箱不能为空！"), 400)
 		return
-	}
-
-	// 判断邮箱是否已经注册
-	ok := facade.DB.Model(&table).Where("email", params["email"]).Exist()
-	if ok {
-		this.json(ctx, nil, facade.Lang(ctx, "该邮箱已经注册！"), 400)
-		return
-	}
-
-	// 判断手机号是否已经注册
-	if !utils.Is.Empty(params["phone"]) {
-		ok := facade.DB.Model(&table).Where("phone", params["phone"]).Exist()
-		if ok {
-			this.json(ctx, nil, facade.Lang(ctx, "该手机号已经注册！"), 400)
-			return
-		}
-	}
-
-	// 判断账号是否已经注册
-	if !utils.Is.Empty(params["account"]) {
-		ok := facade.DB.Model(&table).Where("account", params["account"]).Exist()
-		if ok {
-			this.json(ctx, nil, facade.Lang(ctx, "该账号已经注册！"), 400)
-			return
-		}
 	}
 
 	// 动态给结构体赋值
@@ -358,7 +334,7 @@ func (this *Users) update(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Users{}
-	allow := []any{"id", "account", "password", "nickname", "email", "phone", "avatar", "description", "source", "pages", "remark"}
+	allow := []any{"id", "account", "password", "nickname", "email", "phone", "avatar", "description", "source", "pages", "remark", "title", "json", "text"}
 	async := utils.Async[map[string]any]()
 
 	// 动态给结构体赋值
@@ -373,39 +349,6 @@ func (this *Users) update(ctx *gin.Context) {
 		}
 	}
 
-	// 账号唯一处理
-	if !utils.Is.Empty(params["account"]) {
-		item := facade.DB.Model(&table).Where("account", params["account"]).Find()
-		if item != nil && cast.ToInt(item["id"]) != cast.ToInt(params["id"]) {
-			this.json(ctx, nil, facade.Lang(ctx, "帐号已存在！"), 400)
-			return
-		}
-	}
-
-	// 邮箱唯一处理
-	if !utils.Is.Empty(params["email"]) {
-		ok := facade.DB.Model(&table).Where([]any{
-			[]any{"id", "<>", params["id"]},
-			[]any{"email", "=", params["email"]},
-		}).Exist()
-		if ok {
-			this.json(ctx, nil, facade.Lang(ctx, "邮箱已存在！"), 400)
-			return
-		}
-	}
-
-	// 手机号唯一处理
-	if !utils.Is.Empty(params["phone"]) {
-		ok := facade.DB.Model(&table).Where([]any{
-			[]any{"id", "<>", params["id"]},
-			[]any{"phone", "=", params["phone"]},
-		}).Exist()
-		if ok {
-			this.json(ctx, nil, facade.Lang(ctx, "手机号已存在！"), 400)
-			return
-		}
-	}
-
 	// 更新用户
 	tx := facade.DB.Model(&table).WithTrashed().Where("id", params["id"]).Update(async.Result())
 
@@ -413,6 +356,9 @@ func (this *Users) update(ctx *gin.Context) {
 		this.json(ctx, nil, tx.Error.Error(), 400)
 		return
 	}
+
+	// 删除缓存
+	facade.Cache.Del(fmt.Sprintf("user[%v]", params["id"]))
 
 	this.json(ctx, map[string]any{
 		"id": table.Id,
@@ -474,11 +420,11 @@ func (this *Users) column(ctx *gin.Context) {
 
 	code := 200
 	data := item.Column()
-	msg  := facade.Lang(ctx, "查询成功！")
+	msg := facade.Lang(ctx, "查询成功！")
 
 	if utils.Is.Empty(data) {
 		code = 204
-		msg  = facade.Lang(ctx, "无数据！")
+		msg = facade.Lang(ctx, "无数据！")
 	}
 
 	this.json(ctx, data, msg, code)
@@ -488,7 +434,7 @@ func (this *Users) column(ctx *gin.Context) {
 func (this *Users) remove(ctx *gin.Context) {
 
 	// 表数据结构体
-	table  := model.Users{}
+	table := model.Users{}
 	// 获取请求参数
 	params := this.params(ctx)
 

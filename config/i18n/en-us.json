@@ -49,5 +49,6 @@
     "数据库名不能为空！": "Database name can not be empty!",
     "数据库密码不能为空！": "Database password can not be empty!",
     "不能删除自己！": "Can not delete yourself!",
-    "好的！": "OK!"
+    "好的！": "OK!",
+    "申请提交成功！": "Application submitted successfully!"
 }

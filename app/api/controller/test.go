@@ -11,8 +11,6 @@ import (
 	"github.com/unti-io/go-utils/utils"
 	"inis/app/facade"
 	"mime/multipart"
-	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -28,8 +26,8 @@ func (this *Test) IGET(ctx *gin.Context) {
 
 	allow := map[string]any{
 		"request": this.request,
-		"alipay" : this.alipay,
-		"system" : this.system,
+		"alipay":  this.alipay,
+		"system":  this.system,
 	}
 	err := this.call(allow, method, ctx)
 
@@ -95,92 +93,9 @@ func (this *Test) IDEL(ctx *gin.Context) {
 // INDEX - GET请求本体
 func (this *Test) INDEX(ctx *gin.Context) {
 
-	// expression := "7 * 24 * 60 *60 +1"
-	// result, err := evaluateExpression(expression)
-	// if err != nil {
-	// 	fmt.Println("Error:", err)
-	// } else {
-	// 	fmt.Println(result)
-	// }
-	//
-	// expr := "7 * 24 * 60 * (60 + 1)"
-	// result := evalExpr(expr)
+	params := this.params(ctx)
 
-	// input := "7*24*60* (60 +1) / 33.1"
-	// output := calculate(input)
-
-	input := "7*24*60* 60 + 1/(1.3-0.2)"
-	output := calc(input)
-
-	this.json(ctx, output, facade.Lang(ctx, "好的！"), 200)
-}
-
-// 计算器
-func calc(input string) float64 {
-
-	// 是否为操作符
-	operator := []string{"+", "-", "*", "/"}
-
-	// 操作符优先级
-	precedence := func(operator string) int {
-		switch operator {
-		case "+", "-":
-			return 1
-		case "*", "/":
-			return 2
-		}
-		return 0
-	}
-
-	reg := regexp.MustCompile(`\d+(\.\d*)?|[+\-*/()]`)
-	tokens := reg.FindAllString(input, -1)
-	var stack, postfix []string
-	for _, token := range tokens {
-		if utils.InArray(token, operator) {
-			for len(stack) > 0 && precedence(stack[len(stack)-1]) >= precedence(token) {
-				postfix = append(postfix, stack[len(stack)-1])
-				stack = stack[:len(stack)-1]
-			}
-			stack = append(stack, token)
-		} else if token == "(" {
-			stack = append(stack, token)
-		} else if token == ")" {
-			for len(stack) > 0 && stack[len(stack)-1] != "(" {
-				postfix = append(postfix, stack[len(stack)-1])
-				stack = stack[:len(stack)-1]
-			}
-			stack = stack[:len(stack)-1]
-		} else {
-			postfix = append(postfix, token)
-		}
-	}
-	for len(stack) > 0 {
-		postfix = append(postfix, stack[len(stack)-1])
-		stack = stack[:len(stack)-1]
-	}
-	var result []float64
-	for _, token := range postfix {
-		if utils.InArray(token, operator) {
-			right  := result[len(result)-1]
-			result =  result[:len(result)-1]
-			left   := result[len(result)-1]
-			result =  result[:len(result)-1]
-			switch token {
-			case "+":
-				result = append(result, left+right)
-			case "-":
-				result = append(result, left-right)
-			case "*":
-				result = append(result, left*right)
-			case "/":
-				result = append(result, left/right)
-			}
-		} else {
-			num, _ := strconv.ParseFloat(token, 64)
-			result = append(result, num)
-		}
-	}
-	return result[0]
+	this.json(ctx, params, facade.Lang(ctx, "好的！"), 200)
 }
 
 func (this *Test) qq(ctx *gin.Context) {

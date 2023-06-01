@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
@@ -20,7 +21,8 @@ type Users struct {
 	Phone       string `gorm:"size:32; comment:手机号;" json:"phone"`
 	Avatar      string `gorm:"comment:头像; default:Null;" json:"avatar"`
 	Description string `gorm:"comment:描述; default:Null;" json:"description"`
-	Pages	    string `gorm:"comment:页面权限; default:Null;" json:"pages"`
+	Title       string `gorm:"comment:头衔; default:Null;" json:"title"`
+	Pages       string `gorm:"comment:页面权限; default:Null;" json:"pages"`
 	Source      string `gorm:"size:32; default:'default'; comment:注册来源;" json:"source"`
 	Remark      string `gorm:"comment:备注; default:Null;" json:"remark"`
 	// 以下为公共字段
@@ -77,7 +79,7 @@ func (this *Users) AfterFind(tx *gorm.DB) (err error) {
 	this.Avatar = utils.Replace(this.Avatar, DomainTemp1())
 
 	// 查询自己拥有的权限
-	ids := facade.DB.Model(&AuthGroup{}).Like("uids", "%|" + cast.ToString(this.Id) + "|%").Column("id")
+	ids := facade.DB.Model(&AuthGroup{}).Like("uids", "%|"+cast.ToString(this.Id)+"|%").Column("id")
 
 	this.Result = map[string]any{
 		"level": cast.ToIntSlice(ids),
@@ -94,6 +96,30 @@ func (this *Users) AfterSave(tx *gorm.DB) (err error) {
 		tx.Model(this).UpdateColumn("avatar", this.Avatar)
 	}()
 
+	// 账号 唯一处理
+	if !utils.Is.Empty(this.Account) {
+		exist := facade.DB.Model(&Users{}).Where("id", "!=", this.Id).Where("account", this.Account).Exist()
+		if exist {
+			return errors.New("账号已存在！")
+		}
+	}
+
+	// 邮箱 唯一处理
+	if !utils.Is.Empty(this.Email) {
+		exist := facade.DB.Model(&Users{}).Where("id", "!=", this.Id).Where("email", this.Email).Exist()
+		if exist {
+			return errors.New("邮箱已存在！")
+		}
+	}
+
+	// 手机号 唯一处理
+	if !utils.Is.Empty(this.Phone) {
+		exist := facade.DB.Model(&Users{}).Where("id", "!=", this.Id).Where("phone", this.Phone).Exist()
+		if exist {
+			return errors.New("手机号已存在！")
+		}
+	}
+
 	return
 }
 
@@ -106,7 +132,7 @@ func UserRules(uid any) (slice []any) {
 		var table []AuthGroup
 
 		// 从规则分组里面查找
-		group := facade.DB.Model(&table).Like("uids", "%|" + cast.ToString(uid) + "|%").Select()
+		group := facade.DB.Model(&table).Like("uids", "%|"+cast.ToString(uid)+"|%").Select()
 
 		var hashes []any
 
@@ -162,7 +188,7 @@ func UserRules(uid any) (slice []any) {
 		rules = item(uid)
 
 		go func() {
-			if cast.ToBool(facade.CacheToml.Get("api")) {
+			if cast.ToBool(facade.CacheToml.Get("open")) {
 				facade.Cache.Set(cacheName, rules, 0)
 			}
 		}()

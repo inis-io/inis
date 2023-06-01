@@ -14,11 +14,11 @@ import (
 
 var (
 	// QoSPoint - 单接口限流器
-	QoSPoint  = make(map[string]*rate.Limiter)
+	QoSPoint = make(map[string]*rate.Limiter)
 	// QoSGlobal - 全局接口限流器
 	QoSGlobal = make(map[string]*rate.Limiter)
 	// mutex - 互斥锁
-	mutex     = &sync.Mutex{}
+	mutex = &sync.Mutex{}
 )
 
 // QpsPoint - 单接口限流器
@@ -42,7 +42,7 @@ func QpsPoint() gin.HandlerFunc {
 			config = facade.DB.Model(&model.Config{}).Where("key", "SYSTEM_QPS").Find()
 			// 存储到缓存中
 			go func() {
-				if cast.ToBool(facade.CacheToml.Get("api")) {
+				if cast.ToBool(facade.CacheToml.Get("open")) {
 					facade.Cache.Set(cacheName, config)
 				}
 			}()
@@ -70,7 +70,7 @@ func QpsPoint() gin.HandlerFunc {
 		limit := QoSPoint[key]
 		// 如果不存在则创建一个新的访问频率限制器
 		if limit == nil {
-			limit = rate.NewLimiter(rate.Every(time.Second / 10), speed)
+			limit = rate.NewLimiter(rate.Every(time.Second/10), speed)
 			QoSPoint[key] = limit
 		}
 		mutex.Unlock()
@@ -101,7 +101,7 @@ func QpsGlobal() gin.HandlerFunc {
 			config = facade.DB.Model(&model.Config{}).Where("key", "SYSTEM_QPS").Find()
 			// 存储到缓存中
 			go func() {
-				if cast.ToBool(facade.CacheToml.Get("api")) {
+				if cast.ToBool(facade.CacheToml.Get("open")) {
 					facade.Cache.Set(cacheName, config)
 				}
 			}()
@@ -123,7 +123,7 @@ func QpsGlobal() gin.HandlerFunc {
 		limit := QoSGlobal[ip]
 		// 如果不存在则创建一个新的访问频率限制器
 		if limit == nil {
-			limit = rate.NewLimiter(rate.Every(time.Second / 10), speed)
+			limit = rate.NewLimiter(rate.Every(time.Second/10), speed)
 			QoSGlobal[ip] = limit
 		}
 		mutex.Unlock()
@@ -138,7 +138,7 @@ func QpsGlobal() gin.HandlerFunc {
 }
 
 // qpsDelete - 监控QPSPoint和QoSGlobal的协程
-func qpsDelete()  {
+func qpsDelete() {
 	for {
 		time.Sleep(time.Second)
 		mutex.Lock()
@@ -157,7 +157,7 @@ func qpsDelete()  {
 }
 
 // qpsReset - 重置QPSPoint和QoSGlobal的协程
-func qpsReset()  {
+func qpsReset() {
 	// 每分钟检查一次
 	ticker := time.NewTicker(time.Minute)
 	for range ticker.C {

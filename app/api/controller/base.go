@@ -81,7 +81,7 @@ func (this base) param(ctx *gin.Context, key string, def ...any) any {
 	return params[key]
 }
 
-// params 获取全部参数 , def map[string]any
+// params 获取全部参数
 func (this base) params(ctx *gin.Context, def ...map[string]any) (result map[string]any) {
 
 	params, ok := ctx.Get("params")
@@ -157,7 +157,7 @@ type cache struct{}
 // API请求结果是否优先从缓存中获取
 func (this cache) enable(ctx *gin.Context) (ok bool) {
 	item := cast.ToBool(base{}.param(ctx, "cache", "true"))
-	where := item && cast.ToBool(facade.CacheToml.Get("api"))
+	where := item && cast.ToBool(facade.CacheToml.Get("open"))
 	return utils.Ternary[bool](where, true, false)
 }
 

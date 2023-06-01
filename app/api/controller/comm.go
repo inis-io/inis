@@ -160,7 +160,8 @@ func (this *Comm) login(ctx *gin.Context) {
 	}
 
 	token, _ := facade.Jwt.Create(map[string]any{
-		"uid": table.Id,
+		"uid":  table.Id,
+		"hash": facade.Hash.Sum32(table.Password),
 	})
 
 	// 删除 item 中的密码
@@ -292,13 +293,18 @@ func (this *Comm) register(ctx *gin.Context) {
 	utils.Struct.Set(&table, "login_time", time.Now().Unix())
 
 	// 创建用户
-	facade.DB.Model(&table).Create(&table)
+	tx := facade.DB.Model(&table).Create(&table)
+	if tx.Error != nil {
+		this.json(ctx, nil, tx.Error.Error(), 400)
+		return
+	}
 
 	// 删除验证码
 	facade.Cache.Del(cacheName)
 
 	token, _ := facade.Jwt.Create(map[string]any{
-		"uid": table.Id,
+		"uid":  table.Id,
+		"hash": facade.Hash.Sum32(table.Password),
 	})
 
 	// 删除密码
@@ -403,7 +409,8 @@ func (this *Comm) socialLogin(ctx *gin.Context) {
 	item := facade.DB.Model(&table).Where(social, params["social"]).Find()
 
 	token, _ := facade.Jwt.Create(map[string]any{
-		"uid": table.Id,
+		"uid":  table.Id,
+		"hash": facade.Hash.Sum32(table.Password),
 	})
 
 	// 删除密码
@@ -427,6 +434,8 @@ func (this *Comm) socialLogin(ctx *gin.Context) {
 
 // 校验token
 func (this *Comm) checkToken(ctx *gin.Context) {
+
+	params := this.params(ctx)
 
 	tokenName := cast.ToString(facade.AppToml.Get("app.token_name", "INIS_LOGIN_TOKEN"))
 
@@ -453,15 +462,30 @@ func (this *Comm) checkToken(ctx *gin.Context) {
 	table := model.Users{}
 	// 查询用户
 	item := facade.DB.Model(&table).Where("id", jwt.Data["uid"]).Find()
-	if item == nil {
+	if utils.Is.Empty(item) {
 		this.json(ctx, nil, facade.Lang(ctx, "用户不存在！"), 204)
 		return
+	}
+
+	// token 有效时长
+	valid := jwt.Valid
+
+	if cast.ToBool(params["renew"]) {
+		token, _ = facade.Jwt.Create(map[string]any{
+			"uid":  table.Id,
+			"hash": facade.Hash.Sum32(table.Password),
+		})
+		valid = cast.ToInt64(utils.Calc(facade.AppToml.Get("jwt.expire", "7200")))
+		// 往客户端写入cookie - 存储登录token
+		setToken(ctx, token)
 	}
 
 	delete(item, "password")
 
 	this.json(ctx, map[string]any{
-		"user": item,
+		"user":       item,
+		"token":      token,
+		"valid_time": valid,
 	}, facade.Lang(ctx, facade.Lang(ctx, "合法的token！")), 200)
 }
 

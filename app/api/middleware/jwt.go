@@ -40,23 +40,33 @@ func Jwt() gin.HandlerFunc {
 			return
 		}
 
-		uid := jwt.Data["uid"]
-		cacheName := fmt.Sprintf("user[%v]", uid)
+		var user map[string]any
+		cacheName := fmt.Sprintf("user[%v]", jwt.Data["uid"])
 
 		// 用户缓存不存在 - 从数据库中获取 - 并写入缓存
 		if !facade.Cache.Has(cacheName) {
 
-			item := facade.DB.Model(&model.Users{}).Find(uid)
-			ctx.Set("user", item)
-			if cast.ToBool(facade.CacheToml.Get("api")) {
-				go func() {
-					facade.Cache.Set(cacheName, item, time.Duration(jwt.Valid)*time.Second)
-				}()
-			}
+			user = facade.DB.Model(&model.Users{}).Find(jwt.Data["uid"])
+			go func() {
+				if cast.ToBool(facade.CacheToml.Get("open")) {
+					facade.Cache.Set(cacheName, user, time.Duration(jwt.Valid)*time.Second)
+				}
+			}()
 		} else {
 
-			ctx.Set("user", facade.Cache.Get(cacheName))
+			user = cast.ToStringMap(facade.Cache.Get(cacheName))
 		}
+
+		// 密码发生变化 - 强制退出
+		if jwt.Data["hash"] != facade.Hash.Sum32(user["password"]) {
+			result["msg"] = facade.Lang(ctx, "登录已过期，请重新登录！")
+			ctx.SetCookie(tokenName, "", -1, "/", "", false, false)
+			ctx.JSON(200, result)
+			ctx.Abort()
+			return
+		}
+
+		ctx.Set("user", user)
 
 		ctx.Next()
 	}

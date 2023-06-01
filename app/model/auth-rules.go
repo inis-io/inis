@@ -29,8 +29,8 @@ type AuthRules struct {
 	DeleteTime soft_delete.DeletedAt `gorm:"comment:删除时间; default:0;" json:"delete_time"`
 }
 
-// AfterSave - 保存后的Hook（包括 create update）
-func (this *AuthRules) AfterSave(tx *gorm.DB) (err error) {
+// BeforeCreate - 创建前的Hook
+func (this *AuthRules) BeforeCreate(tx *gorm.DB) (err error) {
 
 	// 检查 hash 是否存在
 	exist := facade.DB.Model(&AuthRules{}).Where("hash", this.Hash).Exist()
@@ -54,42 +54,44 @@ func InitAuthRules() {
 
 	// 规则列表
 	rules := []AuthRules{
-		{Method: "POST",   Route: "/api/comm/login", Name: "【公共 API】传统和加密登录"},
-		{Method: "POST",   Route: "/api/comm/social-login", Name: "【公共 API】验证码登录"},
-		{Method: "POST",   Route: "/api/comm/register", Name: "【公共 API】注册账户"},
-		{Method: "POST",   Route: "/api/comm/check-token", Name: "【公共 API】校验登录"},
-		{Method: "DELETE", Route: "/api/comm/logout", Name: "【公共 API】退出登录"},
-		{Method: "GET",    Route: "/api/file/rand", Name: "【文件 API】随机图"},
-		{Method: "GET",    Route: "/api/file/to-base64", Name: "【文件 API】网络图片转base64"},
-		{Method: "POST",   Route: "/api/file/upload", Name: "【文件 API】简单上传"},
-		{Method: "GET",    Route: "/api/test", Name: "【测试 API】兔子专用"},
-		{Method: "GET",    Route: "/api/test/request", Name: "【测试 API】测试GET请求"},
-		{Method: "PUT",    Route: "/api/test/request", Name: "【测试 API】测试PUT请求"},
-		{Method: "POST",   Route: "/api/test/request", Name: "【测试 API】测试POST请求"},
-		{Method: "DELETE", Route: "/api/test/request", Name: "【测试 API】测试DEL请求"},
-		{Method: "PUT",    Route: "/api/auth-group/uids", Name: "【权限分组 API】更改用户权限"},
-		{Method: "GET",    Route: "/api/proxy", Name: "【代理 API】代理发起 GET 请求"},
-		{Method: "PUT",    Route: "/api/proxy", Name: "【代理 API】代理发起 PUT 请求"},
-		{Method: "POST",   Route: "/api/proxy", Name: "【代理 API】代理发起 POST 请求"},
-		{Method: "PATCH",  Route: "/api/proxy", Name: "【代理 API】代理发起 PATCH 请求"},
-		{Method: "DELETE", Route: "/api/proxy", Name: "【代理 API】代理发起 DELETE 请求"},
+		{Method: "POST", Route: "/api/comm/login", Name: "【公共 API】传统和加密登录", Type: "common"},
+		{Method: "POST", Route: "/api/comm/social-login", Name: "【公共 API】验证码登录", Type: "common"},
+		{Method: "POST", Route: "/api/comm/register", Name: "【公共 API】注册账户", Type: "common"},
+		{Method: "POST", Route: "/api/comm/check-token", Name: "【公共 API】校验登录", Type: "common"},
+		{Method: "DELETE", Route: "/api/comm/logout", Name: "【公共 API】退出登录", Type: "common"},
+		{Method: "GET", Route: "/api/file/rand", Name: "【文件 API】随机图", Type: "common"},
+		{Method: "GET", Route: "/api/file/to-base64", Name: "【文件 API】网络图片转base64", Type: "common"},
+		{Method: "POST", Route: "/api/file/upload", Name: "【文件 API】简单上传", Type: "login"},
+		{Method: "GET", Route: "/api/test", Name: "【测试 API】兔子专用", Type: "common"},
+		{Method: "GET", Route: "/api/test/request", Name: "【测试 API】测试GET请求", Type: "common"},
+		{Method: "PUT", Route: "/api/test/request", Name: "【测试 API】测试PUT请求", Type: "common"},
+		{Method: "POST", Route: "/api/test/request", Name: "【测试 API】测试POST请求", Type: "common"},
+		{Method: "DELETE", Route: "/api/test/request", Name: "【测试 API】测试DEL请求", Type: "common"},
+		{Method: "PUT", Route: "/api/auth-group/uids", Name: "【权限分组 API】更改用户权限"},
+		{Method: "GET", Route: "/api/proxy", Name: "【代理 API】代理发起 GET 请求", Type: "common"},
+		{Method: "PUT", Route: "/api/proxy", Name: "【代理 API】代理发起 PUT 请求", Type: "common"},
+		{Method: "POST", Route: "/api/proxy", Name: "【代理 API】代理发起 POST 请求", Type: "common"},
+		{Method: "PATCH", Route: "/api/proxy", Name: "【代理 API】代理发起 PATCH 请求", Type: "common"},
+		{Method: "DELETE", Route: "/api/proxy", Name: "【代理 API】代理发起 DELETE 请求", Type: "common"},
+		{Method: "POST", Route: "/api/links/apply", Name: "【友链 API】申请友链", Type: "login"},
 	}
 
 	// 基础接口
 	basics := map[string]string{
-		"tags":        "【标签 API】",
-		"users":       "【用户 API】",
-		"links":       "【友链 API】",
-		"banner":      "【轮播 API】",
-		"config":      "【配置 API】",
-		"article":     "【文章 API】",
-		"comment":     "【评论 API】",
-		"placard":     "【公告 API】",
-		"api-keys":    "【接口密钥 API】",
-		"auth-group":  "【权限分组 API】",
-		"auth-pages":  "【页面权限 API】",
-		"auth-rules":  "【权限规则 API】",
-		"links-group": "【友链分组 API】",
+		"tags":          "【标签 API】",
+		"pages":         "【页面 API】",
+		"users":         "【用户 API】",
+		"links":         "【友链 API】",
+		"banner":        "【轮播 API】",
+		"config":        "【配置 API】",
+		"article":       "【文章 API】",
+		"comment":       "【评论 API】",
+		"placard":       "【公告 API】",
+		"api-keys":      "【接口密钥 API】",
+		"auth-group":    "【权限分组 API】",
+		"auth-pages":    "【页面权限 API】",
+		"auth-rules":    "【权限规则 API】",
+		"links-group":   "【友链分组 API】",
 		"article-group": "【文章分组 API】",
 	}
 
@@ -141,12 +143,17 @@ func InitAuthRules() {
 
 			method := strings.ToUpper(cast.ToString(item.Method))
 
-			tx := DB.Model(&item).Where("route", item.Route).Where("method", method).Save(&AuthRules{
+			var table AuthRules
+
+			table = AuthRules{
+				Type:   item.Type,
 				Name:   cast.ToString(item.Name),
 				Method: cast.ToString(item.Method),
 				Route:  cast.ToString(item.Route),
 				Hash:   facade.Hash.Sum32(fmt.Sprintf("[%s]%s", method, item.Route)),
-			})
+			}
+
+			tx := DB.Model(&item).Where("route", item.Route).Where("method", method).Save(&table)
 			if tx.Error != nil {
 				if strings.Contains(tx.Error.Error(), "已存在") {
 					return
@@ -164,63 +171,34 @@ func InitAuthRules() {
 func setRuleType() {
 
 	rules := []AuthRules{
-		{Method: "POST", 	 Route: "/api/comm/login", 		  Type: "common"},
-		{Method: "POST", 	 Route: "/api/comm/social-login", Type: "common"},
-		{Method: "POST", 	 Route: "/api/comm/register", 	  Type: "common"},
-		{Method: "POST", 	 Route: "/api/comm/check-token",  Type: "common"},
-		{Method: "DELETE",   Route: "/api/comm/logout",       Type: "common"},
-		{Method: "GET", 	 Route: "/api/test", 		      Type: "common"},
-		{Method: "GET", 	 Route: "/api/test/request",      Type: "common"},
-		{Method: "PUT", 	 Route: "/api/test/request",      Type: "common"},
-		{Method: "POST",     Route: "/api/test/request",      Type: "common"},
-		{Method: "DELETE",   Route: "/api/test/request",      Type: "common"},
-		{Method: "GET", 	 Route: "/api/file/rand", 		  Type: "common"},
-		{Method: "GET", 	 Route: "/api/file/to-base64", 	  Type: "common"},
-		{Method: "GET", Route: "/api/users/one", 		      Type: "common"},
-		{Method: "GET", Route: "/api/users/all", 		      Type: "common"},
-		{Method: "GET", Route: "/api/users/count",  	      Type: "common"},
-		{Method: "GET", Route: "/api/users/column", 	      Type: "common"},
-		{Method: "GET", Route: "/api/banner/one", 		      Type: "common"},
-		{Method: "GET", Route: "/api/banner/all", 		      Type: "common"},
-		{Method: "GET", Route: "/api/banner/count", 	      Type: "common"},
-		{Method: "GET", Route: "/api/banner/column", 	      Type: "common"},
-		{Method: "GET", Route: "/api/tags/one", 		      Type: "common"},
-		{Method: "GET", Route: "/api/tags/all", 		      Type: "common"},
-		{Method: "GET", Route: "/api/tags/count", 		      Type: "common"},
-		{Method: "GET", Route: "/api/tags/column", 		      Type: "common"},
-		{Method: "GET", Route: "/api/placard/one", 		      Type: "common"},
-		{Method: "GET", Route: "/api/placard/all", 		      Type: "common"},
-		{Method: "GET", Route: "/api/placard/count", 	      Type: "common"},
-		{Method: "GET", Route: "/api/placard/column", 	      Type: "common"},
-		{Method: "GET", Route: "/api/links/one", 		      Type: "common"},
-		{Method: "GET", Route: "/api/links/all", 		      Type: "common"},
-		{Method: "GET", Route: "/api/links/count", 		      Type: "common"},
-		{Method: "GET", Route: "/api/links/column", 	      Type: "common"},
-		{Method: "GET", Route: "/api/links-group/one", 	      Type: "common"},
-		{Method: "GET", Route: "/api/links-group/all",        Type: "common"},
-		{Method: "GET", Route: "/api/links-group/count",      Type: "common"},
-		{Method: "GET", Route: "/api/links-group/column",     Type: "common"},
-		{Method: "GET", Route: "/api/config/one", 		      Type: "common"},
-		{Method: "GET", Route: "/api/config/all", 		      Type: "common"},
-		{Method: "GET", Route: "/api/config/count", 	      Type: "common"},
-		{Method: "GET", Route: "/api/config/column", 	      Type: "common"},
-		{Method: "GET", Route: "/api/article/one", 		      Type: "common"},
-		{Method: "GET", Route: "/api/article/all", 		      Type: "common"},
-		{Method: "GET", Route: "/api/article/count", 	      Type: "common"},
-		{Method: "GET", Route: "/api/article/column", 	      Type: "common"},
-		{Method: "GET", Route: "/api/article-group/one",      Type: "common"},
-		{Method: "GET", Route: "/api/article-group/all",      Type: "common"},
-		{Method: "GET", Route: "/api/article-group/count",    Type: "common"},
-		{Method: "GET", Route: "/api/article-group/column",   Type: "common"},
-		{Method: "GET", Route: "/api/comment/one", 			  Type: "common"},
-		{Method: "GET", Route: "/api/comment/all", 			  Type: "common"},
-		{Method: "GET", Route: "/api/comment/count", 		  Type: "common"},
-		{Method: "GET", Route: "/api/comment/column", 		  Type: "common"},
-		{Method: "GET", Route: "/api/auth-pages/one", 		  Type: "login"},
-		{Method: "GET", Route: "/api/auth-pages/all", 		  Type: "login"},
-		{Method: "GET", Route: "/api/auth-pages/count", 	  Type: "login"},
-		{Method: "GET", Route: "/api/auth-pages/column", 	  Type: "login"},
-		{Method: "POST",Route: "/api/users/save", Remark:"勾选后，拥有该权限的用户不仅可以修改所有人的用户信息，还可以通过GET请求直接获取到所有用户的全部信息（包括账号、邮箱和电话），请谨慎使用"},
+		{Method: "POST", Route: "/api/users/save", Remark: "勾选后，拥有该权限的用户不仅可以修改所有人的用户信息，还可以通过GET请求直接获取到所有用户的全部信息（包括账号、邮箱和电话），请谨慎使用"},
+	}
+
+	// 公共接口
+	common := map[string][]string{
+		"tags":          {"one", "all", "count", "column"},
+		"users":         {"one", "all", "count", "column"},
+		"links":         {"one", "all", "count", "column"},
+		"pages":         {"one", "all", "count", "column"},
+		"banner":        {"one", "all", "count", "column"},
+		"config":        {"one", "all", "count", "column"},
+		"article":       {"one", "all", "count", "column"},
+		"placard":       {"one", "all", "count", "column"},
+		"comment":       {"one", "all", "count", "column"},
+		"auth-pages":    {"one", "all", "count", "column"},
+		"links-group":   {"one", "all", "count", "column"},
+		"article-group": {"one", "all", "count", "column"},
+	}
+
+	// 批量生成公共接口
+	for key, value := range common {
+		for _, val := range value {
+			rules = append(rules, AuthRules{
+				Method: "GET",
+				Route:  "/api/" + key + "/" + val,
+				Type:   "common",
+			})
+		}
 	}
 
 	wg := sync.WaitGroup{}

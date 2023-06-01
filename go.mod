@@ -21,11 +21,11 @@ require (
 	github.com/qiniu/go-sdk/v7 v7.15.0
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/spf13/cast v1.5.1
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.667
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.667
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.668
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.668
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.41
 	github.com/unrolled/secure v1.13.0
-	github.com/unti-io/go-utils v1.1.7
+	github.com/unti-io/go-utils v1.1.8
 	go.uber.org/zap v1.24.0
 	golang.org/x/time v0.3.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
@@ -71,7 +71,7 @@ require (
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.15.0 // indirect
+	github.com/spf13/viper v1.16.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect

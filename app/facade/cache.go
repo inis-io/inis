@@ -3,13 +3,11 @@ package facade
 import (
 	"context"
 	"fmt"
-	"github.com/allegro/bigcache/v3"
 	"github.com/fsnotify/fsnotify"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"reflect"
-	debugs "runtime/debug"
 	"strings"
 	"time"
 )
@@ -30,8 +28,6 @@ func init() {
 }
 
 const (
-	// CacheModeLocal - 本地缓存
-	CacheModeLocal = "local"
 	// CacheModeRedis - Redis缓存
 	CacheModeRedis = "redis"
 )
@@ -46,12 +42,8 @@ const (
  */
 func NewCache(mode any) CacheInterface {
 	switch strings.ToLower(cast.ToString(mode)) {
-	case CacheModeLocal:
-		Cache = BigCache
 	case CacheModeRedis:
 		Cache = Redis
-	default:
-		Cache = BigCache
 	}
 	return Cache
 }
@@ -66,15 +58,15 @@ func initCacheToml() {
 		Mode: "toml",
 		Name: "cache",
 		Content: utils.Replace(TempCache, map[string]any{
-			"${api}": "false",
-			"${default}": "local",
-			"${local.expire}": 300,
-			"${redis.host}": "localhost",
-			"${redis.port}": "6379",
-			"${redis.password}" : "",
-			"${redis.expire}" : 7200,
-			"${redis.prefix}" : "inis:",
-			"${redis.database}" : 0,
+			"${open}":           "false",
+			"${default}":        "redis",
+			"${local.expire}":   300,
+			"${redis.host}":     "localhost",
+			"${redis.port}":     "6379",
+			"${redis.password}": "",
+			"${redis.expire}":   7200,
+			"${redis.prefix}":   "inis:",
+			"${redis.database}": 0,
 		}),
 	}).Read()
 
@@ -112,31 +104,9 @@ func initCache() {
 		Expire: redisExpire,
 	}
 
-	localExpire := time.Duration(cast.ToInt(CacheToml.Get("local.expire", 7200))) * time.Second
-	localClient, err := bigcache.New(context.Background(), bigcache.DefaultConfig(localExpire))
-	if err != nil {
-		Log.Error(map[string]any{
-			"error":     err,
-			"stack":     string(debugs.Stack()),
-			"func_name": utils.Caller().FuncName,
-			"file_name": utils.Caller().FileName,
-			"file_line": utils.Caller().Line,
-		}, "本地缓存初始化失败")
-	}
-
-	// 本地缓存
-	BigCache = &LocalCacheStruct{
-		Client: localClient,
-		Expire: localExpire,
-	}
-
 	switch cast.ToString(CacheToml.Get("default")) {
 	case "redis":
 		Cache = Redis
-	case "local":
-		Cache = BigCache
-	default:
-		Cache = BigCache
 	}
 }
 
@@ -148,7 +118,6 @@ func initCache() {
  */
 var Cache CacheInterface
 var Redis *RedisCacheStruct
-var BigCache *LocalCacheStruct
 
 type CacheInterface interface {
 	// Has
@@ -221,7 +190,7 @@ func (this *RedisCacheStruct) Get(key any) (value any) {
 
 	ctx := context.Background()
 
-	result, err := this.Client.Get(ctx, this.Prefix + cast.ToString(key)).Result()
+	result, err := this.Client.Get(ctx, this.Prefix+cast.ToString(key)).Result()
 
 	return utils.Ternary[any](err != nil, nil, utils.Json.Decode(result))
 }
@@ -265,10 +234,10 @@ func (this *RedisCacheStruct) DelPrefix(prefix ...any) (ok bool) {
 		// 判断是否为切片
 		if reflect.ValueOf(value).Kind() == reflect.Slice {
 			for _, val := range cast.ToSlice(value) {
-				prefixes = append(prefixes, this.Prefix + cast.ToString(val) + "*")
+				prefixes = append(prefixes, this.Prefix+cast.ToString(val)+"*")
 			}
 		} else {
-			prefixes = append(prefixes, this.Prefix + cast.ToString(value) + "*")
+			prefixes = append(prefixes, this.Prefix+cast.ToString(value)+"*")
 		}
 	}
 
@@ -284,12 +253,12 @@ func (this *RedisCacheStruct) DelPrefix(prefix ...any) (ok bool) {
 	// 去重 - 去空
 	keys = cast.ToStringSlice(utils.Array.Empty(utils.ArrayUnique(keys)))
 
-    if len(keys) > 0 {
-        err := this.Client.Del(ctx, keys...).Err()
-        if err != nil {
-            return false
-        }
-    }
+	if len(keys) > 0 {
+		err := this.Client.Del(ctx, keys...).Err()
+		if err != nil {
+			return false
+		}
+	}
 
 	return true
 }
@@ -334,12 +303,12 @@ func (this *RedisCacheStruct) DelTags(tag ...any) (ok bool) {
 	// 去重 - 去空
 	keys = cast.ToStringSlice(utils.Array.Empty(utils.ArrayUnique(keys)))
 
-    if len(keys) > 0 {
-        err := this.Client.Del(ctx, keys...).Err()
-        if err != nil {
-            return false
-        }
-    }
+	if len(keys) > 0 {
+		err := this.Client.Del(ctx, keys...).Err()
+		if err != nil {
+			return false
+		}
+	}
 
 	return true
 }
@@ -349,53 +318,4 @@ func (this *RedisCacheStruct) Clear() (ok bool) {
 	ctx := context.Background()
 	err := this.Client.FlushDB(ctx).Err()
 	return utils.Ternary[bool](err != nil, false, true)
-}
-
-type LocalCacheStruct struct {
-	Client *bigcache.BigCache
-	Expire time.Duration
-}
-
-func (this *LocalCacheStruct) Has(key any) (ok bool) {
-
-	_, err := this.Client.Get(cast.ToString(key))
-	return utils.Ternary[bool](err != nil, false, true)
-}
-
-func (this *LocalCacheStruct) Get(key any) (value any) {
-
-	result, err := this.Client.Get(cast.ToString(key))
-	return utils.Ternary[any](err != nil, nil, utils.Json.Decode(string(result)))
-}
-
-func (this *LocalCacheStruct) Set(key any, value any, expire ...any) bool {
-
-	err := this.Client.Set(cast.ToString(key), []byte(utils.Json.Encode(value)))
-	return utils.Ternary[bool](err != nil, false, true)
-}
-
-func (this *LocalCacheStruct) Del(key any) (ok bool) {
-
-	err := this.Client.Delete(cast.ToString(key))
-	return utils.Ternary[bool](err != nil, false, true)
-}
-
-func (this *LocalCacheStruct) Clear() (ok bool) {
-
-	err := this.Client.Reset()
-	if err != nil {
-		return false
-	}
-
-	return true
-}
-
-// DelPrefix - 未来实现
-func (this *LocalCacheStruct) DelPrefix(prefix ...any) (ok bool) {
-	return false
-}
-
-// DelTags - 未来实现
-func (this *LocalCacheStruct) DelTags(tag ...any) (ok bool) {
-	return false
 }

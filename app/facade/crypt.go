@@ -88,13 +88,17 @@ type JwtStruct struct {
 
 // JwtCreate 创建token
 func JwtCreate(data map[string]any) (result string, err error) {
+
+	// 过期时间戳
+	expire := cast.ToInt64(utils.Calc(AppToml.Get("jwt.expire", "7200")))
+
 	return JWT.NewWithClaims(JWT.SigningMethodHS256, configJwt{
 		Data: data,
 		StandardClaims: JWT.StandardClaims{
-			ExpiresAt: time.Now().Unix() + cast.ToInt64(AppToml.Get("jwt.expire", "7200")), // 过期时间戳
-			IssuedAt:  time.Now().Unix(),                                                   // 当前时间戳
-			Issuer:    cast.ToString(AppToml.Get("jwt.issuer", "unti")),                    // 颁发者签名
-			Subject:   cast.ToString(AppToml.Get("jwt.subject", "unti-io")),                // 签名主题
+			ExpiresAt: time.Now().Unix() + expire,
+			IssuedAt:  time.Now().Unix(),                                    // 当前时间戳
+			Issuer:    cast.ToString(AppToml.Get("jwt.issuer", "unti")),     // 颁发者签名
+			Subject:   cast.ToString(AppToml.Get("jwt.subject", "unti-io")), // 签名主题
 		},
 	}).SignedString([]byte(cast.ToString(AppToml.Get("jwt.secret", "inis"))))
 }
@@ -230,7 +234,6 @@ func (this *CipherRequest) Decrypt(text any) (result *CipherResponse) {
 }
 
 type HashStruct struct {
-
 }
 
 var Hash = &HashStruct{}

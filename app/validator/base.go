@@ -28,6 +28,8 @@ func NewValid(table any, params map[string]any) (err error) {
 	switch strings.ToLower(cast.ToString(table)) {
 	case "tags":
 		item = &Tags{}
+	case "pages":
+		item = &Pages{}
 	case "users":
 		item = &Users{}
 	case "links":
