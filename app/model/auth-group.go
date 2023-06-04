@@ -42,6 +42,7 @@ func InitAuthGroup() {
 		Name:    "超级管理员",
 		Rules:   "all",
 		Uids:    "|1|",
+		Root: 	 1,
 		Default: 1,
 		Remark:  "超级管理员，拥有所有权限！",
 	})
