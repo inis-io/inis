@@ -482,7 +482,7 @@ func (this *Comm) checkToken(ctx *gin.Context) {
 
 	delete(item, "password")
 
-	this.json(ctx, map[string]any{
+	this.json(ctx, gin.H{
 		"user":       item,
 		"token":      token,
 		"valid_time": valid,

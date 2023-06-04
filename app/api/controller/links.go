@@ -280,9 +280,7 @@ func (this *Links) create(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, map[string]any{
-		"id": table.Id,
-	}, facade.Lang(ctx, "创建成功！"), 200)
+	this.json(ctx, gin.H{ "id": table.Id }, facade.Lang(ctx, "创建成功！"), 200)
 }
 
 // update 更新数据
@@ -334,9 +332,7 @@ func (this *Links) update(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, map[string]any{
-		"id": table.Id,
-	}, facade.Lang(ctx, "更新成功！"), 200)
+	this.json(ctx, gin.H{ "id": table.Id }, facade.Lang(ctx, "更新成功！"), 200)
 }
 
 // count 统计数据
@@ -471,7 +467,7 @@ func (this *Links) delete(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "删除成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "删除成功！"), 200)
 }
 
 // clear 清空回收站
@@ -480,15 +476,30 @@ func (this *Links) clear(ctx *gin.Context) {
 	// 表数据结构体
 	table := model.Links{}
 
+	item  := facade.DB.Model(&table).OnlyTrashed()
+
+	// 越权 - 既没有管理权限，只能删除自己的数据
+	if !this.meta.root(ctx) {
+		item.Where("uid", this.user(ctx).Id)
+	}
+
+	ids := utils.Unity.Ids(item.Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 找到所有软删除的数据
-	tx := facade.DB.Model(&table).OnlyTrashed().Force().Delete()
+	tx := item.Force().Delete()
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "清空失败！"), 400)
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "清空成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "清空成功！"), 200)
 }
 
 // restore 恢复数据
@@ -531,5 +542,5 @@ func (this *Links) restore(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "恢复成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "恢复成功！"), 200)
 }

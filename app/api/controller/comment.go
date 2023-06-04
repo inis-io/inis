@@ -285,9 +285,7 @@ func (this *Comment) create(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, map[string]any{
-		"id": table.Id,
-	}, facade.Lang(ctx, "创建成功！"), 200)
+	this.json(ctx, gin.H{ "id": table.Id }, facade.Lang(ctx, "创建成功！"), 200)
 }
 
 // update 更新数据
@@ -323,17 +321,23 @@ func (this *Comment) update(ctx *gin.Context) {
 		}
 	}
 
-	// 更新数据 - Scan() 方法用于将数据扫描到结构体中，使用的位置很重要
-	tx := facade.DB.Model(&table).WithTrashed().Where("id", params["id"]).Scan(&table).Update(async.Result())
+	item := facade.DB.Model(&table).WithTrashed().Where("id", params["id"])
+
+	// 越权 - 既没有管理权限，也不是自己的数据
+	if !this.meta.root(ctx) && cast.ToInt(item.Find()["uid"]) != this.user(ctx).Id {
+		this.json(ctx, nil, facade.Lang(ctx, "无权限！"), 403)
+		return
+	}
+
+	// 更新数据 - Scan() 解析结构体，防止 table 拿不到数据
+	tx := item.Scan(&table).Update(async.Result())
 
 	if tx.Error != nil {
 		this.json(ctx, nil, tx.Error.Error(), 400)
 		return
 	}
 
-	this.json(ctx, map[string]any{
-		"id": table.Id,
-	}, facade.Lang(ctx, "更新成功！"), 200)
+	this.json(ctx, gin.H{ "id": table.Id }, facade.Lang(ctx, "更新成功！"), 200)
 }
 
 // count 统计数据
@@ -401,15 +405,31 @@ func (this *Comment) remove(ctx *gin.Context) {
 		return
 	}
 
+	item := facade.DB.Model(&table)
+
+	// 越权 - 既没有管理权限，只能删除自己的数据
+	if !this.meta.root(ctx) {
+		item.Where("uid", this.user(ctx).Id)
+	}
+
+	// 得到允许操作的 id 数组
+	ids = utils.Unity.Ids(item.WhereIn("id", ids).Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 软删除
-	tx := facade.DB.Model(&table).Delete(ids)
+	tx := item.Delete(ids)
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "删除失败！"), 400)
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "删除成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "删除成功！"), 200)
 }
 
 // delete 真实删除
@@ -428,15 +448,31 @@ func (this *Comment) delete(ctx *gin.Context) {
 		return
 	}
 
+	item := facade.DB.Model(&table).WithTrashed()
+
+	// 越权 - 既没有管理权限，只能删除自己的数据
+	if !this.meta.root(ctx) {
+		item.Where("uid", this.user(ctx).Id)
+	}
+
+	// 得到允许操作的 id 数组
+	ids = utils.Unity.Ids(item.WhereIn("id", ids).Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 真实删除
-	tx := facade.DB.Model(&table).WithTrashed().Force().Delete(ids)
+	tx := item.Force().Delete(ids)
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "删除失败！"), 400)
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "删除成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "删除成功！"), 200)
 }
 
 // clear 清空回收站
@@ -445,15 +481,30 @@ func (this *Comment) clear(ctx *gin.Context) {
 	// 表数据结构体
 	table := model.Comment{}
 
+	item  := facade.DB.Model(&table).OnlyTrashed()
+
+	// 越权 - 既没有管理权限，只能删除自己的数据
+	if !this.meta.root(ctx) {
+		item.Where("uid", this.user(ctx).Id)
+	}
+
+	ids := utils.Unity.Ids(item.Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 找到所有软删除的数据
-	tx := facade.DB.Model(&table).OnlyTrashed().Force().Delete()
+	tx := item.Force().Delete()
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "清空失败！"), 400)
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "清空成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "清空成功！"), 200)
 }
 
 // restore 恢复数据
@@ -472,13 +523,29 @@ func (this *Comment) restore(ctx *gin.Context) {
 		return
 	}
 
+	item := facade.DB.Model(&table)
+
+	// 越权 - 既没有管理权限，只能删除自己的数据
+	if !this.meta.root(ctx) {
+		item.Where("uid", this.user(ctx).Id)
+	}
+
+	// 得到允许操作的 id 数组
+	ids = utils.Unity.Ids(item.WhereIn("id", ids).Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 还原数据
-	tx := facade.DB.Model(&table).Restore(ids)
+	tx := item.Restore(ids)
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "恢复失败！"), 400)
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "恢复成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "恢复成功！"), 200)
 }

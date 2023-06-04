@@ -73,7 +73,6 @@ func InitAuthRules() {
 		{Method: "POST", Route: "/api/proxy", Name: "【代理 API】代理发起 POST 请求", Type: "common"},
 		{Method: "PATCH", Route: "/api/proxy", Name: "【代理 API】代理发起 PATCH 请求", Type: "common"},
 		{Method: "DELETE", Route: "/api/proxy", Name: "【代理 API】代理发起 DELETE 请求", Type: "common"},
-		{Method: "POST", Route: "/api/links/apply", Name: "【友链 API】申请友链", Type: "login"},
 	}
 
 	// 基础接口

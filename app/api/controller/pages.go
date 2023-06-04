@@ -280,9 +280,7 @@ func (this *Pages) create(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, map[string]any{
-		"id": table.Id,
-	}, facade.Lang(ctx, "创建成功！"), 200)
+	this.json(ctx, gin.H{ "id": table.Id }, facade.Lang(ctx, "创建成功！"), 200)
 }
 
 // update 更新数据
@@ -329,9 +327,7 @@ func (this *Pages) update(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, map[string]any{
-		"id": table.Id,
-	}, facade.Lang(ctx, "更新成功！"), 200)
+	this.json(ctx, gin.H{ "id": table.Id }, facade.Lang(ctx, "更新成功！"), 200)
 }
 
 // count 统计数据
@@ -399,15 +395,26 @@ func (this *Pages) remove(ctx *gin.Context) {
 		return
 	}
 
+	item := facade.DB.Model(&table)
+
+	// 得到允许操作的 id 数组
+	ids = utils.Unity.Ids(item.WhereIn("id", ids).Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 软删除
-	tx := facade.DB.Model(&table).Delete(ids)
+	tx := item.Delete(ids)
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "删除失败！"), 400)
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "删除成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "删除成功！"), 200)
 }
 
 // delete 真实删除
@@ -426,15 +433,26 @@ func (this *Pages) delete(ctx *gin.Context) {
 		return
 	}
 
+	item := facade.DB.Model(&table).WithTrashed()
+
+	// 得到允许操作的 id 数组
+	ids = utils.Unity.Ids(item.WhereIn("id", ids).Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 真实删除
-	tx := facade.DB.Model(&table).WithTrashed().Force().Delete(ids)
+	tx := item.Force().Delete(ids)
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "删除失败！"), 400)
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "删除成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "删除成功！"), 200)
 }
 
 // clear 清空回收站
@@ -443,15 +461,25 @@ func (this *Pages) clear(ctx *gin.Context) {
 	// 表数据结构体
 	table := model.Pages{}
 
+	item  := facade.DB.Model(&table).OnlyTrashed()
+
+	ids := utils.Unity.Ids(item.Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 找到所有软删除的数据
-	tx := facade.DB.Model(&table).OnlyTrashed().Force().Delete()
+	tx := item.Force().Delete()
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "清空失败！"), 400)
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "清空成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "清空成功！"), 200)
 }
 
 // restore 恢复数据
@@ -470,13 +498,24 @@ func (this *Pages) restore(ctx *gin.Context) {
 		return
 	}
 
+	item := facade.DB.Model(&table)
+
+	// 得到允许操作的 id 数组
+	ids = utils.Unity.Ids(item.WhereIn("id", ids).Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 还原数据
-	tx := facade.DB.Model(&table).Restore(ids)
+	tx := item.Restore(ids)
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "恢复失败！"), 400)
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "恢复成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "恢复成功！"), 200)
 }

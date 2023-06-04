@@ -276,9 +276,7 @@ func (this *AuthGroup) create(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, map[string]any{
-		"id": table.Id,
-	}, facade.Lang(ctx, "创建成功！"), 200)
+	this.json(ctx, gin.H{ "id": table.Id }, facade.Lang(ctx, "创建成功！"), 200)
 }
 
 // update 更新数据
@@ -322,9 +320,7 @@ func (this *AuthGroup) update(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, map[string]any{
-		"id": table.Id,
-	}, facade.Lang(ctx, "更新成功！"), 200)
+	this.json(ctx, gin.H{ "id": table.Id }, facade.Lang(ctx, "更新成功！"), 200)
 }
 
 // count 统计数据
@@ -384,23 +380,34 @@ func (this *AuthGroup) remove(ctx *gin.Context) {
 	// 获取请求参数
 	params := this.params(ctx)
 
-	if utils.Is.Empty(params["ids"]) {
+	// id 数组 - 参数归一化
+	ids := utils.Unity.Ids(params["ids"])
+
+	if utils.Is.Empty(ids) {
 		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "ids"), 400)
 		return
 	}
 
+	item := facade.DB.Model(&table).Where("default", "!=", 1)
+
+	// 得到允许操作的 id 数组
+	ids = utils.Unity.Ids(item.WhereIn("id", ids).Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 软删除
-	tx := facade.DB.Model(&table).Delete(facade.DB.Model(&table).Where([]any{
-		[]any{"default", "!=", 1}, // 禁止删除默认数据
-		[]any{"id", "in", params["ids"]},
-	}).Column("id"))
+	tx := item.Delete(ids)
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "删除失败！"), 400)
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "删除成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "删除成功！"), 200)
 }
 
 // delete 真实删除
@@ -419,18 +426,26 @@ func (this *AuthGroup) delete(ctx *gin.Context) {
 		return
 	}
 
+	item := facade.DB.Model(&table).WithTrashed().Where("default", "!=", 1)
+
+	// 得到允许操作的 id 数组
+	ids = utils.Unity.Ids(item.WhereIn("id", ids).Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 真实删除
-	tx := facade.DB.Model(&table).WithTrashed().Force().Delete(facade.DB.Model(&table).Where([]any{
-		[]any{"`default`", "!=", 1}, // 禁止删除默认数据
-		[]any{"id", "in", ids},
-	}).Column("id"))
+	tx := item.Force().Delete(ids)
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "删除失败！"), 400)
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "删除成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "删除成功！"), 200)
 }
 
 // clear 清空回收站
@@ -439,15 +454,25 @@ func (this *AuthGroup) clear(ctx *gin.Context) {
 	// 表数据结构体
 	table := model.AuthGroup{}
 
+	item  := facade.DB.Model(&table).OnlyTrashed()
+
+	ids := utils.Unity.Ids(item.Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 找到所有软删除的数据
-	tx := facade.DB.Model(&table).OnlyTrashed().Force().Delete()
+	tx := item.Force().Delete()
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "清空失败！"), 400)
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "清空成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "清空成功！"), 200)
 }
 
 // restore 恢复数据
@@ -466,15 +491,26 @@ func (this *AuthGroup) restore(ctx *gin.Context) {
 		return
 	}
 
+	item := facade.DB.Model(&table)
+
+	// 得到允许操作的 id 数组
+	ids = utils.Unity.Ids(item.WhereIn("id", ids).Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 还原数据
-	tx := facade.DB.Model(&table).Restore(ids)
+	tx := item.Restore(ids)
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "恢复失败！"), 400)
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "恢复成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "恢复成功！"), 200)
 }
 
 // uids 更新用户组成员
@@ -494,20 +530,6 @@ func (this *AuthGroup) uids(ctx *gin.Context) {
 
 		// id 数组 - 参数归一化
 		ids := utils.Unity.Ids(params["ids"])
-
-		// var list []any
-		//
-		// // 判断 ids 是否为字符串
-		// if utils.Is.String(params["ids"]) {
-		// 	// 正则表达式，以非数字非英文的特殊字符分割字符串
-		// 	reg := regexp.MustCompile(`[^0-9a-zA-Z]+`)
-		// 	// 以特殊字符分割字符串
-		// 	ids := reg.Split(cast.ToString(params["ids"]), -1)
-		// 	// 去重去空
-		// 	list = utils.ArrayUnique(utils.ArrayEmpty(ids))
-		// } else {
-		// 	list = utils.ArrayUnique(utils.ArrayEmpty(cast.ToSlice(params["ids"])))
-		// }
 
 		// 需要被剔除的分组
 		cull := facade.DB.Model(&table).WithTrashed()
