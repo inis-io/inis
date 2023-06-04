@@ -147,11 +147,9 @@ func (this *ApiKeys) one(ctx *gin.Context) {
 		item := mold.Where(table).Find()
 
 		// 缓存数据
-		go func() {
-			if this.cache.enable(ctx) {
-				facade.Cache.Set(cacheName, item)
-			}
-		}()
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, item)
+		}
 
 		data = item
 	}
@@ -211,11 +209,9 @@ func (this *ApiKeys) all(ctx *gin.Context) {
 		item := mold.Where(table).Limit(limit).Page(page).Order(params["order"]).Select()
 
 		// 缓存数据
-		go func() {
-			if this.cache.enable(ctx) {
-				facade.Cache.Set(cacheName, item)
-			}
-		}()
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, item)
+		}
 
 		data = item
 	}
@@ -442,6 +438,23 @@ func (this *ApiKeys) remove(ctx *gin.Context) {
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "删除失败！"), 400)
 		return
+	}
+
+	// 如果是全部删除，检查是否开启了 API_KEY
+	if facade.DB.Model(&model.ApiKeys{}).Count() == 0 {
+
+		item := facade.DB.Model(&model.Config{}).Where("key", "SYSTEM_API_KEY")
+
+		if cast.ToInt(item.Find()["value"]) == 1 {
+			res := item.Update(map[string]any{
+				"value": 0,
+			})
+			if res.Error == nil {
+				go facade.Cache.DelTags("SYSTEM_API_KEY")
+				this.json(ctx, nil, facade.Lang(ctx, "删除成功！<br>同时检测到您开启了API_KEY，但无密钥可用。<br>兔子已为您自动关闭API_KEY功能！"), 200)
+				return
+			}
+		}
 	}
 
 	this.json(ctx, nil, facade.Lang(ctx, "删除成功！"), 200)

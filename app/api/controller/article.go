@@ -146,11 +146,9 @@ func (this *Article) one(ctx *gin.Context) {
 		item := mold.Where(table).Find()
 
 		// 缓存数据
-		go func() {
-			if this.cache.enable(ctx) {
-				facade.Cache.Set(cacheName, item)
-			}
-		}()
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, item)
+		}
 
 		data = item
 	}
@@ -210,11 +208,9 @@ func (this *Article) all(ctx *gin.Context) {
 		item := mold.Where(table).Limit(limit).Page(page).Order(params["order"]).Select()
 
 		// 缓存数据
-		go func() {
-			if this.cache.enable(ctx) {
-				facade.Cache.Set(cacheName, item)
-			}
-		}()
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, item)
+		}
 
 		data = item
 	}
@@ -258,7 +254,7 @@ func (this *Article) create(ctx *gin.Context) {
 		return
 	}
 
-	uid := this.user(ctx).Id
+	uid := this.meta.user(ctx).Id
 	if uid == 0 {
 		this.json(ctx, nil, "请先登录！", 400)
 		return
@@ -266,7 +262,7 @@ func (this *Article) create(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Article{Uid: uid, CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
-	allow := []any{"title", "abstract", "content", "covers", "top", "tags", "group", "remark", "json", "text"}
+	allow := []any{"title", "abstract", "content", "covers", "top", "tags", "group", "editor", "remark", "json", "text"}
 
 	// 动态给结构体赋值
 	for key, val := range params {
@@ -311,7 +307,7 @@ func (this *Article) update(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Article{}
-	allow := []any{"title", "abstract", "content", "covers", "top", "tags", "group", "remark", "json", "text"}
+	allow := []any{"title", "abstract", "content", "covers", "top", "tags", "group", "editor", "remark", "json", "text"}
 	async := utils.Async[map[string]any]()
 
 	// 动态给结构体赋值

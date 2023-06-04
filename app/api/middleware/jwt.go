@@ -52,11 +52,9 @@ func Jwt() gin.HandlerFunc {
 		}  else {
 
 			user = facade.DB.Model(&model.Users{}).Find(jwt.Data["uid"])
-			go func() {
-				if cacheState {
-					facade.Cache.Set(cacheName, user, time.Duration(jwt.Valid)*time.Second)
-				}
-			}()
+			if cacheState {
+				go facade.Cache.Set(cacheName, user, time.Duration(jwt.Valid)*time.Second)
+			}
 		}
 
 		// 密码发生变化 - 强制退出

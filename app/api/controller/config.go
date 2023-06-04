@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"inis/app/facade"
@@ -151,11 +152,9 @@ func (this *Config) one(ctx *gin.Context) {
 		item := mold.Where(table).Find()
 
 		// 缓存数据
-		go func() {
-			if this.cache.enable(ctx) {
-				facade.Cache.Set(cacheName, item)
-			}
-		}()
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, item)
+		}
 
 		data = item
 	}
@@ -215,11 +214,9 @@ func (this *Config) all(ctx *gin.Context) {
 		item := mold.Where(table).Limit(limit).Page(page).Order(params["order"]).Select()
 
 		// 缓存数据
-		go func() {
-			if this.cache.enable(ctx) {
-				facade.Cache.Set(cacheName, item)
-			}
-		}()
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, item)
+		}
 
 		data = item
 	}
@@ -329,6 +326,9 @@ func (this *Config) update(ctx *gin.Context) {
 		this.json(ctx, nil, tx.Error.Error(), 400)
 		return
 	}
+
+	// 监听器
+	go this.watch(ctx)
 
 	this.json(ctx, map[string]any{
 		"id": table.Id,
@@ -481,4 +481,25 @@ func (this *Config) restore(ctx *gin.Context) {
 	}
 
 	this.json(ctx, nil, facade.Lang(ctx, "恢复成功！"), 200)
+}
+
+// watch 监听数据
+func (this *Config) watch(ctx *gin.Context) {
+
+	item := facade.DB.Model(&model.Config{}).Where("key", "SYSTEM_API_KEY").Find()
+	if cast.ToInt(item["value"]) == 1 {
+
+		ApiKeys := facade.DB.Model(&model.ApiKeys{})
+		// 检查 密钥 是否为空
+		if ApiKeys.Count() == 0 {
+			// 生成一个随机的UUID
+			UUID := uuid.New().String()
+			// 去除UUID中的横杠
+			UUID = strings.Replace(UUID, "-", "", -1)
+			ApiKeys.Create(&model.ApiKeys{
+				Value: strings.ToUpper(UUID),
+				Remark: "检测到您开启了API_KEY功能，但无可用密钥，兔子贴心的为您创建了一个密钥！不用谢，已为您自动生成五星好评！",
+			})
+		}
+	}
 }

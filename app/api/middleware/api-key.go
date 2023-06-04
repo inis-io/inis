@@ -8,8 +8,8 @@ import (
 	"inis/app/model"
 )
 
-// Security - 安全校验中间件
-func Security() gin.HandlerFunc {
+// ApiKey - 安全校验中间件
+func ApiKey() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
 		var open bool
@@ -28,12 +28,9 @@ func Security() gin.HandlerFunc {
 			// 转换为布尔值
 			open = cast.ToBool(item["value"])
 			// 设置缓存
-			go func() {
-				if cacheState {
-					// 存储到缓存中
-					facade.Cache.Set(cacheName, open)
-				}
-			}()
+			if cacheState {
+				go facade.Cache.Set(cacheName, open)
+			}
 		}
 
 		// 如果关闭了安全校验，则直接跳过
@@ -51,7 +48,7 @@ func Security() gin.HandlerFunc {
 		}
 
 		// 为空拦截请求
-		if utils.Is.Empty(key) {
+		if utils.Is.Empty(key) && !utils.In.Array(ctx.Request.URL.Path, []any{"/api/file/rand"}) {
 			ctx.JSON(200, gin.H{"code": 403, "msg": facade.Lang(ctx, "禁止非法操作！"), "data": nil})
 			ctx.Abort()
 			return
@@ -62,21 +59,21 @@ func Security() gin.HandlerFunc {
 
 		// 检查缓存是否存在
 		if cacheState && facade.Cache.Has(cacheColumn) {
+
 			keys = cast.ToStringSlice(facade.Cache.Get(cacheColumn))
+
 		} else {
 
 			// 获取所有的 key
 			keys = cast.ToStringSlice(facade.DB.Model(&model.ApiKeys{}).Column("value"))
 			// 设置缓存
-			go func() {
-				if cacheState {
-					// 存储到缓存中
-					facade.Cache.Set(cacheColumn, keys)
-				}
-			}()
+			if cacheState {
+				go facade.Cache.Set(cacheColumn, keys)
+			}
 		}
 
-		if !utils.InArray(key, keys) {
+		// 如果 key 不在 keys 中，并且不是随机图接口，则拦截请求
+		if !utils.InArray(key, keys) && !utils.In.Array(ctx.Request.URL.Path, []any{"/api/file/rand"}) {
 			ctx.JSON(200, gin.H{"code": 403, "msg": facade.Lang(ctx, "禁止非法操作！"), "data": nil})
 			ctx.Abort()
 			return

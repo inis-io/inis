@@ -146,11 +146,9 @@ func (this *Placard) one(ctx *gin.Context) {
 		item := mold.Where(table).Find()
 
 		// 缓存数据
-		go func() {
-			if this.cache.enable(ctx) {
-				facade.Cache.Set(cacheName, item)
-			}
-		}()
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, item)
+		}
 
 		data = item
 	}
@@ -210,11 +208,9 @@ func (this *Placard) all(ctx *gin.Context) {
 		item := mold.Where(table).Limit(limit).Page(page).Order(params["order"]).Select()
 
 		// 缓存数据
-		go func() {
-			if this.cache.enable(ctx) {
-				facade.Cache.Set(cacheName, item)
-			}
-		}()
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, item)
+		}
 
 		data = item
 	}

@@ -43,11 +43,9 @@ func QpsPoint() gin.HandlerFunc {
 
 			config = facade.DB.Model(&model.Config{}).Where("key", "SYSTEM_QPS").Find()
 			// 存储到缓存中
-			go func() {
-				if cacheState {
-					facade.Cache.Set(cacheName, config)
-				}
-			}()
+			if cacheState {
+				go facade.Cache.Set(cacheName, config)
+			}
 		}
 
 		// 如果未开启接口限流器 - 直接跳过
@@ -104,11 +102,9 @@ func QpsGlobal() gin.HandlerFunc {
 
 			config = facade.DB.Model(&model.Config{}).Where("key", "SYSTEM_QPS").Find()
 			// 存储到缓存中
-			go func() {
-				if cacheState {
-					facade.Cache.Set(cacheName, config)
-				}
-			}()
+			if cacheState {
+				go facade.Cache.Set(cacheName, config)
+			}
 		}
 
 		// 如果未开启接口限流器 - 直接跳过

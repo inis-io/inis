@@ -80,6 +80,7 @@ func initStorageToml() {
 		Name: "storage",
 		Content: utils.Replace(TempStorage, map[string]any{
 			"${default}": "local",
+			"${local.domain}": "",
 			"${oss.access_key_id}": "",
 			"${oss.access_key_secret}": "",
 			"${oss.endpoint}": "",
@@ -236,7 +237,7 @@ func (this *LocalStorageStruct) Upload(path string, reader io.Reader) (result *S
 
 	// 去除前面的 public
 	result.Path = strings.Replace(path, "public", "", 1)
-	result.Domain = "http://localhost:1000"
+	result.Domain = cast.ToString(StorageToml.Get("local.domain"))
 
 	return
 }

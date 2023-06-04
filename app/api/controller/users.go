@@ -147,7 +147,7 @@ func (this *Users) one(ctx *gin.Context) {
 		item := mold.Where(table).Find()
 
 		// 删除指定字段
-		if !utils.In.Array("[POST][/api/users/save]", model.UserRules(this.user(ctx).Id)) {
+		if !utils.In.Array("[POST][/api/users/save]", this.meta.rules(ctx)) {
 			delete(item, "email")
 			delete(item, "phone")
 			delete(item, "account")
@@ -155,11 +155,9 @@ func (this *Users) one(ctx *gin.Context) {
 		delete(item, "password")
 
 		// 缓存数据
-		go func() {
-			if this.cache.enable(ctx) {
-				facade.Cache.Set(cacheName, item)
-			}
-		}()
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, item)
+		}
 
 		data = item
 	}
@@ -218,10 +216,9 @@ func (this *Users) all(ctx *gin.Context) {
 		// 从数据库中获取数据
 		item := mold.Where(table).Limit(limit).Page(page).Order(params["order"]).Select()
 
-		rules := model.UserRules(this.user(ctx).Id)
 		// 删除指定字段
 		for _, val := range item {
-			if !utils.In.Array("[POST][/api/users/save]", rules) {
+			if !utils.In.Array("[POST][/api/users/save]", this.meta.rules(ctx)) {
 				delete(val, "email")
 				delete(val, "phone")
 				delete(val, "account")
@@ -230,11 +227,9 @@ func (this *Users) all(ctx *gin.Context) {
 		}
 
 		// 缓存数据
-		go func() {
-			if this.cache.enable(ctx) {
-				facade.Cache.Set(cacheName, item)
-			}
-		}()
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, item)
+		}
 
 		data = item
 	}
@@ -408,7 +403,7 @@ func (this *Users) column(ctx *gin.Context) {
 
 	item.WithoutField("password")
 
-	if !utils.In.Array("[POST][/api/users/save]", model.UserRules(this.user(ctx).Id)) {
+	if !utils.In.Array("[POST][/api/users/save]", this.meta.rules(ctx)) {
 		item.WithoutField("account")
 	}
 
@@ -446,7 +441,7 @@ func (this *Users) remove(ctx *gin.Context) {
 		return
 	}
 
-	if utils.In.Array(this.user(ctx).Id, ids) {
+	if utils.In.Array(this.meta.user(ctx).Id, ids) {
 		this.json(ctx, nil, facade.Lang(ctx, "不能删除自己！"), 400)
 		return
 	}
@@ -478,7 +473,7 @@ func (this *Users) delete(ctx *gin.Context) {
 		return
 	}
 
-	if utils.In.Array(this.user(ctx).Id, ids) {
+	if utils.In.Array(this.meta.user(ctx).Id, ids) {
 		this.json(ctx, nil, facade.Lang(ctx, "不能删除自己！"), 400)
 		return
 	}

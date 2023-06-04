@@ -17,7 +17,7 @@ func Route(Gin *gin.Engine) {
 		global.Params(),    // 解析参数
 		middle.Jwt(),       // 验证权限
 		middle.Rule(),      // 验证规则
-		middle.Security(),  // 安全校验
+		middle.ApiKey(),    // 安全校验
 	)
 
 	// 允许动态挂载的路由

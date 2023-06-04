@@ -44,7 +44,6 @@ func (this *Links) IPOST(ctx *gin.Context) {
 
 	allow := map[string]any{
 		"save":   this.save,
-		"apply":  this.apply,
 		"create": this.create,
 	}
 	err := this.call(allow, method, ctx)
@@ -147,11 +146,9 @@ func (this *Links) one(ctx *gin.Context) {
 		item := mold.Where(table).Find()
 
 		// 缓存数据
-		go func() {
-			if this.cache.enable(ctx) {
-				facade.Cache.Set(cacheName, item)
-			}
-		}()
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, item)
+		}
 
 		data = item
 	}
@@ -211,11 +208,9 @@ func (this *Links) all(ctx *gin.Context) {
 		item := mold.Where(table).Limit(limit).Page(page).Order(params["order"]).Select()
 
 		// 缓存数据
-		go func() {
-			if this.cache.enable(ctx) {
-				facade.Cache.Set(cacheName, item)
-			}
-		}()
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, item)
+		}
 
 		data = item
 	}
@@ -259,7 +254,7 @@ func (this *Links) create(ctx *gin.Context) {
 		return
 	}
 
-	uid := this.user(ctx).Id
+	uid := this.meta.user(ctx).Id
 	if uid == 0 {
 		this.json(ctx, nil, "请先登录！", 400)
 		return
@@ -323,8 +318,16 @@ func (this *Links) update(ctx *gin.Context) {
 		}
 	}
 
-	// 更新数据
-	tx := facade.DB.Model(&table).WithTrashed().Where("id", params["id"]).Update(async.Result())
+	item := facade.DB.Model(&table).WithTrashed().Where("id", params["id"])
+
+	// 越权 - 既没有管理权限，也不是自己的数据
+	if !this.meta.root(ctx) && cast.ToInt(item.Find()["uid"]) != this.user(ctx).Id {
+		this.json(ctx, nil, facade.Lang(ctx, "无权限！"), 403)
+		return
+	}
+
+	// 更新数据 - Scan() 解析结构体，防止 table 拿不到数据
+	tx := item.Scan(&table).Update(async.Result())
 
 	if tx.Error != nil {
 		this.json(ctx, nil, tx.Error.Error(), 400)
@@ -401,15 +404,31 @@ func (this *Links) remove(ctx *gin.Context) {
 		return
 	}
 
+	item := facade.DB.Model(&table)
+
+	// 越权 - 既没有管理权限，只能删除自己的数据
+	if !this.meta.root(ctx) {
+		item.Where("uid", this.user(ctx).Id)
+	}
+
+	// 得到允许操作的 id 数组
+	ids = utils.Unity.Ids(item.WhereIn("id", ids).Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 软删除
-	tx := facade.DB.Model(&table).Delete(ids)
+	tx := item.Delete(ids)
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "删除失败！"), 400)
 		return
 	}
 
-	this.json(ctx, nil, facade.Lang(ctx, "删除成功！"), 200)
+	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "删除成功！"), 200)
 }
 
 // delete 真实删除
@@ -428,8 +447,24 @@ func (this *Links) delete(ctx *gin.Context) {
 		return
 	}
 
+	item := facade.DB.Model(&table).WithTrashed()
+
+	// 越权 - 既没有管理权限，只能删除自己的数据
+	if !this.meta.root(ctx) {
+		item.Where("uid", this.user(ctx).Id)
+	}
+
+	// 得到允许操作的 id 数组
+	ids = utils.Unity.Ids(item.WhereIn("id", ids).Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 真实删除
-	tx := facade.DB.Model(&table).WithTrashed().Force().Delete(ids)
+	tx := item.Force().Delete(ids)
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "删除失败！"), 400)
@@ -472,8 +507,24 @@ func (this *Links) restore(ctx *gin.Context) {
 		return
 	}
 
+	item := facade.DB.Model(&table)
+
+	// 越权 - 既没有管理权限，只能删除自己的数据
+	if !this.meta.root(ctx) {
+		item.Where("uid", this.user(ctx).Id)
+	}
+
+	// 得到允许操作的 id 数组
+	ids = utils.Unity.Ids(item.WhereIn("id", ids).Column("id"))
+
+	// 无可操作数据
+	if utils.Is.Empty(ids) {
+		this.json(ctx, nil, facade.Lang(ctx, "无可操作数据！"), 204)
+		return
+	}
+
 	// 还原数据
-	tx := facade.DB.Model(&table).Restore(ids)
+	tx := item.Restore(ids)
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "恢复失败！"), 400)
@@ -481,64 +532,4 @@ func (this *Links) restore(ctx *gin.Context) {
 	}
 
 	this.json(ctx, nil, facade.Lang(ctx, "恢复成功！"), 200)
-}
-
-// apply 申请友链
-func (this *Links) apply(ctx *gin.Context) {
-
-	// 获取请求参数
-	params := this.params(ctx)
-	// 验证器
-	err := validator.NewValid("links", params)
-
-	// 参数校验不通过
-	if err != nil {
-		this.json(ctx, nil, err.Error(), 400)
-		return
-	}
-
-	user := this.user(ctx)
-	if user.Id == 0 {
-		this.json(ctx, nil, "请先登录！", 400)
-		return
-	}
-
-	// 如果没有传昵称，则使用当前登录用户的昵称
-	if utils.Is.Empty(params["nickname"]) {
-		params["nickname"] = user.Nickname
-	}
-
-	// 如果没有传头像，则使用当前登录用户的头像
-	if utils.Is.Empty(params["avatar"]) {
-		params["avatar"] = user.Avatar
-	}
-
-	// 如果没有描述，则使用当前登录用户的描述
-	if utils.Is.Empty(params["description"]) {
-		params["description"] = user.Description
-	}
-
-	// 表数据结构体
-	table := model.Links{Uid: user.Id, State: "check", CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
-	allow := []any{"nickname", "description", "url", "avatar", "target", "group", "json", "text"}
-
-	// 动态给结构体赋值
-	for key, val := range params {
-		// 防止恶意传入字段
-		if utils.In.Array(key, allow) {
-			utils.Struct.Set(&table, key, val)
-		}
-	}
-
-	// 添加数据
-	tx := facade.DB.Model(&table).Create(&table)
-
-	if tx.Error != nil {
-		this.json(ctx, nil, tx.Error.Error(), 400)
-		return
-	}
-
-	this.json(ctx, map[string]any{
-		"id": table.Id,
-	}, facade.Lang(ctx, "申请提交成功！"), 200)
 }

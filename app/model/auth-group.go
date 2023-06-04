@@ -9,6 +9,7 @@ type AuthGroup struct {
 	Id      int    `gorm:"type:int(32); comment:主键;" json:"id"`
 	Name    string `gorm:"comment:权限名称;" json:"name"`
 	Uids    string `gorm:"type:text; comment:用户ID;" json:"uids"`
+	Root	int    `gorm:"type:int(32); comment:'是否拥有越权限操作数据的能力'; default:0;" json:"root"`
 	Rules   string `gorm:"type:text; comment:权限规则;" json:"rules"`
 	Default int    `gorm:"type:int(32); comment:默认权限; default:0;" json:"default"`
 	Remark  string `gorm:"comment:备注; default:Null;" json:"remark"`

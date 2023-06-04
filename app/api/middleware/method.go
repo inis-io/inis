@@ -59,11 +59,9 @@ func Method() gin.HandlerFunc {
 				item := facade.DB.Model(&model.Users{}).Find(uid)
 				ctx.Set("user", item)
 
-				go func() {
-					if cacheState {
-						facade.Cache.Set(cacheName, item, time.Duration(jwt.Valid)*time.Second)
-					}
-				}()
+				if cacheState {
+					go facade.Cache.Set(cacheName, item, time.Duration(jwt.Valid)*time.Second)
+				}
 			}
 		}
 

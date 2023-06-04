@@ -15,6 +15,7 @@ import (
 )
 
 type base struct {
+	meta
 	cache
 }
 
@@ -120,24 +121,6 @@ func (this base) headers(ctx *gin.Context) (result map[string]any) {
 	return
 }
 
-// 从login-token中解析用户信息
-func (this base) user(ctx *gin.Context) (result model.Users) {
-
-	// 表数据结构体
-	table := model.Users{}
-	keys := utils.Struct.Keys(&table)
-
-	if user, ok := ctx.Get("user"); ok {
-		for key, val := range cast.ToStringMap(user) {
-			if utils.InArray(key, keys) && !utils.Is.Empty(val) {
-				utils.Struct.Set(&table, key, val)
-			}
-		}
-	}
-
-	return table
-}
-
 // 获取 *gin.Context.Get() 中的值
 func (this base) get(ctx *gin.Context, key any, def ...any) (value any) {
 	if item, exist := ctx.Get(cast.ToString(key)); exist {
@@ -150,7 +133,7 @@ func (this base) get(ctx *gin.Context, key any, def ...any) (value any) {
 	return
 }
 
-// ============================== 分隔线 ==============================
+// ============================== cache ==============================
 
 type cache struct{}
 
@@ -190,4 +173,54 @@ func (this cache) name(ctx *gin.Context) (name string) {
 	// 生产缓存名称
 	name = fmt.Sprintf("<%s>%s?hash=%s", ctx.Request.Method, ctx.Request.URL.Path, facade.Hash.Sum32(name))
 	return
+}
+
+// ============================== 上下文挂载的 meta 信息 ==============================
+
+type meta struct{}
+
+// 从上下文中解析用户信息
+func (this meta) user(ctx *gin.Context) (result model.Users) {
+
+	// 表数据结构体
+	table := model.Users{}
+	keys := utils.Struct.Keys(&table)
+
+	if user, ok := ctx.Get("user"); ok {
+		for key, val := range cast.ToStringMap(user) {
+			if utils.InArray(key, keys) && !utils.Is.Empty(val) {
+				utils.Struct.Set(&table, key, val)
+			}
+		}
+	}
+
+	return table
+}
+
+// 从上下文中解析路由信息
+func (this meta) route(ctx *gin.Context) (result model.AuthRules) {
+
+	// 表数据结构体
+	table := model.AuthRules{}
+	keys := utils.Struct.Keys(&table)
+
+	if user, ok := ctx.Get("route"); ok {
+		for key, val := range cast.ToStringMap(user) {
+			if utils.InArray(key, keys) && !utils.Is.Empty(val) {
+				utils.Struct.Set(&table, key, val)
+			}
+		}
+	}
+
+	return table
+}
+
+// 从上下文中解析规则信息
+func (this meta) rules(ctx *gin.Context) (slice []any) {
+	return model.UserRules(this.user(ctx).Id)
+}
+
+// 从上下文中解析权限信息
+func (this meta) root(ctx *gin.Context) (ok bool) {
+	return cast.ToBool(cast.ToStringMap(cast.ToStringMap(this.user(ctx).Result)["auth"])["root"])
 }

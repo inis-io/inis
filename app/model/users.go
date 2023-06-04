@@ -79,10 +79,29 @@ func (this *Users) AfterFind(tx *gorm.DB) (err error) {
 	this.Avatar = utils.Replace(this.Avatar, DomainTemp1())
 
 	// 查询自己拥有的权限
-	ids := facade.DB.Model(&AuthGroup{}).Like("uids", "%|"+cast.ToString(this.Id)+"|%").Column("id")
+	group := facade.DB.Model(&AuthGroup{}).Like("uids", "%|"+cast.ToString(this.Id)+"|%").Column("id", "rules", "root")
 
+	var ids []int
+	var rules []string
+	var root bool
+
+	for _, val := range cast.ToSlice(group) {
+		item := cast.ToStringMap(val)
+		ids   = append(ids, cast.ToInt(item["id"]))
+		// 逗号分隔的权限
+		rules = append(rules, strings.Split(cast.ToString(item["rules"]), ",")...)
+		if cast.ToInt(item["root"]) == 1 {
+			root = true
+		}
+	}
+
+	all := utils.InArray("all", rules)
 	this.Result = map[string]any{
-		"level": cast.ToIntSlice(ids),
+		"auth": map[string]any{
+			"all": all,
+			"group": ids,
+			"root": utils.Ternary(root || all, true, false),
+		},
 	}
 
 	return
@@ -179,20 +198,21 @@ func UserRules(uid any) (slice []any) {
 	}
 
 	// 用户组缓存
-	cacheName := fmt.Sprintf("user[%v][rule-group]", uid)
+	cacheName  := fmt.Sprintf("user[%v][rule-group]", uid)
+	// 缓存状态
+	cacheState := cast.ToBool(facade.CacheToml.Get("open"))
 
 	var rules []any
-	// 已经登录的用户 - 检查缓存中是否存在该用户的权限
-	if !facade.Cache.Has(cacheName) {
-
-		rules = item(uid)
-
-		go func() {
-			if cast.ToBool(facade.CacheToml.Get("open")) {
-				facade.Cache.Set(cacheName, rules, 0)
-			}
-		}()
-		return rules
+	// 已经登录的用户 - 检查缓存中是否存在该用户的权限 - 存在则直接返回
+	if cacheState && facade.Cache.Has(cacheName) {
+		return cast.ToSlice(facade.Cache.Get(cacheName))
 	}
-	return cast.ToSlice(facade.Cache.Get(cacheName))
+
+	rules = item(uid)
+
+	if cacheState {
+		go facade.Cache.Set(cacheName, rules, 0)
+	}
+
+	return rules
 }

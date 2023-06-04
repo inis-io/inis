@@ -146,11 +146,9 @@ func (this *Pages) one(ctx *gin.Context) {
 		item := mold.Where(table).Find()
 
 		// 缓存数据
-		go func() {
-			if this.cache.enable(ctx) {
-				facade.Cache.Set(cacheName, item)
-			}
-		}()
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, item)
+		}
 
 		data = item
 	}
@@ -210,11 +208,9 @@ func (this *Pages) all(ctx *gin.Context) {
 		item := mold.Where(table).Limit(limit).Page(page).Order(params["order"]).Select()
 
 		// 缓存数据
-		go func() {
-			if this.cache.enable(ctx) {
-				facade.Cache.Set(cacheName, item)
-			}
-		}()
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, item)
+		}
 
 		data = item
 	}
@@ -258,7 +254,7 @@ func (this *Pages) create(ctx *gin.Context) {
 		return
 	}
 
-	uid := this.user(ctx).Id
+	uid := this.meta.user(ctx).Id
 	if uid == 0 {
 		this.json(ctx, nil, "请先登录！", 400)
 		return

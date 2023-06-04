@@ -19,7 +19,7 @@ func Rule() gin.HandlerFunc {
 		async.Add(2)
 
 		var user model.Users
-		// 挂载用户信息
+		// 获取用户信息
 		go func(async *sync.WaitGroup) {
 			defer async.Done()
 			user = users(ctx)
@@ -30,6 +30,8 @@ func Rule() gin.HandlerFunc {
 		go func(async *sync.WaitGroup) {
 			defer async.Done()
 			rule = rules(ctx)
+			// 挂载到上下文中
+			ctx.Set("route", rule)
 		}(&async)
 
 		async.Wait()
@@ -108,11 +110,9 @@ func rules(ctx *gin.Context) (result map[string]any) {
 	}).Find()
 
 	// 规则列表写入缓存
-	go func() {
-		if !utils.Is.Empty(result) && cacheState {
-			facade.Cache.Set(cacheName, result, 0)
-		}
-	}()
+	if !utils.Is.Empty(result) && cacheState {
+		go facade.Cache.Set(cacheName, result, 0)
+	}
 
 	return result
 }

@@ -170,6 +170,8 @@ default    = "${default}"
 
 # 本地存储配置
 [local]
+# 本地存储域名
+domain     = "${local.domain}"
 
 
 # 阿里OSS配置
