@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"gorm.io/gorm"
 	"gorm.io/plugin/soft_delete"
@@ -33,10 +34,8 @@ type Article struct {
 
 // InitArticle - 初始化Article表
 func InitArticle() {
-	// 数据库
-	DB := facade.NewDB(facade.DBModeMySql)
 	// 迁移表
-	err := DB.Drive().AutoMigrate(&Article{})
+	err := facade.DB.Drive().AutoMigrate(&Article{})
 	if err != nil {
 		facade.Log.Error(map[string]any{"error": err}, "Article表迁移失败")
 		return
@@ -64,6 +63,8 @@ func (this *Article) AfterFind(tx *gorm.DB) (err error) {
 		"group" : facade.DB.Model(&[]ArticleGroup{}).WhereIn("id", group).Column("id", "pid", "name", "avatar", "description"),
 		"tags"  : facade.DB.Model(&[]Tags{}).WhereIn("id", tags).Column("id", "name", "avatar", "description"),
 	}
+	this.Text = cast.ToString(this.Text)
+	this.Json = utils.Json.Decode(this.Json)
 
 	return
 }

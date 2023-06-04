@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/unti-io/go-utils/utils"
 	"gorm.io/plugin/soft_delete"
 	"inis/app/facade"
 )
@@ -20,14 +21,20 @@ type ArticleGroup struct {
 	DeleteTime soft_delete.DeletedAt `gorm:"comment:删除时间; default:0;" json:"delete_time"`
 }
 
-// InitArticleGroup - 初始化Article表
 func InitArticleGroup() {
-	// 数据库
-	DB := facade.NewDB(facade.DBModeMySql)
 	// 迁移表
-	err := DB.Drive().AutoMigrate(&ArticleGroup{})
+	err := facade.DB.Drive().AutoMigrate(&ArticleGroup{})
 	if err != nil {
 		facade.Log.Error(map[string]any{"error": err}, "ArticleGroup表迁移失败")
 		return
 	}
+}
+
+// AfterFind - 查询Hook
+func (this *ArticleGroup) AfterFind(tx *gorm.DB) (err error) {
+
+	this.Text = cast.ToString(this.Text)
+	this.Json = utils.Json.Decode(this.Json)
+
+	return
 }

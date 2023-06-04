@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"gorm.io/gorm"
 	"gorm.io/plugin/soft_delete"
@@ -26,10 +27,8 @@ type Banner struct {
 
 // InitBanner - 初始化Banner表
 func InitBanner() {
-	// 数据库
-	DB := facade.NewDB(facade.DBModeMySql)
 	// 迁移表
-	err := DB.Drive().AutoMigrate(&Banner{})
+	err := facade.DB.Drive().AutoMigrate(&Banner{})
 	if err != nil {
 		facade.Log.Error(map[string]any{"error": err}, "Banner表迁移失败")
 		return
@@ -40,6 +39,8 @@ func InitBanner() {
 func (this *Banner) AfterFind(*gorm.DB) (err error) {
 	// 替换 url 中的域名
 	this.Image = utils.Replace(this.Image, DomainTemp1())
+	this.Text = cast.ToString(this.Text)
+	this.Json = utils.Json.Decode(this.Json)
 	return
 }
 

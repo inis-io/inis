@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"gorm.io/gorm"
 	"gorm.io/plugin/soft_delete"
@@ -23,10 +24,8 @@ type Config struct {
 
 // InitConfig - 初始化Config表
 func InitConfig() {
-	// 数据库
-	DB := facade.NewDB(facade.DBModeMySql)
 	// 迁移表
-	err := DB.Drive().AutoMigrate(&Config{})
+	err := facade.DB.Drive().AutoMigrate(&Config{})
 	if err != nil {
 		facade.Log.Error(map[string]any{"error": err}, "Config表迁移失败")
 		return
@@ -44,11 +43,11 @@ func InitConfig() {
 
 		for _, item := range configs {
 			// 判断是否存在
-			if DB.Model(&Config{}).Where("key", item.Key).Exist() {
+			if facade.DB.Model(&Config{}).Where("key", item.Key).Exist() {
 				continue
 			}
 			// 创建数据
-			DB.Model(&item).Create(&item)
+			facade.DB.Model(&item).Create(&item)
 		}
 	}()
 }
@@ -56,6 +55,7 @@ func InitConfig() {
 // AfterFind - 查询Hook
 func (this *Config) AfterFind(tx *gorm.DB) (err error) {
 
+	this.Text = cast.ToString(this.Text)
 	this.Json = utils.Json.Decode(this.Json)
 
 	return

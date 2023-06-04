@@ -1,6 +1,9 @@
 package model
 
 import (
+	"github.com/spf13/cast"
+	"github.com/unti-io/go-utils/utils"
+	"gorm.io/gorm"
 	"gorm.io/plugin/soft_delete"
 	"inis/app/facade"
 )
@@ -21,21 +24,28 @@ type LinksGroup struct {
 
 // InitLinksGroup - 初始化LinksGroup表
 func InitLinksGroup() {
-	// 数据库
-	DB := facade.NewDB(facade.DBModeMySql)
 	// 迁移表
-	err := DB.Drive().AutoMigrate(&LinksGroup{})
+	err := facade.DB.Drive().AutoMigrate(&LinksGroup{})
 	if err != nil {
 		facade.Log.Error(map[string]any{"error": err}, "LinksGroup表迁移失败")
 		return
 	}
 	// 初始化数据
-	count := DB.Model(&LinksGroup{}).Count()
+	count := facade.DB.Model(&LinksGroup{}).Count()
 	if count != 0 {
 		return
 	}
-	DB.Model(&LinksGroup{}).Create(&LinksGroup{
+	facade.DB.Model(&LinksGroup{}).Create(&LinksGroup{
 		Name:        "默认分组",
 		Description: "默认分组",
 	})
+}
+
+// AfterFind - 查询Hook
+func (this *LinksGroup) AfterFind(tx *gorm.DB) (err error) {
+
+	this.Text = cast.ToString(this.Text)
+	this.Json = utils.Json.Decode(this.Json)
+
+	return
 }

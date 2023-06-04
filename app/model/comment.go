@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"gorm.io/gorm"
 	"gorm.io/plugin/soft_delete"
@@ -29,10 +30,8 @@ type Comment struct {
 
 // InitComment - 初始化Article表
 func InitComment() {
-	// 数据库
-	DB := facade.NewDB(facade.DBModeMySql)
 	// 迁移表
-	err := DB.Drive().AutoMigrate(&Comment{})
+	err := facade.DB.Drive().AutoMigrate(&Comment{})
 	if err != nil {
 		facade.Log.Error(map[string]any{"error": err}, "Comment表迁移失败")
 		return
@@ -67,6 +66,8 @@ func (this *Comment) AfterFind(tx *gorm.DB) (err error) {
 		"author": author,
 		"article": article,
 	}
+	this.Text = cast.ToString(this.Text)
+	this.Json = utils.Json.Decode(this.Json)
 
 	return
 }

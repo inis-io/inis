@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"gorm.io/gorm"
 	"gorm.io/plugin/soft_delete"
@@ -27,10 +28,8 @@ type Pages struct {
 
 // InitPages - 初始化Pages表
 func InitPages() {
-	// 数据库
-	DB := facade.NewDB(facade.DBModeMySql)
 	// 迁移表
-	err := DB.Drive().AutoMigrate(&Pages{})
+	err := facade.DB.Drive().AutoMigrate(&Pages{})
 	if err != nil {
 		facade.Log.Error(map[string]any{"error": err}, "Pages表迁移失败")
 		return
@@ -47,6 +46,15 @@ func (this *Pages) AfterSave(tx *gorm.DB) (err error) {
 			return errors.New("key 已存在！")
 		}
 	}
+
+	return
+}
+
+// AfterFind - 查询Hook
+func (this *Pages) AfterFind(tx *gorm.DB) (err error) {
+
+	this.Text = cast.ToString(this.Text)
+	this.Json = utils.Json.Decode(this.Json)
 
 	return
 }

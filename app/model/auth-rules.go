@@ -30,6 +30,15 @@ type AuthRules struct {
 	DeleteTime soft_delete.DeletedAt `gorm:"comment:删除时间; default:0;" json:"delete_time"`
 }
 
+// AfterFind - 查询Hook
+func (this *AuthRules) AfterFind(tx *gorm.DB) (err error) {
+
+	this.Text = cast.ToString(this.Text)
+	this.Json = utils.Json.Decode(this.Json)
+
+	return
+}
+
 // BeforeCreate - 创建前的Hook
 func (this *AuthRules) BeforeCreate(tx *gorm.DB) (err error) {
 

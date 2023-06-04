@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"gorm.io/gorm"
 	"gorm.io/plugin/soft_delete"
@@ -29,10 +30,8 @@ type Links struct {
 
 // InitLinks - 初始化Links表
 func InitLinks() {
-	// 数据库
-	DB := facade.NewDB(facade.DBModeMySql)
 	// 迁移表
-	err := DB.Drive().AutoMigrate(&Links{})
+	err := facade.DB.Drive().AutoMigrate(&Links{})
 	if err != nil {
 		facade.Log.Error(map[string]any{"error": err}, "Links表迁移失败")
 		return
@@ -52,13 +51,13 @@ func InitLinks() {
 		}
 
 		// 如果数据表中有数据，则不进行初始化
-		if DB.Model(&Links{}).Count() != 0 {
+		if facade.DB.Model(&Links{}).Count() != 0 {
 			return
 		}
 
 		// 创建数据
 		for _, item := range array {
-			DB.Model(&item).Create(&item)
+			facade.DB.Model(&item).Create(&item)
 		}
 	}()
 }
@@ -96,6 +95,9 @@ func (this *Links) AfterFind(tx *gorm.DB) (err error) {
 	this.Result = map[string]any{
 		"group": group,
 	}
+	this.Text = cast.ToString(this.Text)
+	this.Json = utils.Json.Decode(this.Json)
+
 	return
 }
 

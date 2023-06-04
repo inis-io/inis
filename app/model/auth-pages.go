@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/spf13/cast"
+	"github.com/unti-io/go-utils/utils"
 	"gorm.io/gorm"
 	"gorm.io/plugin/soft_delete"
 	"inis/app/facade"
@@ -28,6 +29,15 @@ type AuthPages struct {
 	DeleteTime soft_delete.DeletedAt `gorm:"comment:删除时间; default:0;" json:"delete_time"`
 }
 
+// AfterFind - 查询Hook
+func (this *AuthPages) AfterFind(tx *gorm.DB) (err error) {
+
+	this.Text = cast.ToString(this.Text)
+	this.Json = utils.Json.Decode(this.Json)
+
+	return
+}
+
 // AfterSave - 保存后的Hook（包括 create update）
 func (this *AuthPages) AfterSave(tx *gorm.DB) (err error) {
 
@@ -42,10 +52,8 @@ func (this *AuthPages) AfterSave(tx *gorm.DB) (err error) {
 
 // InitAuthPages - 初始化AuthPages表
 func InitAuthPages() {
-	// 数据库
-	DB := facade.NewDB(facade.DBModeMySql)
 	// 迁移表
-	err := DB.Drive().AutoMigrate(&AuthPages{})
+	err := facade.DB.Drive().AutoMigrate(&AuthPages{})
 	if err != nil {
 		facade.Log.Error(map[string]any{"error": err}, "AuthPages表迁移失败")
 		return
@@ -79,7 +87,7 @@ func InitAuthPages() {
 		go func(item AuthPages, wg *sync.WaitGroup) {
 			defer wg.Done()
 
-			tx := DB.Model(&item).Where("path", item.Path).Save(&AuthPages{
+			tx := facade.DB.Model(&item).Where("path", item.Path).Save(&AuthPages{
 				Name: cast.ToString(item.Name),
 				Path: cast.ToString(item.Path),
 				Icon: cast.ToString(item.Icon),

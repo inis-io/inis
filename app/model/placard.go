@@ -1,6 +1,9 @@
 package model
 
 import (
+	"github.com/spf13/cast"
+	"github.com/unti-io/go-utils/utils"
+	"gorm.io/gorm"
 	"gorm.io/plugin/soft_delete"
 	"inis/app/facade"
 )
@@ -23,12 +26,19 @@ type Placard struct {
 
 // InitPlacard - 初始化Placard表
 func InitPlacard() {
-	// 数据库
-	DB := facade.NewDB(facade.DBModeMySql)
 	// 迁移表
-	err := DB.Drive().AutoMigrate(&Placard{})
+	err := facade.DB.Drive().AutoMigrate(&Placard{})
 	if err != nil {
 		facade.Log.Error(map[string]any{"error": err}, "Placard表迁移失败")
 		return
 	}
+}
+
+// AfterFind - 查询Hook
+func (this *Placard) AfterFind(tx *gorm.DB) (err error) {
+
+	this.Text = cast.ToString(this.Text)
+	this.Json = utils.Json.Decode(this.Json)
+
+	return
 }

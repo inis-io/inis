@@ -1,6 +1,9 @@
 package model
 
 import (
+	"github.com/spf13/cast"
+	"github.com/unti-io/go-utils/utils"
+	"gorm.io/gorm"
 	"gorm.io/plugin/soft_delete"
 	"inis/app/facade"
 )
@@ -24,20 +27,18 @@ type AuthGroup struct {
 
 // InitAuthGroup - 初始化AuthGroup表
 func InitAuthGroup() {
-	// 数据库
-	DB := facade.NewDB(facade.DBModeMySql)
 	// 迁移表
-	err := DB.Drive().AutoMigrate(&AuthGroup{})
+	err := facade.DB.Drive().AutoMigrate(&AuthGroup{})
 	if err != nil {
 		facade.Log.Error(map[string]any{"error": err}, "AuthGroup表迁移失败")
 		return
 	}
 	// 初始化数据
-	count := DB.Model(&AuthGroup{}).Count()
+	count := facade.DB.Model(&AuthGroup{}).Count()
 	if count != 0 {
 		return
 	}
-	DB.Model(&AuthGroup{}).Create(&AuthGroup{
+	facade.DB.Model(&AuthGroup{}).Create(&AuthGroup{
 		Id: 	 1,
 		Name:    "超级管理员",
 		Rules:   "all",
@@ -46,4 +47,13 @@ func InitAuthGroup() {
 		Default: 1,
 		Remark:  "超级管理员，拥有所有权限！",
 	})
+}
+
+// AfterFind - 查询Hook
+func (this *AuthGroup) AfterFind(tx *gorm.DB) (err error) {
+
+	this.Text = cast.ToString(this.Text)
+	this.Json = utils.Json.Decode(this.Json)
+
+	return
 }

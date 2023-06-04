@@ -37,10 +37,8 @@ type Users struct {
 
 // InitUsers - 初始化Users表
 func InitUsers() {
-	// 数据库
-	DB := facade.NewDB(facade.DBModeMySql)
 	// 迁移表
-	err := DB.Drive().AutoMigrate(&Users{})
+	err := facade.DB.Drive().AutoMigrate(&Users{})
 	if err != nil {
 		facade.Log.Error(map[string]any{"error": err}, "Users表迁移失败")
 		return
@@ -103,6 +101,8 @@ func (this *Users) AfterFind(tx *gorm.DB) (err error) {
 			"root": utils.Ternary(root || all, true, false),
 		},
 	}
+	this.Text = cast.ToString(this.Text)
+	this.Json = utils.Json.Decode(this.Json)
 
 	return
 }
