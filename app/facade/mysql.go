@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -656,19 +657,80 @@ func (this *ModelStruct) Page(page ...any) *ModelStruct {
 
 // Field - 查询字段范围
 func (this *ModelStruct) Field(args ...any) *ModelStruct {
+
 	if len(args) > 0 {
-		this.model.Select(args[0], args[1:]...)
+		for _, val := range args {
+			if utils.Is.String(val) {
+
+				// 构建我们的正则表达式模式
+				pattern := regexp.MustCompile(`[,\s|]+`)
+
+				// 使用正则表达式模式来分隔字符串
+				result := pattern.Split(cast.ToString(val), -1)
+				// 使用 strings.TrimSpace 将分隔后的字符串数组中的元素进行 trim 处理
+				for index, item := range result {
+					result[index] = strings.TrimSpace(item)
+				}
+
+				this.field = append(this.field, result...)
+
+			} else if utils.Is.Slice(val) {
+
+				this.field = append(this.field, cast.ToStringSlice(val)...)
+			}
+		}
 	}
+
+	// 去重 去空
+	this.field = cast.ToStringSlice(utils.ArrayUnique(utils.ArrayEmpty(this.field)))
+
+	var field []string
+
+	// 过滤掉 withoutField 中的字段
+	for _, val := range this.field {
+		if !utils.InArray(val, this.withoutField) {
+			field = append(field, val)
+		}
+	}
+
+	this.model.Select(field)
+
 	return this
 }
 
 // WithoutField - 排除查询字段
 func (this *ModelStruct) WithoutField(args ...any) *ModelStruct {
+
 	if len(args) > 0 {
 		for _, val := range args {
-			this.model.Omit(cast.ToString(val))
+			if utils.Is.String(val) {
+
+				// 构建我们的正则表达式模式
+				pattern := regexp.MustCompile(`[,\s|]+`)
+				// 使用正则表达式模式来分隔字符串
+				result := pattern.Split(cast.ToString(val), -1)
+
+				// 使用 strings.TrimSpace 将分隔后的字符串数组中的元素进行 trim 处理
+				for index, item := range result {
+					result[index] = strings.TrimSpace(item)
+				}
+
+				this.withoutField = append(this.withoutField, result...)
+
+			} else if utils.Is.Slice(val) {
+
+				this.withoutField = append(this.withoutField, cast.ToStringSlice(val)...)
+			}
 		}
 	}
+
+	// 去重 去空
+	this.withoutField = cast.ToStringSlice(utils.ArrayUnique(utils.ArrayEmpty(this.withoutField)))
+
+	this.model.Omit(this.withoutField...)
+
+	fmt.Println(this.withoutField)
+
 	return this
 }
 

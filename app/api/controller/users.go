@@ -144,15 +144,16 @@ func (this *Users) one(ctx *gin.Context) {
 
 		mold := facade.DB.Model(&table).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
 		mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
-		item := mold.Where(table).Find()
 
-		// 删除指定字段
-		if !utils.In.Array("[POST][/api/users/save]", this.meta.rules(ctx)) {
-			delete(item, "email")
-			delete(item, "phone")
-			delete(item, "account")
+		mold.WithoutField("password")
+
+		user := this.user(ctx)
+		// 越权 - 既没有管理权限，也不是自己的数据
+		if !this.meta.root(ctx) && (table.Id != user.Id || user.Id == 0) {
+			mold.WithoutField("account", "email", "phone")
 		}
-		delete(item, "password")
+
+		item := mold.Where(table).Find()
 
 		// 缓存数据
 		if this.cache.enable(ctx) {
@@ -213,18 +214,15 @@ func (this *Users) all(ctx *gin.Context) {
 
 	} else {
 
+		mold.WithoutField("password")
+
+		// 越权 - 没有管理权限
+		if !this.meta.root(ctx) {
+			mold.WithoutField("account", "email", "phone")
+		}
+
 		// 从数据库中获取数据
 		item := mold.Where(table).Limit(limit).Page(page).Order(params["order"]).Select()
-
-		// 删除指定字段
-		for _, val := range item {
-			if !utils.In.Array("[POST][/api/users/save]", this.meta.rules(ctx)) {
-				delete(val, "email")
-				delete(val, "phone")
-				delete(val, "account")
-			}
-			delete(val, "password")
-		}
 
 		// 缓存数据
 		if this.cache.enable(ctx) {
@@ -342,6 +340,12 @@ func (this *Users) update(ctx *gin.Context) {
 		}
 	}
 
+	// 越权 - 既没有管理权限，也不是自己的数据
+	if !this.meta.root(ctx) && cast.ToInt(params["id"]) != this.user(ctx).Id {
+		this.json(ctx, nil, facade.Lang(ctx, "无权限！"), 403)
+		return
+	}
+
 	// 更新用户
 	tx := facade.DB.Model(&table).WithTrashed().Where("id", params["id"]).Update(async.Result())
 
@@ -383,24 +387,15 @@ func (this *Users) column(ctx *gin.Context) {
 	item := facade.DB.Model(&table).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"]).Order(params["order"])
 	item.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 
-	// 排除密码
-	if strings.Contains(cast.ToString(params["field"]), "password") {
-		// 转换为数组
-		field := strings.Split(cast.ToString(params["field"]), ",")
-		// 排除密码
-		field = utils.Array.Remove(field, "password")
-		// 转换为字符串
-		params["field"] = strings.Join(field, ",")
+	item.WithoutField("password")
+
+	// 越权 - 没有管理权限
+	if !this.meta.root(ctx) {
+		item.WithoutField("account", "email", "phone")
 	}
 
 	if !strings.Contains(cast.ToString(params["field"]), "*") {
 		item.Field(params["field"])
-	}
-
-	item.WithoutField("password")
-
-	if !utils.In.Array("[POST][/api/users/save]", this.meta.rules(ctx)) {
-		item.WithoutField("account")
 	}
 
 	// id 数组 - 参数归一化

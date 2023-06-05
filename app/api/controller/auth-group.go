@@ -258,7 +258,7 @@ func (this *AuthGroup) create(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.AuthGroup{CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
-	allow := []any{"name", "rules", "uids", "remark", "json", "text"}
+	allow := []any{"name", "rules", "uids", "root", "remark", "json", "text"}
 
 	// 动态给结构体赋值
 	for key, val := range params {
@@ -301,7 +301,7 @@ func (this *AuthGroup) update(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.AuthGroup{}
-	allow := []any{"name", "rules", "uids", "remark", "json", "text"}
+	allow := []any{"name", "rules", "uids", "root", "remark", "json", "text"}
 	async := utils.Async[map[string]any]()
 
 	// 动态给结构体赋值

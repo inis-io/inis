@@ -222,5 +222,28 @@ func (this meta) rules(ctx *gin.Context) (slice []any) {
 
 // 从上下文中解析权限信息
 func (this meta) root(ctx *gin.Context) (ok bool) {
-	return cast.ToBool(cast.ToStringMap(cast.ToStringMap(this.user(ctx).Result)["auth"])["root"])
+
+	var hash  []string
+	var table []model.AuthGroup
+
+	user := this.user(ctx)
+	// 查询自己拥有的权限
+	facade.DB.Model(&table).Where("root", 1).Like("uids", "%|" + cast.ToString(user.Id) + "|%").Select()
+
+	for _, item := range table {
+		// 逗号分隔的权限
+		hash = append(hash, strings.Split(cast.ToString(item.Rules), ",")...)
+	}
+
+	// 拥有全部权限 - 直接返回
+	if utils.InArray("all", hash) {
+		return true
+	}
+
+	// 拥有部分权限 - 判断当前路由是否在权限列表中
+	if utils.InArray(this.route(ctx).Hash, hash) {
+		return true
+	}
+
+	return false
 }

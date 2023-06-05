@@ -77,20 +77,16 @@ func (this *Users) AfterFind(tx *gorm.DB) (err error) {
 	this.Avatar = utils.Replace(this.Avatar, DomainTemp1())
 
 	// 查询自己拥有的权限
-	group := facade.DB.Model(&AuthGroup{}).Like("uids", "%|"+cast.ToString(this.Id)+"|%").Column("id", "rules", "root")
+	group := facade.DB.Model(&AuthGroup{}).Like("uids", "%|"+cast.ToString(this.Id)+"|%").Column("id", "rules")
 
 	var ids []int
 	var rules []string
-	var root bool
 
 	for _, val := range cast.ToSlice(group) {
 		item := cast.ToStringMap(val)
 		ids   = append(ids, cast.ToInt(item["id"]))
 		// 逗号分隔的权限
 		rules = append(rules, strings.Split(cast.ToString(item["rules"]), ",")...)
-		if cast.ToInt(item["root"]) == 1 {
-			root = true
-		}
 	}
 
 	all := utils.InArray("all", rules)
@@ -98,7 +94,6 @@ func (this *Users) AfterFind(tx *gorm.DB) (err error) {
 		"auth": map[string]any{
 			"all": all,
 			"group": ids,
-			"root": utils.Ternary(root || all, true, false),
 		},
 	}
 	this.Text = cast.ToString(this.Text)

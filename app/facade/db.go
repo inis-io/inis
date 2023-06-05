@@ -54,6 +54,8 @@ type ModelStruct struct {
 	page              any      // 分页
 	softDelete        string   // 软删除 - 字段
 	defaultSoftDelete any      // 默认软删除 - 值
+	field 		      []string // 查询字段范围
+	withoutField	  []string // 排除查询字段
 }
 
 type ModelInterface interface {

@@ -121,10 +121,12 @@ func createAuthRules() (result []AuthRules) {
 				"path=count&type=common",
 				"path=column&type=common",
 			},
-			"PUT":    {"update","restore"},
+			"PUT":    {
+				"restore",
+				"path=update&type=login",
+			},
 			"POST":   {
-				"create",
-				"path=save&remark=勾选后，拥有该权限的用户不仅可以修改所有人的用户信息，还可以通过GET请求直接获取到所有用户的全部信息（包括账号、邮箱和电话），请谨慎使用",
+				"create", "save",
 			},
 			"DELETE": {"remove", "delete", "clear"},
 		},
