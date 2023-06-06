@@ -171,7 +171,6 @@ func (this *Links) all(ctx *gin.Context) {
 	// 获取请求参数
 	params := this.params(ctx, map[string]any{
 		"page":  1,
-		"limit": 5,
 		"order": "create_time desc",
 	})
 
@@ -188,7 +187,7 @@ func (this *Links) all(ctx *gin.Context) {
 	}
 
 	page := cast.ToInt(params["page"])
-	limit := cast.ToInt(params["limit"])
+	limit := this.meta.limit(ctx)
 	var result []model.Links
 	mold := facade.DB.Model(&result).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
 	mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
@@ -262,7 +261,12 @@ func (this *Links) create(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Links{Uid: uid, CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
-	allow := []any{"nickname", "description", "url", "avatar", "target", "group", "state", "remark", "json", "text"}
+	allow := []any{"nickname", "description", "url", "avatar", "target", "group", "json", "text"}
+
+	// 越权 - 增加可选字段
+	if this.meta.root(ctx) {
+		allow = append(allow, "check", "remark")
+	}
 
 	// 动态给结构体赋值
 	for key, val := range params {
@@ -305,8 +309,15 @@ func (this *Links) update(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Links{}
-	allow := []any{"nickname", "description", "url", "avatar", "target", "group", "state", "remark", "json", "text"}
+	allow := []any{"nickname", "description", "url", "avatar", "target", "group", "json", "text"}
 	async := utils.Async[map[string]any]()
+
+	root := this.meta.root(ctx)
+
+	// 越权 - 增加可选字段
+	if root {
+		allow = append(allow, "check", "remark")
+	}
 
 	// 动态给结构体赋值
 	for key, val := range params {
@@ -319,7 +330,7 @@ func (this *Links) update(ctx *gin.Context) {
 	item := facade.DB.Model(&table).WithTrashed().Where("id", params["id"])
 
 	// 越权 - 既没有管理权限，也不是自己的数据
-	if !this.meta.root(ctx) && cast.ToInt(item.Find()["uid"]) != this.user(ctx).Id {
+	if !root && cast.ToInt(item.Find()["uid"]) != this.user(ctx).Id {
 		this.json(ctx, nil, facade.Lang(ctx, "无权限！"), 403)
 		return
 	}

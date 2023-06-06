@@ -56,7 +56,7 @@ func Rule() gin.HandlerFunc {
 		// ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ 以下为处理默认的权限规则 ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓
 
 		// 获取用户权限
-		rules := model.UserRules(user.Id)
+		rules := (&model.Users{}).Rules(user.Id)
 		name := fmt.Sprintf("[%v][%v]", strings.ToUpper(ctx.Request.Method), ctx.Request.URL.Path)
 
 		// 判断是否有权限

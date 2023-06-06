@@ -87,6 +87,7 @@ func (this *OAuth) INDEX(ctx *gin.Context) {
 	this.json(ctx, nil, facade.Lang(ctx, "没什么用！"), 202)
 }
 
+// qq - QQ登录
 func (this *OAuth) qq(ctx *gin.Context) {
 
 	params := this.params(ctx)
@@ -147,6 +148,7 @@ func (this *OAuth) qq(ctx *gin.Context) {
 	}
 }
 
+// github - github登录
 func (this *OAuth) github(ctx *gin.Context) {
 
 	params := this.params(ctx)
@@ -194,6 +196,7 @@ func (this *OAuth) github(ctx *gin.Context) {
 	}
 }
 
+// google - google登录 - 未完成
 func (this *OAuth) google(ctx *gin.Context) {
 	clientId := "239457649289-1meff8lsn920gv5i3kug0gef8olgbitg.apps.googleusercontent.com"
 	clientKey := "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"

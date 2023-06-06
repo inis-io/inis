@@ -122,7 +122,7 @@ type ModelInterface interface {
 	// Min - 最小值
 	Min(field string) (result int64)
 	// Update - 更新
-	Update(data any) (tx *gorm.DB)
+	Update(data ...any) (tx *gorm.DB)
 	// Force - 真实删除
 	Force() *ModelStruct
 	// Delete - 删除
@@ -132,9 +132,15 @@ type ModelInterface interface {
 	// Restore - 恢复
 	Restore(args ...any) (tx *gorm.DB)
 	// Create - 创建
-	Create(data any) (tx *gorm.DB)
+	Create(data ...any) (tx *gorm.DB)
 	// Save - 保存
-	Save(data any) (tx *gorm.DB)
+	Save(data ...any) (tx *gorm.DB)
+	// Inc - 自增
+	Inc(column any, step ...int) *ModelStruct
+	// Dec - 自减
+	Dec(column any, step ...int) *ModelStruct
+	// UpdateColumn - 更新单个字段
+	UpdateColumn(column any, value any) (tx *gorm.DB)
 }
 
 // WatchDB - 初始化数据库 - 顺便监听配置文件变化

@@ -159,6 +159,17 @@ func createAuthRules() (result []AuthRules) {
 			"POST":   {"save", "create"},
 			"DELETE": {"remove", "delete", "clear"},
 		},
+		"level":{
+			"GET":    {
+				"path=one&type=common",
+				"path=all&type=common",
+				"path=count&type=common",
+				"path=column&type=common",
+			},
+			"PUT":    {"update","restore"},
+			"POST":   {"save", "create"},
+			"DELETE": {"remove", "delete", "clear"},
+		},
 		"banner":{
 			"GET":    {
 				"path=one&type=common",
@@ -265,15 +276,35 @@ func createAuthRules() (result []AuthRules) {
 			"POST":   {"save", "create"},
 			"DELETE": {"remove", "delete", "clear"},
 		},
+		"exp":{
+			"GET":    {
+				"path=one&type=common",
+				"path=all&type=common",
+				"path=count&type=common",
+				"path=column&type=common",
+			},
+			"PUT":    {"update","restore"},
+			"POST":   {
+				"save",
+				"create",
+				"path=check-in&type=login&name=每日签到",
+				"path=share&type=login&name=分享",
+				"path=collect&type=login&name=收藏",
+				"path=like&type=login&name=点赞",
+			},
+			"DELETE": {"remove", "delete", "clear"},
+		},
 	}
 
 	// 接口名称
 	names := map[string]string{
+		"exp":    		 "【经验值 API】",
 		"test":          "【测试 API】",
 		"proxy":         "【代理 API】",
 		"file":          "【文件 API】",
 		"comm":          "【公共 API】",
 		"tags":          "【标签 API】",
+		"level":         "【等级 API】",
 		"pages":         "【页面 API】",
 		"users":         "【用户 API】",
 		"links":         "【友链 API】",

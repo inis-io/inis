@@ -12,13 +12,13 @@ import (
 	"time"
 )
 
-type Comment struct {
+type EXP struct {
 	// 继承
 	base
 }
 
 // IGET - GET请求本体
-func (this *Comment) IGET(ctx *gin.Context) {
+func (this *EXP) IGET(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
@@ -37,14 +37,18 @@ func (this *Comment) IGET(ctx *gin.Context) {
 }
 
 // IPOST - POST请求本体
-func (this *Comment) IPOST(ctx *gin.Context) {
+func (this *EXP) IPOST(ctx *gin.Context) {
 
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
 	allow := map[string]any{
-		"save":   this.save,
-		"create": this.create,
+		"save":     this.save,
+		"create":   this.create,
+		"like":     this.like,
+		"share" :   this.share,
+		"collect" : this.collect,
+		"check-in": this.checkIn,
 	}
 	err := this.call(allow, method, ctx)
 
@@ -58,7 +62,7 @@ func (this *Comment) IPOST(ctx *gin.Context) {
 }
 
 // IPUT - PUT请求本体
-func (this *Comment) IPUT(ctx *gin.Context) {
+func (this *EXP) IPUT(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
@@ -78,7 +82,7 @@ func (this *Comment) IPUT(ctx *gin.Context) {
 }
 
 // IDEL - DELETE请求本体
-func (this *Comment) IDEL(ctx *gin.Context) {
+func (this *EXP) IDEL(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
@@ -99,18 +103,18 @@ func (this *Comment) IDEL(ctx *gin.Context) {
 }
 
 // INDEX - GET请求本体
-func (this *Comment) INDEX(ctx *gin.Context) {
+func (this *EXP) INDEX(ctx *gin.Context) {
 	this.json(ctx, nil, facade.Lang(ctx, "没什么用！"), 202)
 }
 
 // 删除缓存
-func (this *Comment) delCache() {
+func (this *EXP) delCache() {
 	// 删除缓存
-	facade.Cache.DelTags([]any{"<GET>","comment"})
+	facade.Cache.DelTags([]any{"<GET>","exp"})
 }
 
 // one 获取指定数据
-func (this *Comment) one(ctx *gin.Context) {
+func (this *EXP) one(ctx *gin.Context) {
 
 	code := 204
 	msg := []string{"无数据！", ""}
@@ -120,7 +124,7 @@ func (this *Comment) one(ctx *gin.Context) {
 	params := this.params(ctx)
 
 	// 表数据结构体
-	table := model.Comment{}
+	table := model.EXP{}
 	// 允许查询的字段
 	allow := []any{"id"}
 	// 动态给结构体赋值
@@ -162,7 +166,7 @@ func (this *Comment) one(ctx *gin.Context) {
 }
 
 // all 获取全部数据
-func (this *Comment) all(ctx *gin.Context) {
+func (this *EXP) all(ctx *gin.Context) {
 
 	code := 204
 	msg := []string{"无数据！", ""}
@@ -175,7 +179,7 @@ func (this *Comment) all(ctx *gin.Context) {
 	})
 
 	// 表数据结构体
-	table := model.Comment{}
+	table := model.EXP{}
 	// 允许查询的字段
 	var allow []any
 	// 动态给结构体赋值
@@ -188,7 +192,7 @@ func (this *Comment) all(ctx *gin.Context) {
 
 	page := cast.ToInt(params["page"])
 	limit := this.meta.limit(ctx)
-	var result []model.Comment
+	var result []model.EXP
 	mold := facade.DB.Model(&result).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
 	mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 	count := mold.Where(table).Count()
@@ -227,7 +231,7 @@ func (this *Comment) all(ctx *gin.Context) {
 }
 
 // save 保存数据 - 包含创建和更新
-func (this *Comment) save(ctx *gin.Context) {
+func (this *EXP) save(ctx *gin.Context) {
 
 	// 获取请求参数
 	params := this.params(ctx)
@@ -240,14 +244,12 @@ func (this *Comment) save(ctx *gin.Context) {
 }
 
 // create 创建数据
-func (this *Comment) create(ctx *gin.Context) {
+func (this *EXP) create(ctx *gin.Context) {
 
 	// 获取请求参数
-	params := this.params(ctx, map[string]any{
-		"bind_type": "article",
-	})
+	params := this.params(ctx)
 	// 验证器
-	err := validator.NewValid("comment", params)
+	err := validator.NewValid("exp", params)
 
 	// 参数校验不通过
 	if err != nil {
@@ -255,39 +257,15 @@ func (this *Comment) create(ctx *gin.Context) {
 		return
 	}
 
-	if utils.Is.Empty(params["bind_id"]) {
-		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "bind_id"), 400)
-		return
-	}
-
-	user := this.meta.user(ctx)
-	if user.Id == 0 {
+	uid := this.meta.user(ctx).Id
+	if uid == 0 {
 		this.json(ctx, nil, "请先登录！", 400)
 		return
 	}
 
-	// 从数据库里面找一下存不存在这个类型的数据
-	switch params["bind_type"] {
-	case "article":
-		if exist := facade.DB.Model(&model.Article{}).Where("id", params["bind_id"]).Exist(); !exist {
-			this.json(ctx, nil, facade.Lang(ctx, "不存在的文章！"), 400)
-			return
-		}
-	case "page":
-		if exist := facade.DB.Model(&model.Pages{}).Where("id", params["bind_id"]).Exist(); !exist {
-			this.json(ctx, nil, facade.Lang(ctx, "不存在的页面！"), 400)
-			return
-		}
-	}
-
 	// 表数据结构体
-	table := model.Comment{
-		Uid: user.Id,
-		Agent: this.header(ctx, "User-Agent"),
-		Ip: cast.ToString(this.get(ctx, "ip")),
-		CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix(),
-	}
-	allow := []any{"pid", "content", "bind_id", "bind_type", "json", "text"}
+	table := model.EXP{Uid: uid, CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
+	allow := []any{"value", "type", "description", "json", "text"}
 
 	// 动态给结构体赋值
 	for key, val := range params {
@@ -305,21 +283,11 @@ func (this *Comment) create(ctx *gin.Context) {
 		return
 	}
 
-	// 更新用户经验
-	go func() {
-		_ = (&model.EXP{}).Add(model.EXP{
-			Uid:  user.Id,
-			Type: "comment",
-			BindId: table.BindId,
-			BindType: table.BindType,
-		})
-	}()
-
 	this.json(ctx, gin.H{ "id": table.Id }, facade.Lang(ctx, "创建成功！"), 200)
 }
 
 // update 更新数据
-func (this *Comment) update(ctx *gin.Context) {
+func (this *EXP) update(ctx *gin.Context) {
 
 	// 获取请求参数
 	params := this.params(ctx)
@@ -330,7 +298,7 @@ func (this *Comment) update(ctx *gin.Context) {
 	}
 
 	// 验证器
-	err := validator.NewValid("comment", params)
+	err := validator.NewValid("exp", params)
 
 	// 参数校验不通过
 	if err != nil {
@@ -339,16 +307,9 @@ func (this *Comment) update(ctx *gin.Context) {
 	}
 
 	// 表数据结构体
-	table := model.Comment{}
-	allow := []any{"content", "json", "text"}
+	table := model.EXP{}
+	allow := []any{"value", "type", "description", "json", "text"}
 	async := utils.Async[map[string]any]()
-
-	root := this.meta.root(ctx)
-
-	// 越权 - 增加可选字段
-	if root {
-		allow = append(allow, "pid", "bind_id", "bind_type")
-	}
 
 	// 动态给结构体赋值
 	for key, val := range params {
@@ -361,7 +322,7 @@ func (this *Comment) update(ctx *gin.Context) {
 	item := facade.DB.Model(&table).WithTrashed().Where("id", params["id"])
 
 	// 越权 - 既没有管理权限，也不是自己的数据
-	if !root && cast.ToInt(item.Find()["uid"]) != this.user(ctx).Id {
+	if !this.meta.root(ctx) && cast.ToInt(item.Find()["uid"]) != this.user(ctx).Id {
 		this.json(ctx, nil, facade.Lang(ctx, "无权限！"), 403)
 		return
 	}
@@ -378,10 +339,10 @@ func (this *Comment) update(ctx *gin.Context) {
 }
 
 // count 统计数据
-func (this *Comment) count(ctx *gin.Context) {
+func (this *EXP) count(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.Comment{}
+	table := model.EXP{}
 	// 获取请求参数
 	params := this.params(ctx)
 
@@ -392,10 +353,10 @@ func (this *Comment) count(ctx *gin.Context) {
 }
 
 // column 获取单列数据
-func (this *Comment) column(ctx *gin.Context) {
+func (this *EXP) column(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.Comment{}
+	table := model.EXP{}
 	// 获取请求参数
 	params := this.params(ctx, map[string]any{
 		"field": "*",
@@ -416,21 +377,21 @@ func (this *Comment) column(ctx *gin.Context) {
 
 	code := 200
 	data := item.Column()
-	msg  := facade.Lang(ctx, "查询成功！")
+	msg := facade.Lang(ctx, "查询成功！")
 
 	if utils.Is.Empty(data) {
 		code = 204
-		msg  = facade.Lang(ctx, "无数据！")
+		msg = facade.Lang(ctx, "无数据！")
 	}
 
 	this.json(ctx, data, msg, code)
 }
 
 // remove 软删除
-func (this *Comment) remove(ctx *gin.Context) {
+func (this *EXP) remove(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.Comment{}
+	table := model.EXP{}
 	// 获取请求参数
 	params := this.params(ctx)
 
@@ -470,10 +431,10 @@ func (this *Comment) remove(ctx *gin.Context) {
 }
 
 // delete 真实删除
-func (this *Comment) delete(ctx *gin.Context) {
+func (this *EXP) delete(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.Comment{}
+	table := model.EXP{}
 	// 获取请求参数
 	params := this.params(ctx)
 
@@ -513,10 +474,10 @@ func (this *Comment) delete(ctx *gin.Context) {
 }
 
 // clear 清空回收站
-func (this *Comment) clear(ctx *gin.Context) {
+func (this *EXP) clear(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.Comment{}
+	table := model.EXP{}
 
 	item  := facade.DB.Model(&table).OnlyTrashed()
 
@@ -545,10 +506,10 @@ func (this *Comment) clear(ctx *gin.Context) {
 }
 
 // restore 恢复数据
-func (this *Comment) restore(ctx *gin.Context) {
+func (this *EXP) restore(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.Comment{}
+	table := model.EXP{}
 	// 获取请求参数
 	params := this.params(ctx)
 
@@ -585,4 +546,308 @@ func (this *Comment) restore(ctx *gin.Context) {
 	}
 
 	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "恢复成功！"), 200)
+}
+
+// checkIn 每日签到
+func (this *EXP) checkIn(ctx *gin.Context) {
+
+	user := this.user(ctx)
+
+	if user.Id == 0 {
+		this.json(ctx, nil, facade.Lang(ctx, "请先登录！"), 401)
+		return
+	}
+
+	err := (&model.EXP{}).Add(model.EXP{
+		Uid:	user.Id,
+		Type:	"check-in",
+	})
+
+	if err != nil {
+		this.json(ctx, gin.H{ "value": 0 }, err.Error(), 202)
+		return
+	}
+
+	this.json(ctx, gin.H{ "value": 30 }, facade.Lang(ctx, "签到成功！"), 200)
+}
+
+// share 分享
+func (this *EXP) share(ctx *gin.Context)  {
+
+	// 获取请求参数
+	params := this.params(ctx, map[string]any{
+		"bind_type": "article",
+	})
+
+	allow := []any{"article", "page"}
+
+	if !utils.In.Array(params["bind_type"], allow) {
+		this.json(ctx, nil, facade.Lang(ctx, "不存在的分享类型！"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["bind_id"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "bind_id"), 400)
+		return
+	}
+
+	user := this.user(ctx)
+
+	if user.Id == 0 {
+		this.json(ctx, nil, facade.Lang(ctx, "请先登录！"), 401)
+		return
+	}
+
+	// 从数据库里面找一下存不存在这个类型的数据
+	switch params["bind_type"] {
+	case "article":
+		if exist := facade.DB.Model(&model.Article{}).Where("id", params["bind_id"]).Exist(); !exist {
+			this.json(ctx, nil, facade.Lang(ctx, "不存在的文章！"), 400)
+			return
+		}
+	case "page":
+		if exist := facade.DB.Model(&model.Pages{}).Where("id", params["bind_id"]).Exist(); !exist {
+			this.json(ctx, nil, facade.Lang(ctx, "不存在的页面！"), 400)
+			return
+		}
+	}
+
+	err := (&model.EXP{}).Add(model.EXP{
+		Type:	  	 "share",
+		Uid:	  	 user.Id,
+		BindId:   	 cast.ToInt(params["bind_id"]),
+		BindType: 	 cast.ToString(params["bind_type"]),
+		Description: cast.ToString(params["description"]),
+	})
+
+	if err != nil {
+		this.json(ctx, gin.H{ "value": 0 }, err.Error(), 202)
+		return
+	}
+
+	this.json(ctx, gin.H{ "value": 1 }, facade.Lang(ctx, "分享成功！"), 200)
+}
+
+// collect 收藏
+func (this *EXP) collect(ctx *gin.Context)  {
+
+	// 获取请求参数
+	params := this.params(ctx, map[string]any{
+		"state":	 1,
+		"bind_type": "article",
+	})
+
+	if !utils.InArray(cast.ToInt(params["state"]), []int{0, 1}) {
+		this.json(ctx, nil, facade.Lang(ctx, "state 只能是 0 或 1"), 400)
+		return
+	}
+
+	allow := []any{"article", "page"}
+
+	if !utils.In.Array(params["bind_type"], allow) {
+		this.json(ctx, nil, facade.Lang(ctx, "不存在的收藏类型！"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["bind_id"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "bind_id"), 400)
+		return
+	}
+
+	user := this.user(ctx)
+
+	if user.Id == 0 {
+		this.json(ctx, nil, facade.Lang(ctx, "请先登录！"), 401)
+		return
+	}
+
+	// 从数据库里面找一下存不存在这个类型的数据
+	switch params["bind_type"] {
+	case "article":
+		if exist := facade.DB.Model(&model.Article{}).Where("id", params["bind_id"]).Exist(); !exist {
+			this.json(ctx, nil, facade.Lang(ctx, "不存在的文章！"), 400)
+			return
+		}
+	case "page":
+		if exist := facade.DB.Model(&model.Pages{}).Where("id", params["bind_id"]).Exist(); !exist {
+			this.json(ctx, nil, facade.Lang(ctx, "不存在的页面！"), 400)
+			return
+		}
+	}
+
+	// 检查是否已经收藏过了
+	item := facade.DB.Model(&model.EXP{}).Where([]any{
+		[]any{"uid", "=", user.Id},
+		[]any{"type", "=", "collect"},
+		[]any{"bind_id", "=", params["bind_id"]},
+		[]any{"bind_type", "=", params["bind_type"]},
+	}).Find()
+
+	// 存在记录，不允许刷经验
+	if !utils.Is.Empty(item) {
+
+		// 取消收藏
+		if cast.ToInt(params["state"]) == 0 {
+			tx := facade.DB.Model(&model.EXP{}).Where(item["id"]).UpdateColumn("state", 0)
+			if tx.Error != nil {
+				this.json(ctx, nil, tx.Error.Error(), 400)
+				return
+			}
+			this.json(ctx, gin.H{ "value": 0 }, facade.Lang(ctx, "取消收藏成功！"), 200)
+			return
+		}
+
+		// 重复收藏
+		if cast.ToInt(params["state"]) == 1 && cast.ToInt(item["state"]) == 1 {
+			this.json(ctx, gin.H{ "value": 0 }, facade.Lang(ctx, "已经收藏过了！"), 400)
+			return
+		}
+
+		// 重新收藏
+		tx := facade.DB.Model(&model.EXP{}).Where(item["id"]).UpdateColumn("state", 1)
+		if tx.Error != nil {
+			this.json(ctx, gin.H{ "value": 0 }, tx.Error.Error(), 400)
+			return
+		}
+
+		this.json(ctx, gin.H{ "value": 0 }, facade.Lang(ctx, "收藏成功！"), 200)
+		return
+	}
+
+	// ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ 以下为没有收藏过的情况 ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓
+
+	if cast.ToInt(params["state"]) == 0 {
+		this.json(ctx, nil, facade.Lang(ctx, "您未收藏该内容！"), 400)
+		return
+	}
+
+	err := (&model.EXP{}).Add(model.EXP{
+		Type:	  	 "collect",
+		Uid:	  	 user.Id,
+		BindId:   	 cast.ToInt(params["bind_id"]),
+		BindType: 	 cast.ToString(params["bind_type"]),
+		Description: cast.ToString(params["description"]),
+	})
+
+	if err != nil {
+		this.json(ctx, gin.H{ "value": 0 }, err.Error(), 202)
+		return
+	}
+
+	this.json(ctx, gin.H{ "value": 1 }, facade.Lang(ctx, "收藏成功！"), 200)
+}
+
+// like 点赞
+func (this *EXP) like(ctx *gin.Context)  {
+
+	// 获取请求参数
+	params := this.params(ctx, map[string]any{
+		"state":	 1,
+		"bind_type": "article",
+	})
+
+	if !utils.InArray(cast.ToInt(params["state"]), []int{0, 1}) {
+		this.json(ctx, nil, facade.Lang(ctx, "state 只能是 0 或 1"), 400)
+		return
+	}
+
+	allow := []any{"article", "page", "comment"}
+
+	if !utils.In.Array(params["bind_type"], allow) {
+		this.json(ctx, nil, facade.Lang(ctx, "不存在的点赞类型！"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["bind_id"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "bind_id"), 400)
+		return
+	}
+
+	user := this.user(ctx)
+
+	if user.Id == 0 {
+		this.json(ctx, nil, facade.Lang(ctx, "请先登录！"), 401)
+		return
+	}
+
+	// 从数据库里面找一下存不存在这个类型的数据
+	switch params["bind_type"] {
+	case "article":
+		if exist := facade.DB.Model(&model.Article{}).Where("id", params["bind_id"]).Exist(); !exist {
+			this.json(ctx, nil, facade.Lang(ctx, "不存在的文章！"), 400)
+			return
+		}
+	case "page":
+		if exist := facade.DB.Model(&model.Pages{}).Where("id", params["bind_id"]).Exist(); !exist {
+			this.json(ctx, nil, facade.Lang(ctx, "不存在的页面！"), 400)
+			return
+		}
+	case "comment":
+		if exist := facade.DB.Model(&model.Comment{}).Where("id", params["bind_id"]).Exist(); !exist {
+			this.json(ctx, nil, facade.Lang(ctx, "不存在的评论！"), 400)
+			return
+		}
+	}
+
+	// 检查是否已经收藏过了
+	item := facade.DB.Model(&model.EXP{}).Where([]any{
+		[]any{"uid", "=", user.Id},
+		[]any{"type", "=", "collect"},
+		[]any{"bind_id", "=", params["bind_id"]},
+		[]any{"bind_type", "=", params["bind_type"]},
+	}).Find()
+
+	// 存在记录，不允许刷经验
+	if !utils.Is.Empty(item) {
+
+		// 取消点赞
+		if cast.ToInt(params["state"]) == 0 {
+			tx := facade.DB.Model(&model.EXP{}).Where(item["id"]).UpdateColumn("state", 0)
+			if tx.Error != nil {
+				this.json(ctx, nil, tx.Error.Error(), 400)
+				return
+			}
+			this.json(ctx, gin.H{ "value": 0 }, facade.Lang(ctx, "点踩成功！"), 200)
+			return
+		}
+
+		// 重复收藏
+		if cast.ToInt(params["state"]) == 1 && cast.ToInt(item["state"]) == 1 {
+			this.json(ctx, gin.H{ "value": 0 }, facade.Lang(ctx, "已经点过赞啦！"), 400)
+			return
+		}
+
+		// 重新收藏
+		tx := facade.DB.Model(&model.EXP{}).Where(item["id"]).UpdateColumn("state", 1)
+		if tx.Error != nil {
+			this.json(ctx, gin.H{ "value": 0 }, tx.Error.Error(), 400)
+			return
+		}
+
+		this.json(ctx, gin.H{ "value": 0 }, facade.Lang(ctx, "点赞成功！"), 200)
+		return
+	}
+
+	// ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ 以下为没有点赞过的情况 ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓
+
+	msg := "点赞"
+	if cast.ToInt(params["state"]) == 0 {
+		msg = "点踩"
+	}
+
+	err := (&model.EXP{}).Add(model.EXP{
+		Type:	  	 "collect",
+		Uid:	  	 user.Id,
+		State: 		 cast.ToInt(params["state"]),
+		BindId:   	 cast.ToInt(params["bind_id"]),
+		BindType: 	 cast.ToString(params["bind_type"]),
+		Description: utils.Default(cast.ToString(params["description"]), msg + "奖励"),
+	})
+
+	if err != nil {
+		this.json(ctx, gin.H{ "value": 0 }, err.Error(), 202)
+		return
+	}
+
+	this.json(ctx, gin.H{ "value": 1 }, facade.Lang(ctx, msg + "成功！"), 200)
 }

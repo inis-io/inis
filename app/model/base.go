@@ -41,6 +41,8 @@ func InitTable() {
 		InitTags,
 		InitUsers,
 		InitPages,
+		InitLevel,
+		InitEXP,
 	}
 
 	for _, val := range allow {

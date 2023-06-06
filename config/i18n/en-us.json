@@ -50,5 +50,14 @@
     "数据库密码不能为空！": "Database password can not be empty!",
     "不能删除自己！": "Can not delete yourself!",
     "好的！": "OK!",
-    "申请提交成功！": "Application submitted successfully!"
+    "申请提交成功！": "Application submitted successfully!",
+    "请先登录！": "Please login first!",
+    "今天已经签到过了！": "Today has been signed!",
+    "签到失败！": "Sign failed!",
+    "签到成功！": "Sign success!",
+    "无可操作数据！": "No operable data!",
+    "不存在的分享类型！": "Non-existent sharing type!",
+    "不存在的文章！": "Non-existent article!",
+    "不存在的页面！": "Non-existent page!",
+    "分享成功！": "Share success!"
 }

@@ -34,6 +34,8 @@ func NewValid(table any, params map[string]any) (err error) {
 		item = &Users{}
 	case "links":
 		item = &Links{}
+	case "level":
+		item = &Level{}
 	case "config":
 		item = &Config{}
 	case "banner":
@@ -56,6 +58,8 @@ func NewValid(table any, params map[string]any) (err error) {
 		item = &LinksGroup{}
 	case "article-group":
 		item = &ArticleGroup{}
+	case "exp":
+		item = &EXP{}
 	default:
 		return errors.New("未知的验证器！")
 	}

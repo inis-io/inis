@@ -39,6 +39,7 @@ func InitConfig() {
 			{Key: "SYSTEM_QPS", Value: "1", Json: utils.Json.Encode(map[string]any{
 				"point": 10, "global": 50,
 			}), Remark: "是否开启接口限流器（QPS）"},
+			{Key: "SYSTEM_PAGE_LIMIT", Value: "1", Text: "50", Remark: "限制分页查询的最大条数量"},
 		}
 
 		for _, item := range configs {

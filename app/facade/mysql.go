@@ -729,8 +729,6 @@ func (this *ModelStruct) WithoutField(args ...any) *ModelStruct {
 
 	this.model.Omit(this.withoutField...)
 
-	fmt.Println(this.withoutField)
-
 	return this
 }
 
@@ -879,27 +877,73 @@ func (this *ModelStruct) Min(field string) (result int64) {
 }
 
 // Create - 创建
-func (this *ModelStruct) Create(data any) (tx *gorm.DB) {
-	return this.model.Create(data)
+func (this *ModelStruct) Create(data ...any) (tx *gorm.DB) {
+
+	if len(data) <= 0 {
+		return this.model
+	}
+
+	return this.model.Create(data[0])
 }
 
 // Update - 更新
-func (this *ModelStruct) Update(data any) (tx *gorm.DB) {
-	// 返回主键
-	return this.model.Updates(data)
+func (this *ModelStruct) Update(data ...any) (tx *gorm.DB) {
+
+	if len(data) <= 0 {
+		return this.model
+	}
+
+	return this.model.Updates(data[0])
+}
+
+// Inc - 自增
+func (this *ModelStruct) Inc(column any, step ...int) *ModelStruct {
+
+	size := 1
+
+	if len(step) > 0 {
+		size = step[0]
+	}
+
+	this.model.UpdateColumn("`" + cast.ToString(column) + "`", gorm.Expr("`" + cast.ToString(column) + "` + ?", size))
+
+	return this
+}
+
+// Dec - 自减
+func (this *ModelStruct) Dec(column any, step ...int) *ModelStruct {
+
+	size := 1
+
+	if len(step) > 0 {
+		size = step[0]
+	}
+
+	this.model.UpdateColumn("`" + cast.ToString(column) + "`", gorm.Expr("`" + cast.ToString(column) + "` - ?", size))
+
+	return this
+}
+
+// UpdateColumn - 更新单个字段
+func (this *ModelStruct) UpdateColumn(column any, value any) (tx *gorm.DB) {
+	return this.model.UpdateColumn(cast.ToString(column), value)
 }
 
 // Save - 保存
-func (this *ModelStruct) Save(data any) (tx *gorm.DB) {
+func (this *ModelStruct) Save(data ...any) (tx *gorm.DB) {
+
+	if len(data) <= 0 {
+		return this.model
+	}
 
 	// 查询是否存在 - 存在则更新，不存在则创建
 	tx = this.model.First(&this.dest)
 	if tx.Error != nil {
-		return NewDB(DBModeMySql).Model(&this.dest).Create(data)
+		return NewDB(DBModeMySql).Model(&this.dest).Create(data[0])
 	}
 
 	// 更新
-	return this.model.Updates(data)
+	return this.model.Updates(data[0])
 }
 
 // Force - 真实删除

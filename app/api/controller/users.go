@@ -181,7 +181,6 @@ func (this *Users) all(ctx *gin.Context) {
 	// 获取请求参数
 	params := this.params(ctx, map[string]any{
 		"page":  1,
-		"limit": 5,
 		"order": "create_time desc",
 	})
 
@@ -198,7 +197,7 @@ func (this *Users) all(ctx *gin.Context) {
 	}
 
 	page := cast.ToInt(params["page"])
-	limit := cast.ToInt(params["limit"])
+	limit := this.meta.limit(ctx)
 	var result []model.Users
 	mold := facade.DB.Model(&result).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
 	mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
@@ -325,8 +324,15 @@ func (this *Users) update(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Users{}
-	allow := []any{"id", "account", "password", "nickname", "email", "phone", "avatar", "description", "source", "pages", "remark", "title", "json", "text"}
+	allow := []any{"id", "account", "password", "nickname", "email", "phone", "avatar", "description", "json", "text"}
 	async := utils.Async[map[string]any]()
+
+	root := this.meta.root(ctx)
+
+	// 越权 - 增加可选字段
+	if root {
+		allow = append(allow, "source", "pages", "remark", "title")
+	}
 
 	// 动态给结构体赋值
 	for key, val := range params {
@@ -341,7 +347,7 @@ func (this *Users) update(ctx *gin.Context) {
 	}
 
 	// 越权 - 既没有管理权限，也不是自己的数据
-	if !this.meta.root(ctx) && cast.ToInt(params["id"]) != this.user(ctx).Id {
+	if !root && cast.ToInt(params["id"]) != this.user(ctx).Id {
 		this.json(ctx, nil, facade.Lang(ctx, "无权限！"), 403)
 		return
 	}

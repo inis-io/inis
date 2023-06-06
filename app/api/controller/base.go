@@ -217,7 +217,7 @@ func (this meta) route(ctx *gin.Context) (result model.AuthRules) {
 
 // 从上下文中解析规则信息
 func (this meta) rules(ctx *gin.Context) (slice []any) {
-	return model.UserRules(this.user(ctx).Id)
+	return (&model.Users{}).Rules(this.user(ctx).Id)
 }
 
 // 从上下文中解析权限信息
@@ -247,3 +247,59 @@ func (this meta) root(ctx *gin.Context) (ok bool) {
 
 	return false
 }
+
+// 分页限制
+func (this meta) limit(ctx *gin.Context) (result int) {
+
+	// 请求参数
+	params := base{}.params(ctx, map[string]any{
+		"limit": 10,
+	})
+
+	// 配置信息
+	var config map[string]any
+
+	// 缓存名称
+	cacheName  := "config[SYSTEM_PAGE_LIMIT]"
+	// 是否开启了缓存
+	cacheState := cast.ToBool(facade.CacheToml.Get("open"))
+
+	// 检查缓存是否存在
+	if cacheState && facade.Cache.Has(cacheName) {
+
+		config = cast.ToStringMap(facade.Cache.Get(cacheName))
+
+	} else {
+
+		config = facade.DB.Model(&model.Config{}).Where("key", "SYSTEM_PAGE_LIMIT").Find()
+		// 存储到缓存中
+		if cacheState {
+			go facade.Cache.Set(cacheName, config)
+		}
+	}
+
+	// 最大限制
+	max   := cast.ToInt(config["text"])
+	// 当前限制
+	limit := cast.ToInt(params["limit"])
+	// 是否开启了限制
+	state := cast.ToBool(config["value"])
+
+	// 限制小于等于 0 - 返回默认值
+	if limit <= 0 {
+		return 10
+	}
+
+	// 没开启限制 - 直接返回
+	if !state {
+		return limit
+	}
+
+	if limit > max {
+		return max
+	}
+
+	return limit
+}
+
+// ============================== 上下文挂载的 meta 信息 ==============================

@@ -158,6 +158,26 @@ func (this *Pages) one(ctx *gin.Context) {
 		msg[0] = "数据请求成功！"
 	}
 
+	// 更新用户经验
+	go func() {
+		user := this.meta.user(ctx)
+		// 用户未登录
+		if user.Id == 0 {
+			return
+		}
+		item := cast.ToStringMap(data)
+		// 数据不存在
+		if utils.Is.Empty(item) {
+			return
+		}
+		_ = (&model.EXP{}).Add(model.EXP{
+			Uid:  user.Id,
+			Type: "visit",
+			BindId: cast.ToInt(item["id"]),
+			BindType: "page",
+		})
+	}()
+
 	this.json(ctx, data, facade.Lang(ctx, strings.Join(msg, "")), code)
 }
 
@@ -171,7 +191,6 @@ func (this *Pages) all(ctx *gin.Context) {
 	// 获取请求参数
 	params := this.params(ctx, map[string]any{
 		"page":  1,
-		"limit": 5,
 		"order": "create_time desc",
 	})
 
@@ -188,7 +207,7 @@ func (this *Pages) all(ctx *gin.Context) {
 	}
 
 	page := cast.ToInt(params["page"])
-	limit := cast.ToInt(params["limit"])
+	limit := this.meta.limit(ctx)
 	var result []model.Pages
 	mold := facade.DB.Model(&result).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"]).WithoutField("content")
 	mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])

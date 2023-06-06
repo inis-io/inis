@@ -96,10 +96,11 @@ func (this *Test) INDEX(ctx *gin.Context) {
 	// params := this.params(ctx)
 
 	res := gin.H{
-		"root" : this.meta.root(ctx),
-		"user" : this.meta.user(ctx),
-		"route": this.meta.route(ctx),
-		"rules": this.meta.rules(ctx),
+		// "root" : this.meta.root(ctx),
+		// "user" : this.meta.user(ctx),
+		// "route": this.meta.route(ctx),
+		// "rules": this.meta.rules(ctx),
+		"limit": this.meta.limit(ctx),
 		// "json" : utils.Json.Encode(params["json"]),
 	}
 

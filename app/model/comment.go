@@ -13,11 +13,11 @@ type Comment struct {
 	Id       int     `gorm:"type:int(32); comment:主键;" json:"id"`
 	Pid		 int     `gorm:"type:int(32); comment:父级ID; default:0;" json:"pid"`
 	Uid		 int     `gorm:"type:int(32); comment:用户ID; default:0;" json:"uid"`
-	Bind     string  `gorm:"type:varchar(32); comment:绑定ID; default:Null;" json:"bind"`
 	Content  string  `gorm:"type:varchar(1024); comment:内容; default:Null;" json:"content"`
 	Ip       string  `gorm:"comment:IP; default:Null;" json:"ip"`
 	Agent    string  `gorm:"type:varchar(512); comment:浏览器信息; default:Null;" json:"agent"`
-	Type 	 string  `gorm:"comment:类型; default:'article';" json:"type"`
+	BindId 	 int     `gorm:"type:int(32); comment:绑定ID; default:0;" json:"bind_id"`
+	BindType string  `gorm:"comment:绑定类型; default:'article';" json:"bind_type"`
 	Like     string  `gorm:"type:text; comment:点赞; default:Null;" json:"like"`
 	// 以下为公共字段
 	Json       any                   `gorm:"type:longtext; comment:用于存储JSON数据;" json:"json"`
@@ -57,7 +57,7 @@ func (this *Comment) AfterFind(tx *gorm.DB) (err error) {
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
 		// 文章信息
-		article = utils.Map.WithField(facade.DB.Model(&Article{}).Find(this.Bind), []string{"id", "title", "abstract"})
+		article = utils.Map.WithField(facade.DB.Model(&Article{}).Find(this.BindId), []string{"id", "title", "abstract"})
 	}(&wg)
 
 	wg.Wait()

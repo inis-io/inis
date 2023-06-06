@@ -16,7 +16,8 @@ type Links struct {
 	Url         string `gorm:"size:256; comment:链接; default:Null;" json:"url"`
 	Avatar      string `gorm:"size:256; comment:头像; default:Null;" json:"avatar"`
 	Target      string `gorm:"size:32; comment:打开方式; default:'_blank';" json:"target"`
-	State       string `gorm:"size:32; comment:状态; default:'ok';" json:"state"`
+	Check 	 	string `gorm:"size:32; comment:审核; default:'wait';" json:"check"`
+	State       string `gorm:"size:32; comment:状态; default:'wait';" json:"state"`
 	Remark      string `gorm:"comment:备注; default:Null;" json:"remark"`
 	Group       int    `gorm:"size:32; comment:分组; default:0;" json:"group"`
 	// 以下为公共字段
@@ -38,28 +39,7 @@ func InitLinks() {
 	}
 
 	// 初始化数据
-	go func() {
-
-		array := []Links{
-			{
-				Nickname:    "兔子",
-				Description: "许一人，以偏爱，尽此生，之慷慨！",
-				Url:         "https://inis.cn",
-				Avatar:      "https://q.qlogo.cn/g?b=qq&nk=97783391&s=640",
-				Remark:      "如果可以，请不要删除我！开发不易，感谢支持！",
-			},
-		}
-
-		// 如果数据表中有数据，则不进行初始化
-		if facade.DB.Model(&Links{}).Count() != 0 {
-			return
-		}
-
-		// 创建数据
-		for _, item := range array {
-			facade.DB.Model(&item).Create(&item)
-		}
-	}()
+	go initLinksData()
 }
 
 // AfterFind - 查询Hook
@@ -110,4 +90,28 @@ func (this *Links) AfterSave(tx *gorm.DB) (err error) {
 	}()
 
 	return
+}
+
+// initLinksData - 初始化Links表数据
+func initLinksData() {
+
+	// 如果数据表中有数据，则不进行初始化
+	if facade.DB.Model(&Links{}).Count() != 0 {
+		return
+	}
+
+	array := []Links{
+		{
+			Nickname:    "兔子",
+			Description: "许一人，以偏爱，尽此生，之慷慨！",
+			Url:         "https://inis.cn",
+			Avatar:      "https://q.qlogo.cn/g?b=qq&nk=97783391&s=640",
+			Remark:      "如果可以，请不要删除我！开发不易，感谢支持！",
+		},
+	}
+
+	// 创建数据
+	for _, item := range array {
+		facade.DB.Model(&item).Create(&item)
+	}
 }

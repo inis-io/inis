@@ -2,7 +2,6 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"inis/app/facade"
@@ -13,13 +12,13 @@ import (
 	"time"
 )
 
-type ApiKeys struct {
+type Level struct {
 	// 继承
 	base
 }
 
 // IGET - GET请求本体
-func (this *ApiKeys) IGET(ctx *gin.Context) {
+func (this *Level) IGET(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
@@ -38,7 +37,7 @@ func (this *ApiKeys) IGET(ctx *gin.Context) {
 }
 
 // IPOST - POST请求本体
-func (this *ApiKeys) IPOST(ctx *gin.Context) {
+func (this *Level) IPOST(ctx *gin.Context) {
 
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
@@ -59,7 +58,7 @@ func (this *ApiKeys) IPOST(ctx *gin.Context) {
 }
 
 // IPUT - PUT请求本体
-func (this *ApiKeys) IPUT(ctx *gin.Context) {
+func (this *Level) IPUT(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
@@ -79,7 +78,7 @@ func (this *ApiKeys) IPUT(ctx *gin.Context) {
 }
 
 // IDEL - DELETE请求本体
-func (this *ApiKeys) IDEL(ctx *gin.Context) {
+func (this *Level) IDEL(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
@@ -100,18 +99,18 @@ func (this *ApiKeys) IDEL(ctx *gin.Context) {
 }
 
 // INDEX - GET请求本体
-func (this *ApiKeys) INDEX(ctx *gin.Context) {
+func (this *Level) INDEX(ctx *gin.Context) {
 	this.json(ctx, nil, facade.Lang(ctx, "没什么用！"), 202)
 }
 
 // 删除缓存
-func (this *ApiKeys) delCache() {
+func (this *Level) delCache() {
 	// 删除缓存
-	facade.Cache.DelTags([]any{"<GET>","api-keys"})
+	facade.Cache.DelTags([]any{"<GET>","level"})
 }
 
 // one 获取指定数据
-func (this *ApiKeys) one(ctx *gin.Context) {
+func (this *Level) one(ctx *gin.Context) {
 
 	code := 204
 	msg := []string{"无数据！", ""}
@@ -121,7 +120,7 @@ func (this *ApiKeys) one(ctx *gin.Context) {
 	params := this.params(ctx)
 
 	// 表数据结构体
-	table := model.ApiKeys{}
+	table := model.Level{}
 	// 允许查询的字段
 	allow := []any{"id"}
 	// 动态给结构体赋值
@@ -163,7 +162,7 @@ func (this *ApiKeys) one(ctx *gin.Context) {
 }
 
 // all 获取全部数据
-func (this *ApiKeys) all(ctx *gin.Context) {
+func (this *Level) all(ctx *gin.Context) {
 
 	code := 204
 	msg := []string{"无数据！", ""}
@@ -176,7 +175,7 @@ func (this *ApiKeys) all(ctx *gin.Context) {
 	})
 
 	// 表数据结构体
-	table := model.ApiKeys{}
+	table := model.Level{}
 	// 允许查询的字段
 	var allow []any
 	// 动态给结构体赋值
@@ -189,7 +188,7 @@ func (this *ApiKeys) all(ctx *gin.Context) {
 
 	page := cast.ToInt(params["page"])
 	limit := this.meta.limit(ctx)
-	var result []model.ApiKeys
+	var result []model.Level
 	mold := facade.DB.Model(&result).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
 	mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 	count := mold.Where(table).Count()
@@ -228,7 +227,7 @@ func (this *ApiKeys) all(ctx *gin.Context) {
 }
 
 // save 保存数据 - 包含创建和更新
-func (this *ApiKeys) save(ctx *gin.Context) {
+func (this *Level) save(ctx *gin.Context) {
 
 	// 获取请求参数
 	params := this.params(ctx)
@@ -241,12 +240,12 @@ func (this *ApiKeys) save(ctx *gin.Context) {
 }
 
 // create 创建数据
-func (this *ApiKeys) create(ctx *gin.Context) {
+func (this *Level) create(ctx *gin.Context) {
 
 	// 获取请求参数
 	params := this.params(ctx)
 	// 验证器
-	err := validator.NewValid("api-keys", params)
+	err := validator.NewValid("level", params)
 
 	// 参数校验不通过
 	if err != nil {
@@ -255,34 +254,15 @@ func (this *ApiKeys) create(ctx *gin.Context) {
 	}
 
 	// 表数据结构体
-	table := model.ApiKeys{CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
-	allow := []any{"value", "remark", "json", "text"}
+	table := model.Level{CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
+	allow := []any{"name", "value", "description", "experience", "remark", "json", "text"}
 
 	// 动态给结构体赋值
 	for key, val := range params {
 		// 防止恶意传入字段
 		if utils.In.Array(key, allow) {
-			if key == "value" {
-				val = strings.ToUpper(cast.ToString(val))
-			}
 			utils.Struct.Set(&table, key, val)
 		}
-	}
-
-	// 判断 value 是否是空的 - 自动创建
-	if utils.Is.Empty(table.Value) {
-		// 生成一个随机的UUID
-		UUID := uuid.New().String()
-		// 去除UUID中的横杠
-		UUID = strings.Replace(UUID, "-", "", -1)
-		// 转换成大写
-		utils.Struct.Set(&table, "value", strings.ToUpper(UUID))
-	}
-
-	// 检查 value 唯一性
-	if facade.DB.Model(&table).Where("value", table.Value).Exist() {
-		this.json(ctx, nil, facade.Lang(ctx, "%s 已经存在！", table.Value), 400)
-		return
 	}
 
 	// 添加数据
@@ -297,7 +277,7 @@ func (this *ApiKeys) create(ctx *gin.Context) {
 }
 
 // update 更新数据
-func (this *ApiKeys) update(ctx *gin.Context) {
+func (this *Level) update(ctx *gin.Context) {
 
 	// 获取请求参数
 	params := this.params(ctx)
@@ -308,7 +288,7 @@ func (this *ApiKeys) update(ctx *gin.Context) {
 	}
 
 	// 验证器
-	err := validator.NewValid("api-keys", params)
+	err := validator.NewValid("level", params)
 
 	// 参数校验不通过
 	if err != nil {
@@ -317,38 +297,16 @@ func (this *ApiKeys) update(ctx *gin.Context) {
 	}
 
 	// 表数据结构体
-	table := model.ApiKeys{}
-	allow := []any{"value", "remark", "json", "text"}
+	table := model.Level{}
+	allow := []any{"name", "value", "description", "experience", "remark", "json", "text"}
 	async := utils.Async[map[string]any]()
 
 	// 动态给结构体赋值
 	for key, val := range params {
 		// 防止恶意传入字段
 		if utils.In.Array(key, allow) {
-			if key == "value" {
-				val = strings.ToUpper(cast.ToString(val))
-			}
 			async.Set(key, val)
 		}
-	}
-
-	// 判断 value 是否是空的 - 自动创建
-	if utils.Is.Empty(async.Get("value")) {
-		// 生成一个随机的UUID
-		UUID := uuid.New().String()
-		// 去除UUID中的横杠
-		UUID = strings.Replace(UUID, "-", "", -1)
-		// 转换成大写
-		async.Set("value", strings.ToUpper(UUID))
-	}
-
-	key  := cast.ToString(async.Get("value"))
-	item := facade.DB.Model(&table).Where("value", key).Find()
-
-	// 检查 value 唯一性
-	if !utils.IsEmpty(item) && item["value"] != key {
-		this.json(ctx, nil, facade.Lang(ctx, "%s 已经存在！", key), 400)
-		return
 	}
 
 	// 更新数据 - Scan() 方法用于将数据扫描到结构体中，使用的位置很重要
@@ -363,10 +321,10 @@ func (this *ApiKeys) update(ctx *gin.Context) {
 }
 
 // count 统计数据
-func (this *ApiKeys) count(ctx *gin.Context) {
+func (this *Level) count(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.ApiKeys{}
+	table := model.Level{}
 	// 获取请求参数
 	params := this.params(ctx)
 
@@ -377,10 +335,10 @@ func (this *ApiKeys) count(ctx *gin.Context) {
 }
 
 // column 获取单列数据
-func (this *ApiKeys) column(ctx *gin.Context) {
+func (this *Level) column(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.ApiKeys{}
+	table := model.Level{}
 	// 获取请求参数
 	params := this.params(ctx, map[string]any{
 		"field": "*",
@@ -412,10 +370,10 @@ func (this *ApiKeys) column(ctx *gin.Context) {
 }
 
 // remove 软删除
-func (this *ApiKeys) remove(ctx *gin.Context) {
+func (this *Level) remove(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.ApiKeys{}
+	table := model.Level{}
 	// 获取请求参数
 	params := this.params(ctx)
 
@@ -446,31 +404,14 @@ func (this *ApiKeys) remove(ctx *gin.Context) {
 		return
 	}
 
-	// 如果是全部删除，检查是否开启了 API_KEY
-	if facade.DB.Model(&model.ApiKeys{}).Count() == 0 {
-
-		item := facade.DB.Model(&model.Config{}).Where("key", "SYSTEM_API_KEY")
-
-		if cast.ToInt(item.Find()["value"]) == 1 {
-			res := item.Update(map[string]any{
-				"value": 0,
-			})
-			if res.Error == nil {
-				go facade.Cache.DelTags("SYSTEM_API_KEY")
-				this.json(ctx, nil, facade.Lang(ctx, "删除成功！<br>同时检测到您开启了API_KEY，但无密钥可用。<br>兔子已为您自动关闭API_KEY功能！"), 200)
-				return
-			}
-		}
-	}
-
 	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "删除成功！"), 200)
 }
 
 // delete 真实删除
-func (this *ApiKeys) delete(ctx *gin.Context) {
+func (this *Level) delete(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.ApiKeys{}
+	table := model.Level{}
 	// 获取请求参数
 	params := this.params(ctx)
 
@@ -505,10 +446,10 @@ func (this *ApiKeys) delete(ctx *gin.Context) {
 }
 
 // clear 清空回收站
-func (this *ApiKeys) clear(ctx *gin.Context) {
+func (this *Level) clear(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.ApiKeys{}
+	table := model.Level{}
 
 	item  := facade.DB.Model(&table).OnlyTrashed()
 
@@ -532,10 +473,10 @@ func (this *ApiKeys) clear(ctx *gin.Context) {
 }
 
 // restore 恢复数据
-func (this *ApiKeys) restore(ctx *gin.Context) {
+func (this *Level) restore(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.ApiKeys{}
+	table := model.Level{}
 	// 获取请求参数
 	params := this.params(ctx)
 
@@ -543,7 +484,7 @@ func (this *ApiKeys) restore(ctx *gin.Context) {
 	ids := utils.Unity.Ids(params["ids"])
 
 	if utils.Is.Empty(ids) {
-		this.json(ctx, params, facade.Lang(ctx, "%s 不能为空！", "ids"), 400)
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "ids"), 400)
 		return
 	}
 

@@ -10,6 +10,7 @@ import (
 	"inis/app/facade"
 	regexp2 "regexp"
 	"strings"
+	"sync"
 )
 
 type Users struct {
@@ -22,6 +23,7 @@ type Users struct {
 	Avatar      string `gorm:"comment:头像; default:Null;" json:"avatar"`
 	Description string `gorm:"comment:描述; default:Null;" json:"description"`
 	Title       string `gorm:"comment:头衔; default:Null;" json:"title"`
+	Exp  		int    `gorm:"type:int(32); comment:经验值; default:0;" json:"exp"`
 	Pages       string `gorm:"comment:页面权限; default:Null;" json:"pages"`
 	Source      string `gorm:"size:32; default:'default'; comment:注册来源;" json:"source"`
 	Remark      string `gorm:"comment:备注; default:Null;" json:"remark"`
@@ -76,25 +78,26 @@ func (this *Users) AfterFind(tx *gorm.DB) (err error) {
 	// 替换 url 中的域名
 	this.Avatar = utils.Replace(this.Avatar, DomainTemp1())
 
-	// 查询自己拥有的权限
-	group := facade.DB.Model(&AuthGroup{}).Like("uids", "%|"+cast.ToString(this.Id)+"|%").Column("id", "rules")
+	wg := sync.WaitGroup{}
+	wg.Add(2)
 
-	var ids []int
-	var rules []string
+	var auth, level map[string]any
 
-	for _, val := range cast.ToSlice(group) {
-		item := cast.ToStringMap(val)
-		ids   = append(ids, cast.ToInt(item["id"]))
-		// 逗号分隔的权限
-		rules = append(rules, strings.Split(cast.ToString(item["rules"]), ",")...)
-	}
+	go func() {
+		defer wg.Done()
+		auth = this.getAuthAttr()
+	}()
 
-	all := utils.InArray("all", rules)
+	go func() {
+		defer wg.Done()
+		level = this.getLevelAttr()
+	}()
+
+	wg.Wait()
+
 	this.Result = map[string]any{
-		"auth": map[string]any{
-			"all": all,
-			"group": ids,
-		},
+		"auth" : auth,
+		"level": level,
 	}
 	this.Text = cast.ToString(this.Text)
 	this.Json = utils.Json.Decode(this.Json)
@@ -137,8 +140,8 @@ func (this *Users) AfterSave(tx *gorm.DB) (err error) {
 	return
 }
 
-// UserRules - 生成用户权限列表
-func UserRules(uid any) (slice []any) {
+// Rules - 生成用户权限列表
+func (this *Users) Rules(uid any) (slice []any) {
 
 	// 生成规则列表
 	item := func(uid any) (slice []any) {
@@ -210,4 +213,60 @@ func UserRules(uid any) (slice []any) {
 	}
 
 	return rules
+}
+
+// getAuthAttr - 解析用户权限
+func (this *Users) getAuthAttr() (result map[string]any) {
+
+	// 查询自己拥有的权限
+	group := facade.DB.Model(&AuthGroup{}).Like("uids", "%|"+cast.ToString(this.Id)+"|%").Column("id", "rules")
+
+	var ids []int
+	var rules []string
+
+	for _, val := range cast.ToSlice(group) {
+		item := cast.ToStringMap(val)
+		ids   = append(ids, cast.ToInt(item["id"]))
+		// 逗号分隔的权限
+		rules = append(rules, strings.Split(cast.ToString(item["rules"]), ",")...)
+	}
+
+	result = map[string]any{
+		"all": utils.InArray("all", rules),
+		"group": ids,
+	}
+
+	return
+}
+
+// getLevelAttr - 解析用户等级
+func (this *Users) getLevelAttr() (result map[string]any) {
+
+	// 查询字段
+	field := []string{"name", "value", "description", "experience"}
+
+	// 查询当前等级
+	item1 := facade.DB.Model(&Level{}).Field(field).Limit(1)
+	item1.Where("experience", "<=", this.Exp).Order("experience desc")
+
+	// 查询下一等级
+	item2 := facade.DB.Model(&Level{}).Field(field).Limit(1)
+	item2.Where("experience", ">", this.Exp).Order("experience asc")
+
+	currents := cast.ToSlice(item1.Column())
+	var current any
+	if len(currents) > 0 {
+		current = currents[0]
+	}
+
+	nexts    := cast.ToSlice(item2.Column())
+	var next any
+	if len(nexts) > 0 {
+		next = nexts[0]
+	}
+
+	return map[string]any{
+		"current": current,
+		"next"   : next,
+	}
 }

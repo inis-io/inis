@@ -158,6 +158,26 @@ func (this *Article) one(ctx *gin.Context) {
 		msg[0] = "数据请求成功！"
 	}
 
+	// 更新用户经验
+	go func() {
+		user := this.meta.user(ctx)
+		// 用户未登录
+		if user.Id == 0 {
+			return
+		}
+		item := cast.ToStringMap(data)
+		// 数据不存在
+		if utils.Is.Empty(item) {
+			return
+		}
+		_ = (&model.EXP{}).Add(model.EXP{
+			Uid:  user.Id,
+			Type: "visit",
+			BindId: cast.ToInt(item["id"]),
+			BindType: "article",
+		})
+	}()
+
 	this.json(ctx, data, facade.Lang(ctx, strings.Join(msg, "")), code)
 }
 
@@ -171,7 +191,6 @@ func (this *Article) all(ctx *gin.Context) {
 	// 获取请求参数
 	params := this.params(ctx, map[string]any{
 		"page":        1,
-		"limit":       5,
 		"order":       "create_time desc",
 	})
 
@@ -188,7 +207,7 @@ func (this *Article) all(ctx *gin.Context) {
 	}
 
 	page := cast.ToInt(params["page"])
-	limit := cast.ToInt(params["limit"])
+	limit := this.meta.limit(ctx)
 	var result []model.Article
 	mold := facade.DB.Model(&result).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"]).WithoutField("content")
 	mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
@@ -262,7 +281,12 @@ func (this *Article) create(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Article{Uid: uid, CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
-	allow := []any{"title", "abstract", "content", "covers", "top", "tags", "group", "editor", "remark", "json", "text"}
+	allow := []any{"title", "abstract", "content", "covers", "tags", "group", "editor", "remark", "json", "text"}
+
+	// 越权 - 增加可选字段
+	if this.meta.root(ctx) {
+		allow = append(allow, "top")
+	}
 
 	// 动态给结构体赋值
 	for key, val := range params {
@@ -305,8 +329,15 @@ func (this *Article) update(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Article{}
-	allow := []any{"title", "abstract", "content", "covers", "top", "tags", "group", "editor", "remark", "json", "text"}
+	allow := []any{"title", "abstract", "content", "covers", "tags", "group", "editor", "remark", "json", "text"}
 	async := utils.Async[map[string]any]()
+
+	root := this.meta.root(ctx)
+
+	// 越权 - 增加可选字段
+	if root {
+		allow = append(allow, "top")
+	}
 
 	// 动态给结构体赋值
 	for key, val := range params {
@@ -322,7 +353,7 @@ func (this *Article) update(ctx *gin.Context) {
 	item := facade.DB.Model(&table).WithTrashed().Where("id", params["id"])
 
 	// 越权 - 既没有管理权限，也不是自己的数据
-	if !this.meta.root(ctx) && cast.ToInt(item.Find()["uid"]) != this.user(ctx).Id {
+	if !root && cast.ToInt(item.Find()["uid"]) != this.user(ctx).Id {
 		this.json(ctx, nil, facade.Lang(ctx, "无权限！"), 403)
 		return
 	}

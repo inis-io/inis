@@ -177,7 +177,6 @@ func (this *Config) all(ctx *gin.Context) {
 	// 获取请求参数
 	params := this.params(ctx, map[string]any{
 		"page":        1,
-		"limit":       5,
 		"order":       "create_time desc",
 	})
 
@@ -194,7 +193,7 @@ func (this *Config) all(ctx *gin.Context) {
 	}
 
 	page := cast.ToInt(params["page"])
-	limit := cast.ToInt(params["limit"])
+	limit := this.meta.limit(ctx)
 	var result []model.Config
 	mold := facade.DB.Model(&result).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
 	mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
