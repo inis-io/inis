@@ -31,7 +31,9 @@ func QpsPoint() gin.HandlerFunc {
 
 		var config map[string]any
 
+		// 缓存名称
 		cacheName  := "config[SYSTEM_QPS]"
+		// 是否开启了缓存
 		cacheState := cast.ToBool(facade.CacheToml.Get("open"))
 
 		// 检查缓存是否存在

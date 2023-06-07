@@ -159,7 +159,7 @@ func (this *Comm) login(ctx *gin.Context) {
 		return
 	}
 
-	token, _ := facade.Jwt.Create(map[string]any{
+	jwt := facade.Jwt().Create(map[string]any{
 		"uid":  table.Id,
 		"hash": facade.Hash.Sum32(table.Password),
 	})
@@ -174,11 +174,11 @@ func (this *Comm) login(ctx *gin.Context) {
 
 	result := map[string]any{
 		"user":  item,
-		"token": token,
+		"token": jwt.Text,
 	}
 
 	// 往客户端写入cookie - 存储登录token
-	setToken(ctx, token)
+	setToken(ctx, jwt.Text)
 
 	this.json(ctx, result, facade.Lang(ctx, "登录成功！"), 200)
 }
@@ -302,7 +302,7 @@ func (this *Comm) register(ctx *gin.Context) {
 	// 删除验证码
 	facade.Cache.Del(cacheName)
 
-	token, _ := facade.Jwt.Create(map[string]any{
+	jwt := facade.Jwt().Create(map[string]any{
 		"uid":  table.Id,
 		"hash": facade.Hash.Sum32(table.Password),
 	})
@@ -312,11 +312,11 @@ func (this *Comm) register(ctx *gin.Context) {
 
 	result := map[string]any{
 		"user":  table,
-		"token": token,
+		"token": jwt.Text,
 	}
 
 	// 往客户端写入cookie - 存储登录token
-	setToken(ctx, token)
+	setToken(ctx, jwt.Text)
 
 	this.json(ctx, result, facade.Lang(ctx, "注册成功！"), 200)
 }
@@ -408,7 +408,7 @@ func (this *Comm) socialLogin(ctx *gin.Context) {
 	// 查询用户
 	item := facade.DB.Model(&table).Where(social, params["social"]).Find()
 
-	token, _ := facade.Jwt.Create(map[string]any{
+	jwt := facade.Jwt().Create(map[string]any{
 		"uid":  table.Id,
 		"hash": facade.Hash.Sum32(table.Password),
 	})
@@ -423,11 +423,11 @@ func (this *Comm) socialLogin(ctx *gin.Context) {
 
 	result := map[string]any{
 		"user":  item,
-		"token": token,
+		"token": jwt.Text,
 	}
 
 	// 往客户端写入cookie - 存储登录token
-	setToken(ctx, token)
+	setToken(ctx, jwt.Text)
 
 	this.json(ctx, result, facade.Lang(ctx, "登录成功！"), 200)
 }
@@ -452,7 +452,7 @@ func (this *Comm) checkToken(ctx *gin.Context) {
 	}
 
 	// 解析token
-	jwt := facade.Jwt.Parse(token)
+	jwt := facade.Jwt().Parse(token)
 	if jwt.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "%s 无效！", "Authorization"), 400)
 		return
@@ -471,20 +471,20 @@ func (this *Comm) checkToken(ctx *gin.Context) {
 	valid := jwt.Valid
 
 	if cast.ToBool(params["renew"]) {
-		token, _ = facade.Jwt.Create(map[string]any{
+		jwt = facade.Jwt().Create(map[string]any{
 			"uid":  table.Id,
 			"hash": facade.Hash.Sum32(table.Password),
 		})
 		valid = cast.ToInt64(utils.Calc(facade.AppToml.Get("jwt.expire", "7200")))
 		// 往客户端写入cookie - 存储登录token
-		setToken(ctx, token)
+		setToken(ctx, jwt.Text)
 	}
 
 	delete(item, "password")
 
 	this.json(ctx, gin.H{
 		"user":       item,
-		"token":      token,
+		"token":      jwt.Text,
 		"valid_time": valid,
 	}, facade.Lang(ctx, facade.Lang(ctx, "合法的token！")), 200)
 }

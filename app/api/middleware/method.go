@@ -36,7 +36,7 @@ func Method() gin.HandlerFunc {
 			}
 
 			// 解析token
-			jwt := facade.Jwt.Parse(token)
+			jwt := facade.Jwt().Parse(token)
 			if jwt.Error != nil {
 				result["msg"] = utils.Ternary(jwt.Valid == 0, facade.Lang(ctx, "登录已过期，请重新登录！"), jwt.Error.Error())
 				ctx.SetCookie(tokenName, "", -1, "/", "", false, false)

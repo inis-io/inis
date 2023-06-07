@@ -11,13 +11,6 @@ port        = 8642
 debug       = false
 # 登录token名称（别乱改，别作死）
 token_name  = "INIS_LOGIN_TOKEN"
-
-# JWT加密配置
-[jwt]
-# jwt密钥
-secret   = "${jwt.secret}"
-# 过期时间(秒)
-expire   = "7 * 24 * 60 * 60"
 `
 
 // TempDatabase - 数据库配置模板
@@ -216,4 +209,18 @@ bucket            = "${kodo.bucket}"
 region            = "${kodo.region}"
 # KODO 外网域名 - 用于访问 - 这里必须填写
 domain            = "${kodo.domain}"
+`
+
+const TempCrypt   = `# ======== 加密配置 ========
+
+# JWT配置
+[jwt]
+# 密钥
+key      = "${jwt.key}"
+# 过期时间(秒)
+expire   = "${jwt.expire}"
+# 签发者
+issuer   = "${jwt.issuer}"
+# 主题
+subject  = "${jwt.subject}"
 `

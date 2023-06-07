@@ -2,11 +2,9 @@ package config
 
 import (
 	"bytes"
-	"crypto/md5"
 	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"image"
@@ -16,7 +14,6 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"time"
 )
 
 // Gin - gin引擎
@@ -39,16 +36,11 @@ func init() {
 // initAppToml - 初始化APP配置文件
 func initAppToml() {
 
-	key := fmt.Sprintf("%v-%v", uuid.New().String(), time.Now().Unix())
-	secret := fmt.Sprintf("INIS-%x", md5.Sum([]byte(key)))
-
 	item := utils.Viper(utils.ViperModel{
 		Path: "config",
 		Mode: "toml",
 		Name: "app",
-		Content: utils.Replace(facade.TempApp, map[string]any{
-			"${jwt.secret}": secret,
-		}),
+		Content: utils.Replace(facade.TempApp, nil),
 	}).Read()
 
 	if item.Error != nil {

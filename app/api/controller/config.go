@@ -149,6 +149,10 @@ func (this *Config) one(ctx *gin.Context) {
 	} else {
 
 		mold := facade.DB.Model(&table).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
+		// 越权 - 无权限屏蔽系统配置
+		if !this.meta.root(ctx) {
+			mold.Not("key", "LIKE", "SYSTEM_%")
+		}
 		item := mold.Where(table).Find()
 
 		// 缓存数据
@@ -197,6 +201,12 @@ func (this *Config) all(ctx *gin.Context) {
 	var result []model.Config
 	mold := facade.DB.Model(&result).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
 	mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
+
+	// 越权 - 无权限屏蔽系统配置
+	if !this.meta.root(ctx) {
+		mold.Not("key", "LIKE", "SYSTEM_%")
+	}
+
 	count := mold.Where(table).Count()
 
 	cacheName := this.cache.name(ctx)
@@ -346,6 +356,11 @@ func (this *Config) count(ctx *gin.Context) {
 	item := facade.DB.Model(&table).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
 	item.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 
+	// 越权 - 无权限屏蔽系统配置
+	if !this.meta.root(ctx) {
+		item.Not("key", "LIKE", "SYSTEM_%")
+	}
+
 	this.json(ctx, item.Count(), facade.Lang(ctx, "查询成功！"), 200)
 }
 
@@ -370,6 +385,11 @@ func (this *Config) column(ctx *gin.Context) {
 	keys := utils.Unity.Keys(params["keys"])
 	if !utils.Is.Empty(keys) {
 		item.WhereIn("key", keys)
+	}
+
+	// 越权 - 无权限屏蔽系统配置
+	if !this.meta.root(ctx) {
+		item.Not("key", "LIKE", "SYSTEM_%")
 	}
 
 	code := 200

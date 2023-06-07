@@ -250,7 +250,7 @@ func (this *Install) createAdmin(ctx *gin.Context) {
 	// 创建用户
 	facade.DB.Model(&table).Create(&table)
 
-	token, _ := facade.Jwt.Create(map[string]any{
+	jwt := facade.Jwt().Create(map[string]any{
 		"uid": table.Id,
 	})
 
@@ -259,11 +259,11 @@ func (this *Install) createAdmin(ctx *gin.Context) {
 
 	result := map[string]any{
 		"user":  table,
-		"token": token,
+		"token": jwt.Text,
 	}
 
 	// 往客户端写入cookie - 存储登录token
-	setToken(ctx, token)
+	setToken(ctx, jwt.Text)
 
 	go func() {
 

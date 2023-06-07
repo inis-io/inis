@@ -17,21 +17,24 @@ import (
 	"time"
 )
 
-// AppToml - APP配置文件
-var AppToml *utils.ViperResponse
+// CryptToml - Crypt配置文件
+var CryptToml *utils.ViperResponse
 
-// initAppToml - 初始化APP配置文件
-func initAppToml() {
+// initCryptToml - 初始化Crypt配置文件
+func initCryptToml() {
 
 	key := fmt.Sprintf("%v-%v", uuid.New().String(), time.Now().Unix())
-	secret := fmt.Sprintf("INIS-%x", md5.Sum([]byte(key)))
+	secret := fmt.Sprintf("INIS%x", md5.Sum([]byte(key)))
 
 	item := utils.Viper(utils.ViperModel{
 		Path: "config",
 		Mode: "toml",
-		Name: "app",
-		Content: utils.Replace(TempApp, map[string]any{
-			"${jwt.secret}": secret,
+		Name: "crypt",
+		Content: utils.Replace(TempCrypt, map[string]any{
+			"${jwt.key}": 		secret,
+			"${jwt.expire}":    "7 * 24 * 60 * 60",
+			"${jwt.issuer}" :   "inis.cn",
+			"${jwt.subject}":   "inis",
 		}),
 	}).Read()
 
@@ -41,73 +44,130 @@ func initAppToml() {
 			"func_name": utils.Caller().FuncName,
 			"file_name": utils.Caller().FileName,
 			"file_line": utils.Caller().Line,
-		}, "APP配置初始化错误")
+		}, "Crypt配置初始化错误")
 		return
 	}
 
-	AppToml = &item
+	CryptToml = &item
 }
 
-// 初始化缓存
-func initApp() {
+// 初始化加密配置
+func initCrypt() {
 
 }
 
 func init() {
 	// 初始化配置文件
-	initAppToml()
+	initCryptToml()
 	// 初始化缓存
-	initApp()
+	initCrypt()
 
 	// 监听配置文件变化
-	AppToml.Viper.WatchConfig()
+	CryptToml.Viper.WatchConfig()
 	// 配置文件变化时，重新初始化配置文件
-	AppToml.Viper.OnConfigChange(func(event fsnotify.Event) {
-		initApp()
+	CryptToml.Viper.OnConfigChange(func(event fsnotify.Event) {
+		initCrypt()
 	})
-
-	Jwt.Create = JwtCreate
-	Jwt.Parse = JwtParse
-}
-
-var Jwt struct {
-	Create func(data map[string]any) (result string, error error)
-	Parse  func(token string) (result JwtStruct)
-}
-
-type configJwt struct {
-	Data map[string]any `json:"data"`
-	JWT.StandardClaims
 }
 
 type JwtStruct struct {
+	request  JwtRequest
+	response JwtResponse
+}
+
+// JwtRequest - JWT请求
+type JwtRequest struct {
+	// 过期时间
+	Expire  int64        `json:"expire"`
+	// 颁发者签名
+	Issuer  string       `json:"issuer"`
+	// 主题
+	Subject string       `json:"subject"`
+	// 密钥
+	Key     string       `json:"key"`
+}
+
+// JwtResponse - JWT响应
+type JwtResponse struct {
+	Text  string         `json:"text"`
 	Data  map[string]any `json:"data"`
 	Error error          `json:"error"`
 	Valid int64          `json:"valid"`
 }
 
-// JwtCreate 创建token
-func JwtCreate(data map[string]any) (result string, err error) {
+// Jwt - 入口
+func Jwt(request ...JwtRequest) *JwtStruct {
 
-	// 过期时间戳
-	expire := cast.ToInt64(utils.Calc(AppToml.Get("jwt.expire", "7200")))
+	if len(request) == 0 {
+		request = append(request, JwtRequest{})
+	}
 
-	return JWT.NewWithClaims(JWT.SigningMethodHS256, configJwt{
-		Data: data,
-		StandardClaims: JWT.StandardClaims{
-			ExpiresAt: time.Now().Unix() + expire,
-			IssuedAt:  time.Now().Unix(),                                    // 当前时间戳
-			Issuer:    cast.ToString(AppToml.Get("jwt.issuer", "unti")),     // 颁发者签名
-			Subject:   cast.ToString(AppToml.Get("jwt.subject", "unti-io")), // 签名主题
+	// 过期时间
+	if request[0].Expire == 0 {
+		request[0].Expire = cast.ToInt64(utils.Calc(CryptToml.Get("jwt.expire", "7200")))
+	}
+
+	// 颁发者签名
+	if utils.Is.Empty(request[0].Issuer) {
+		request[0].Issuer = cast.ToString(CryptToml.Get("jwt.issuer", "inis.cn"))
+	}
+
+	// 主题
+	if utils.Is.Empty(request[0].Subject) {
+		request[0].Subject = cast.ToString(CryptToml.Get("jwt.subject", "inis"))
+	}
+
+	// 密钥
+	if utils.Is.Empty(request[0].Key) {
+		request[0].Key = cast.ToString(CryptToml.Get("jwt.key", "inis"))
+	}
+
+	return &JwtStruct{
+		request: request[0],
+		response: JwtResponse{
+			Data: make(map[string]any),
 		},
-	}).SignedString([]byte(cast.ToString(AppToml.Get("jwt.secret", "inis"))))
+	}
 }
 
-// JwtParse 解析token
-func JwtParse(token string) (result JwtStruct) {
+// Create - 创建JWT
+func (this *JwtStruct) Create(data map[string]any) (result JwtResponse) {
 
-	item, err := JWT.ParseWithClaims(token, &configJwt{}, func(token *JWT.Token) (any, error) {
-		return []byte(cast.ToString(AppToml.Get("jwt.secret", "inis"))), nil
+	type JwtClaims struct {
+		Data map[string]any `json:"data"`
+		JWT.StandardClaims
+	}
+
+	item, err := JWT.NewWithClaims(JWT.SigningMethodHS256, JwtClaims{
+		Data: data,
+		StandardClaims: JWT.StandardClaims{
+			IssuedAt:  time.Now().Unix(),                                    // 当前时间戳
+			ExpiresAt: time.Now().Unix() + this.request.Expire,				 // 过期时间戳
+			Issuer:    this.request.Issuer,     						   	 // 颁发者签名
+			Subject:   this.request.Subject, 								 // 签名主题
+		},
+	}).SignedString([]byte(this.request.Key))
+
+	if err != nil {
+		this.response.Error = err
+		return this.response
+	}
+
+	this.response.Text = item
+
+	return this.response
+}
+
+// Parse - 解析JWT
+func (this *JwtStruct) Parse(token any) (result JwtResponse) {
+
+	type JwtClaims struct {
+		Data map[string]any `json:"data"`
+		JWT.StandardClaims
+	}
+
+	item, err := JWT.ParseWithClaims(cast.ToString(token), &JwtClaims{}, func(token *JWT.Token) (any, error) {
+		return []byte(this.request.Key), nil
 	})
 
 	if err != nil {
@@ -117,16 +177,16 @@ func JwtParse(token string) (result JwtStruct) {
 			"file_name": utils.Caller().FileName,
 			"file_line": utils.Caller().Line,
 		}, "JWT解析错误")
-		result.Error = err
-		return
+		this.response.Error = err
+		return this.response
 	}
 
-	if key, _ := item.Claims.(*configJwt); item.Valid {
-		result.Data = key.Data
-		result.Valid = key.StandardClaims.ExpiresAt - time.Now().Unix()
+	if key, _ := item.Claims.(*JwtClaims); item.Valid {
+		this.response.Data  = key.Data
+		this.response.Valid = key.StandardClaims.ExpiresAt - time.Now().Unix()
 	}
 
-	return
+	return this.response
 }
 
 // CipherRequest - 请求输入
@@ -233,8 +293,7 @@ func (this *CipherRequest) Decrypt(text any) (result *CipherResponse) {
 	return
 }
 
-type HashStruct struct {
-}
+type HashStruct struct {}
 
 var Hash = &HashStruct{}
 
