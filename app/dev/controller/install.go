@@ -250,7 +250,7 @@ func (this *Install) createAdmin(ctx *gin.Context) {
 	// 创建用户
 	facade.DB.Model(&table).Create(&table)
 
-	jwt := facade.Jwt().Create(map[string]any{
+	jwt := facade.Jwt().Create(facade.H{
 		"uid": table.Id,
 	})
 

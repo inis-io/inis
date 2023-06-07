@@ -159,7 +159,7 @@ func (this *Comm) login(ctx *gin.Context) {
 		return
 	}
 
-	jwt := facade.Jwt().Create(map[string]any{
+	jwt := facade.Jwt().Create(facade.H{
 		"uid":  table.Id,
 		"hash": facade.Hash.Sum32(table.Password),
 	})
@@ -302,7 +302,7 @@ func (this *Comm) register(ctx *gin.Context) {
 	// 删除验证码
 	facade.Cache.Del(cacheName)
 
-	jwt := facade.Jwt().Create(map[string]any{
+	jwt := facade.Jwt().Create(facade.H{
 		"uid":  table.Id,
 		"hash": facade.Hash.Sum32(table.Password),
 	})
@@ -408,7 +408,7 @@ func (this *Comm) socialLogin(ctx *gin.Context) {
 	// 查询用户
 	item := facade.DB.Model(&table).Where(social, params["social"]).Find()
 
-	jwt := facade.Jwt().Create(map[string]any{
+	jwt := facade.Jwt().Create(facade.H{
 		"uid":  table.Id,
 		"hash": facade.Hash.Sum32(table.Password),
 	})
@@ -471,7 +471,7 @@ func (this *Comm) checkToken(ctx *gin.Context) {
 	valid := jwt.Valid
 
 	if cast.ToBool(params["renew"]) {
-		jwt = facade.Jwt().Create(map[string]any{
+		jwt = facade.Jwt().Create(facade.H{
 			"uid":  table.Id,
 			"hash": facade.Hash.Sum32(table.Password),
 		})

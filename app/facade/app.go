@@ -5,6 +5,8 @@ import (
 	"github.com/unti-io/go-utils/utils"
 )
 
+type H map[string]any
+
 // AppToml - App配置文件
 var AppToml *utils.ViperResponse
 
