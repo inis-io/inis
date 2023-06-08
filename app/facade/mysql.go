@@ -1013,5 +1013,5 @@ func (this *ModelStruct) Restore(args ...any) (tx *gorm.DB) {
 	}
 
 	// 恢复
-	return this.model.Unscoped().Update(this.softDelete, this.defaultSoftDelete)
+	return this.model.Unscoped().UpdateColumn(this.softDelete, this.defaultSoftDelete)
 }

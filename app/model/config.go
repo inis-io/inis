@@ -35,11 +35,11 @@ func InitConfig() {
 	go func() {
 
 		configs := []Config{
-			{Key: "SYSTEM_API_KEY", Value: "0", Remark: "是否开启API KEY验证"},
+			{Key: "SYSTEM_API_KEY", Value: "0", Remark: "API KEY验证"},
 			{Key: "SYSTEM_QPS", Value: "1", Json: utils.Json.Encode(map[string]any{
 				"point": 10, "global": 50,
-			}), Remark: "是否开启接口限流器（QPS）"},
-			{Key: "SYSTEM_PAGE_LIMIT", Value: "1", Text: "50", Remark: "限制分页查询的最大条数量"},
+			}), Remark: "接口限流器（QPS）"},
+			{Key: "SYSTEM_PAGE_LIMIT", Value: "1", Text: "50", Remark: "限制分页查询单次最大数据量"},
 		}
 
 		for _, item := range configs {

@@ -523,10 +523,10 @@ func (this *Config) restore(ctx *gin.Context) {
 		return
 	}
 
-	item := facade.DB.Model(&table)
+	item := facade.DB.Model(&table).OnlyTrashed().WhereIn("key", keys)
 
 	// 得到允许操作的 key 数组
-	keys = utils.Unity.Keys(item.WhereIn("key", keys).Column("key"))
+	keys = utils.Unity.Keys(item.Column("key"))
 
 	// 无可操作数据
 	if utils.Is.Empty(keys) {
@@ -535,7 +535,7 @@ func (this *Config) restore(ctx *gin.Context) {
 	}
 
 	// 软删除
-	tx := item.WhereIn("key", keys).Restore()
+	tx := facade.DB.Model(&table).OnlyTrashed().WhereIn("key", keys).Restore()
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "恢复失败！"), 400)

@@ -517,10 +517,10 @@ func (this *Pages) restore(ctx *gin.Context) {
 		return
 	}
 
-	item := facade.DB.Model(&table)
+	item := facade.DB.Model(&table).OnlyTrashed().WhereIn("id", ids)
 
 	// 得到允许操作的 id 数组
-	ids = utils.Unity.Ids(item.WhereIn("id", ids).Column("id"))
+	ids = utils.Unity.Ids(item.Column("id"))
 
 	// 无可操作数据
 	if utils.Is.Empty(ids) {
@@ -529,7 +529,7 @@ func (this *Pages) restore(ctx *gin.Context) {
 	}
 
 	// 还原数据
-	tx := item.Restore(ids)
+	tx := facade.DB.Model(&table).OnlyTrashed().Restore(ids)
 
 	if tx.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "恢复失败！"), 400)
