@@ -25,6 +25,7 @@ func Route(Gin *gin.Engine) {
 		"exp":    		 &controller.EXP{},
 		"test":          &controller.Test{},
 		"comm":          &controller.Comm{},
+		"toml":          &controller.Toml{},
 		"file":          &controller.File{},
 		"tags":          &controller.Tags{},
 		"pages":         &controller.Pages{},

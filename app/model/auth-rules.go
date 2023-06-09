@@ -103,6 +103,25 @@ func createAuthRules() (result []AuthRules) {
 			},
 			"DELETE": {"path=logout&name=退出登录&type=common"},
 		},
+		"toml": {
+			"GET": {
+				"path=sms&name=获取SMS服务配置",
+				"path=cache&name=获取缓存服务配置",
+				"path=crypt&name=获取加密服务配置",
+				"path=log&name=获取日志服务配置",
+				"path=storage&name=获取存储服务配置",
+			},
+			"PUT": {
+				"path=sms&name=修改SMS服务配置",
+				"path=sms-default&name=修改SMS默认服务类型",
+				"path=sms-email&name=修改邮件服务配置",
+				"path=sms-aliyun&name=修改阿里云短信服务配置",
+				"path=sms-tencent&name=修改腾讯云短信服务配置",
+			},
+			"POST": {
+				"path=test-email&name=测试邮件服务",
+			},
+		},
 		"tags": {
 			"GET":    {
 				"path=one&type=common",
@@ -309,10 +328,11 @@ func createAuthRules() (result []AuthRules) {
 		"users":         "【用户 API】",
 		"links":         "【友链 API】",
 		"banner":        "【轮播 API】",
-		"config":        "【配置 API】",
 		"article":       "【文章 API】",
 		"comment":       "【评论 API】",
 		"placard":       "【公告 API】",
+		"config":        "【配置 API】",
+		"toml":          "【服务配置 API】",
 		"api-keys":      "【接口密钥 API】",
 		"auth-group":    "【权限分组 API】",
 		"auth-pages":    "【页面权限 API】",

@@ -57,7 +57,7 @@ func (this *Comment) AfterFind(tx *gorm.DB) (err error) {
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
 		// 文章信息
-		article = utils.Map.WithField(facade.DB.Model(&Article{}).Find(this.BindId), []string{"id", "title", "abstract"})
+		article = utils.Map.WithField(facade.DB.Model(&Article{}).Find(this.BindId), []string{"id", "title"})
 	}(&wg)
 
 	wg.Wait()

@@ -115,7 +115,7 @@ port      = ${email.port}
 # 邮件账号
 account   = "${email.account}"
 # 服务密码 - 不是邮箱密码
-password  = "${email.account}"
+password  = "${email.password}"
 # 邮件昵称
 nickname  = "${email.nickname}"
 # 邮件签名
@@ -138,9 +138,9 @@ verify_code       = "${aliyun.verify_code}"
 
 # 腾讯云短信服务配置
 [tencent]
-# 腾讯云COS SecretId
+# 腾讯云SecretId
 secret_id         = "${tencent.secret_id}"
-# 腾讯云COS SecretKey
+# 腾讯云SecretKey
 secret_key        = "${tencent.secret_key}"
 # 腾讯云短信服务endpoint
 endpoint          = "${tencent.endpoint}"

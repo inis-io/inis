@@ -70,6 +70,7 @@ func InitAuthPages() {
 		{Name: "轮播", Icon: "banner", Path: "/admin/banner"},
 		{Name: "标签", Icon: "tag", Path: "/admin/tags"},
 		{Name: "友链", Icon: "link", Path: "/admin/links"},
+		{Name: "系统配置", Icon: "system", Path: "/admin/system", Size: "15px"},
 		{Name: "页面列表", Icon: "open", Path: "/admin/pages", Size: "17px"},
 		{Name: "撰写页面", Icon: "article", Path: "/admin/pages/write"},
 		{Name: "友链分组", Icon: "group", Path: "/admin/links/group", Size: "14px"},
