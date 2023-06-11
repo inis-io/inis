@@ -24,7 +24,7 @@ var CryptToml *utils.ViperResponse
 func initCryptToml() {
 
 	key := fmt.Sprintf("%v-%v", uuid.New().String(), time.Now().Unix())
-	secret := fmt.Sprintf("INIS%x", md5.Sum([]byte(key)))
+	secret := fmt.Sprintf("INIS-%x", md5.Sum([]byte(key)))
 
 	item := utils.Viper(utils.ViperModel{
 		Path: "config",
