@@ -145,7 +145,7 @@ func (this *EXP) one(ctx *gin.Context) {
 
 	} else {
 
-		mold := facade.DB.Model(&table).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
+		mold := facade.DB.Model(&table)
 		mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 		item := mold.Where(table).Find()
 
@@ -193,7 +193,7 @@ func (this *EXP) all(ctx *gin.Context) {
 	page := cast.ToInt(params["page"])
 	limit := this.meta.limit(ctx)
 	var result []model.EXP
-	mold := facade.DB.Model(&result).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
+	mold := facade.DB.Model(&result)
 	mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 	count := mold.Where(table).Count()
 
@@ -346,7 +346,7 @@ func (this *EXP) count(ctx *gin.Context) {
 	// 获取请求参数
 	params := this.params(ctx)
 
-	item := facade.DB.Model(&table).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
+	item := facade.DB.Model(&table)
 	item.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 
 	this.json(ctx, item.Count(), facade.Lang(ctx, "查询成功！"), 200)
@@ -362,7 +362,7 @@ func (this *EXP) column(ctx *gin.Context) {
 		"field": "*",
 	})
 
-	item := facade.DB.Model(&table).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"]).Order(params["order"])
+	item := facade.DB.Model(&table).Order(params["order"])
 	item.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 
 	if !strings.Contains(cast.ToString(params["field"]), "*") {

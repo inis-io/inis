@@ -64,7 +64,7 @@ func initCacheToml() {
 			"${redis.host}":     "localhost",
 			"${redis.port}":     "6379",
 			"${redis.password}": "",
-			"${redis.expire}":   7200,
+			"${redis.expire}":   "2 * 60 * 60",
 			"${redis.prefix}":   "inis:",
 			"${redis.database}": 0,
 		}),
@@ -95,7 +95,7 @@ func initCache() {
 		DB:       cast.ToInt(CacheToml.Get("redis.database")),
 		Password: cast.ToString(CacheToml.Get("redis.password")),
 	})
-	redisExpire := time.Duration(cast.ToInt(CacheToml.Get("redis.expire", 7200))) * time.Second
+	redisExpire := time.Duration(cast.ToInt(utils.Calc(CacheToml.Get("redis.expire", 7200)))) * time.Second
 
 	// Redis 缓存
 	Redis = &RedisCacheStruct{

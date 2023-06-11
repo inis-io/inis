@@ -148,7 +148,7 @@ func (this *Config) one(ctx *gin.Context) {
 
 	} else {
 
-		mold := facade.DB.Model(&table).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
+		mold := facade.DB.Model(&table).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"]))
 		// 越权 - 无权限屏蔽系统配置
 		if !this.meta.root(ctx) {
 			mold.Not("key", "LIKE", "SYSTEM_%")
@@ -199,7 +199,7 @@ func (this *Config) all(ctx *gin.Context) {
 	page := cast.ToInt(params["page"])
 	limit := this.meta.limit(ctx)
 	var result []model.Config
-	mold := facade.DB.Model(&result).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
+	mold := facade.DB.Model(&result).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"]))
 	mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 
 	// 越权 - 无权限屏蔽系统配置
@@ -353,7 +353,7 @@ func (this *Config) count(ctx *gin.Context) {
 	// 获取请求参数
 	params := this.params(ctx)
 
-	item := facade.DB.Model(&table).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
+	item := facade.DB.Model(&table).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"]))
 	item.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 
 	// 越权 - 无权限屏蔽系统配置
@@ -374,7 +374,7 @@ func (this *Config) column(ctx *gin.Context) {
 		"field": "*",
 	})
 
-	item := facade.DB.Model(&table).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"]).Order(params["order"])
+	item := facade.DB.Model(&table).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"])).Order(params["order"])
 	item.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 
 	if !strings.Contains(cast.ToString(params["field"]), "*") {

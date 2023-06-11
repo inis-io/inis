@@ -58,7 +58,7 @@ port       = ${redis.port}
 # redis密码
 password   = "${redis.password}"
 # 过期时间(秒) - 0为永不过期
-expire     = ${redis.expire}
+expire     = "${redis.expire}"
 # redis前缀
 prefix     = "${redis.prefix}"
 # redis数据库

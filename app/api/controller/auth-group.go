@@ -143,7 +143,7 @@ func (this *AuthGroup) one(ctx *gin.Context) {
 
 	} else {
 
-		mold := facade.DB.Model(&table).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
+		mold := facade.DB.Model(&table).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"]))
 		mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 		item := mold.Where(table).Find()
 
@@ -191,7 +191,7 @@ func (this *AuthGroup) all(ctx *gin.Context) {
 	page := cast.ToInt(params["page"])
 	limit := this.meta.limit(ctx)
 	var result []model.AuthGroup
-	mold := facade.DB.Model(&result).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
+	mold := facade.DB.Model(&result).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"]))
 	mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 	count := mold.Where(table).Count()
 
@@ -330,7 +330,7 @@ func (this *AuthGroup) count(ctx *gin.Context) {
 	// 获取请求参数
 	params := this.params(ctx)
 
-	item := facade.DB.Model(&table).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"])
+	item := facade.DB.Model(&table).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"]))
 	item.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 
 	this.json(ctx, item.Count(), facade.Lang(ctx, "查询成功！"), 200)
@@ -346,7 +346,7 @@ func (this *AuthGroup) column(ctx *gin.Context) {
 		"field": "*",
 	})
 
-	item := facade.DB.Model(&table).OnlyTrashed(params["onlyTrashed"]).WithTrashed(params["withTrashed"]).Order(params["order"]).IWhereIn(params["whereIn"])
+	item := facade.DB.Model(&table).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"])).Order(params["order"]).IWhereIn(params["whereIn"])
 	item.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 
 	if !strings.Contains(cast.ToString(params["field"]), "*") {
