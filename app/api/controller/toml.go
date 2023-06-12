@@ -7,17 +7,24 @@ import (
 	AliYunUtil "github.com/alibabacloud-go/openapi-util/service"
 	AliYunUtilV2 "github.com/alibabacloud-go/tea-utils/v2/service"
 	"github.com/alibabacloud-go/tea/tea"
+	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/gin-gonic/gin"
+	"github.com/qiniu/go-sdk/v7/auth/qbox"
+	"github.com/qiniu/go-sdk/v7/storage"
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/cast"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 	TencentCloud "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms/v20210111"
+	"github.com/tencentyun/cos-go-sdk-v5"
 	"github.com/unti-io/go-utils/utils"
 	"gopkg.in/gomail.v2"
 	"inis/app/facade"
+	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
+	"time"
 )
 
 type Toml struct {
@@ -56,6 +63,9 @@ func (this *Toml) IPOST(ctx *gin.Context) {
 		"test-sms-aliyun" : this.testSMSAliyun,
 		"test-sms-tencent": this.testSMSTencent,
 		"test-redis"	  : this.testRedis,
+		"test-oss"		  : this.testOSS,
+		"test-cos"		  : this.testCOS,
+		"test-kodo"	  	  : this.testKODO,
 	}
 	err := this.call(allow, method, ctx)
 
@@ -71,14 +81,19 @@ func (this *Toml) IPUT(ctx *gin.Context) {
 	method := strings.ToLower(ctx.Param("method"))
 
 	allow := map[string]any{
-		"sms":     	     this.putSMS,
-		"sms-email":     this.putSMSEmail,
-		"sms-aliyun":    this.putSMSAliyun,
-		"sms-tencent":   this.putSMSTencent,
-		"sms-default":   this.putSMSDefault,
-		"crypt-jwt":     this.putCryptJWT,
-		"cache-default": this.putCacheDefault,
-		"cache-redis":   this.putCacheRedis,
+		"sms":     	       this.putSMS,
+		"sms-email":       this.putSMSEmail,
+		"sms-aliyun":      this.putSMSAliyun,
+		"sms-tencent":     this.putSMSTencent,
+		"sms-default":     this.putSMSDefault,
+		"crypt-jwt":       this.putCryptJWT,
+		"cache-default":   this.putCacheDefault,
+		"cache-redis":     this.putCacheRedis,
+		"storage-default": this.putStorageDefault,
+		"storage-local":   this.putStorageLocal,
+		"storage-oss":     this.putStorageOSS,
+		"storage-cos":     this.putStorageCOS,
+		"storage-kodo":    this.putStorageKODO,
 	}
 	err := this.call(allow, method, ctx)
 
@@ -264,8 +279,11 @@ func (this *Toml) getStorage(ctx *gin.Context) {
 		return
 	}
 
+	result := cast.ToStringMap(item.Get(cast.ToString(params["name"])))
+	result["default"] = item.Get("default")
+
 	// 获取指定
-	this.json(ctx, item.Get(cast.ToString(params["name"])), facade.Lang(ctx, "数据请求成功！"), 200)
+	this.json(ctx, result, facade.Lang(ctx, "数据请求成功！"), 200)
 }
 
 // getStorage - 获取日志服务配置
@@ -923,6 +941,404 @@ func (this *Toml) putCacheDefault(ctx *gin.Context) {
 	}
 
 	item := utils.File().Save(strings.NewReader(temp), "config/cache.toml")
+
+	if item.Error != nil {
+		this.json(ctx, nil, facade.Lang(ctx, "修改失败！"), 400)
+		return
+	}
+
+	this.json(ctx, nil, facade.Lang(ctx, "修改成功！"), 200)
+}
+
+// putStorageDefault - 修改存储默认服务类型
+func (this *Toml) putStorageDefault(ctx *gin.Context) {
+
+	// 请求参数
+	params := this.params(ctx)
+
+	if utils.Is.Empty(params["value"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "value"), 400)
+		return
+	}
+
+	allow := []any{"local", "oss", "cos", "kodo"}
+
+	if !utils.In.Array(params["value"], allow) {
+		this.json(ctx, nil, facade.Lang(ctx, "value 只允许是 local、oss、cos、kodo 其中一个！"), 400)
+		return
+	}
+
+	temp := facade.TempStorage
+	temp = utils.Replace(temp, map[string]any{
+		"${default}": params["value"],
+	})
+
+	// 正则匹配出所有的 ${?} 字符串
+	reg := regexp.MustCompile(`\${(.+?)}`)
+	matches := reg.FindAllStringSubmatch(temp, -1)
+
+	for _, match := range matches {
+		temp = strings.Replace(temp, match[0], cast.ToString(facade.StorageToml.Get(match[1])), -1)
+	}
+
+	item := utils.File().Save(strings.NewReader(temp), "config/storage.toml")
+
+	if item.Error != nil {
+		this.json(ctx, nil, facade.Lang(ctx, "修改失败！"), 400)
+		return
+	}
+
+	this.json(ctx, nil, facade.Lang(ctx, "修改成功！"), 200)
+}
+
+// putStorageLocal - 修改本地存储配置
+func (this *Toml) putStorageLocal(ctx *gin.Context) {
+
+	// 请求参数
+	params := this.params(ctx, map[string]any{
+		"domain": this.get(ctx, "domain"),
+	})
+
+	temp := facade.TempStorage
+	temp = utils.Replace(temp, map[string]any{
+		"${local.domain}": params["domain"],
+	})
+
+	// 正则匹配出所有的 ${?} 字符串
+	reg := regexp.MustCompile(`\${(.+?)}`)
+	matches := reg.FindAllStringSubmatch(temp, -1)
+
+	for _, match := range matches {
+		temp = strings.Replace(temp, match[0], cast.ToString(facade.StorageToml.Get(match[1])), -1)
+	}
+
+	item := utils.File().Save(strings.NewReader(temp), "config/storage.toml")
+
+	if item.Error != nil {
+		this.json(ctx, nil, facade.Lang(ctx, "修改失败！"), 400)
+		return
+	}
+
+	this.json(ctx, nil, facade.Lang(ctx, "修改成功！"), 200)
+}
+
+// testOSS - 测试OSS连接
+func (this *Toml) testOSS(ctx *gin.Context) {
+
+	// 请求参数
+	params := this.params(ctx)
+
+	if utils.Is.Empty(params["access_key_id"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "access_key_id"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["access_key_secret"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "access_key_secret"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["endpoint"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "endpoint"), 400)
+		return
+	}
+
+	id       := cast.ToString(params["access_key_id"])
+	secret   := cast.ToString(params["access_key_secret"])
+	endpoint := cast.ToString(params["endpoint"])
+
+	client, err := oss.New(endpoint, id, secret)
+
+	if err != nil {
+		this.json(ctx, err.Error(), facade.Lang(ctx, "测试OSS连接失败！"), 400)
+		return
+	}
+
+	exist, err := client.IsBucketExist(cast.ToString(params["bucket"]))
+	if err != nil {
+		this.json(ctx, err.Error(), facade.Lang(ctx, "测试OSS连接失败！"), 400)
+		return
+	}
+
+	if !exist {
+		this.json(ctx, nil, facade.Lang(ctx, "Bucket 不存在！"), 400)
+		return
+	}
+
+	this.json(ctx, nil, facade.Lang(ctx, "测试OSS连接成功！"), 200)
+}
+
+// putStorageOSS - 修改OSS存储配置
+func (this *Toml) putStorageOSS(ctx *gin.Context) {
+
+	// 请求参数
+	params := this.params(ctx)
+
+	if utils.Is.Empty(params["access_key_id"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "access_key_id"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["access_key_secret"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "access_key_secret"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["endpoint"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "endpoint"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["bucket"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "bucket"), 400)
+		return
+	}
+
+	temp := facade.TempStorage
+	temp = utils.Replace(temp, map[string]any{
+		"${oss.access_key_id}": 	cast.ToString(params["access_key_id"]),
+		"${oss.access_key_secret}": cast.ToString(params["access_key_secret"]),
+		"${oss.endpoint}": 			cast.ToString(params["endpoint"]),
+		"${oss.bucket}": 			cast.ToString(params["bucket"]),
+		"${oss.domain}": 			cast.ToString(params["domain"]),
+	})
+
+	// 正则匹配出所有的 ${?} 字符串
+	reg := regexp.MustCompile(`\${(.+?)}`)
+	matches := reg.FindAllStringSubmatch(temp, -1)
+
+	for _, match := range matches {
+		temp = strings.Replace(temp, match[0], cast.ToString(facade.StorageToml.Get(match[1])), -1)
+	}
+
+	item := utils.File().Save(strings.NewReader(temp), "config/storage.toml")
+
+	if item.Error != nil {
+		this.json(ctx, nil, facade.Lang(ctx, "修改失败！"), 400)
+		return
+	}
+
+	this.json(ctx, nil, facade.Lang(ctx, "修改成功！"), 200)
+}
+
+// testCOS - 测试COS连接
+func (this *Toml) testCOS(ctx *gin.Context) {
+
+	// 请求参数
+	params := this.params(ctx)
+
+	if utils.Is.Empty(params["secret_id"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "secret_id"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["secret_key"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "secret_key"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["app_id"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "app_id"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["bucket"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "bucket"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["region"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "region"), 400)
+		return
+	}
+
+	appId     := cast.ToString(params["app_id"])
+	secretId  := cast.ToString(params["secret_id"])
+	secretKey := cast.ToString(params["secret_key"])
+	bucket    := cast.ToString(params["bucket"])
+	region    := cast.ToString(params["region"])
+
+	BucketURL, err := url.Parse(fmt.Sprintf("https://%s-%s.cos.%s.myqcloud.com", bucket, appId, region))
+	if err != nil {
+		this.json(ctx, err.Error(), facade.Lang(ctx, "测试COS连接失败！"), 400)
+		return
+	}
+
+	client := cos.NewClient(&cos.BaseURL{
+		BucketURL: BucketURL,
+	}, &http.Client{
+		// 设置超时时间
+		Timeout: 100 * time.Second,
+		Transport: &cos.AuthorizationTransport{
+			SecretID:  secretId,
+			SecretKey: secretKey,
+		},
+	})
+
+	// 查询存储桶
+	exist, err := client.Bucket.IsExist(context.Background())
+
+	if err != nil {
+		this.json(ctx, err.Error(), facade.Lang(ctx, "测试COS连接失败！"), 400)
+		return
+	}
+
+	if !exist {
+		this.json(ctx, nil, facade.Lang(ctx, "Bucket 不存在！"), 400)
+		return
+	}
+
+	this.json(ctx, nil, facade.Lang(ctx, "测试COS连接成功！"), 200)
+}
+
+// putStorageCOS - 修改COS存储配置
+func (this *Toml) putStorageCOS(ctx *gin.Context) {
+
+	// 请求参数
+	params := this.params(ctx)
+
+	if utils.Is.Empty(params["secret_id"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "secret_id"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["secret_key"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "secret_key"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["app_id"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "app_id"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["bucket"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "bucket"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["region"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "region"), 400)
+		return
+	}
+
+	temp := facade.TempStorage
+	temp = utils.Replace(temp, map[string]any{
+		"${cos.secret_id}":  cast.ToString(params["secret_id"]),
+		"${cos.secret_key}": cast.ToString(params["secret_key"]),
+		"${cos.app_id}": 	 cast.ToString(params["app_id"]),
+		"${cos.bucket}": 	 cast.ToString(params["bucket"]),
+		"${cos.region}": 	 cast.ToString(params["region"]),
+		"${cos.domain}": 	 cast.ToString(params["domain"]),
+	})
+
+	// 正则匹配出所有的 ${?} 字符串
+	reg := regexp.MustCompile(`\${(.+?)}`)
+	matches := reg.FindAllStringSubmatch(temp, -1)
+
+	for _, match := range matches {
+		temp = strings.Replace(temp, match[0], cast.ToString(facade.StorageToml.Get(match[1])), -1)
+	}
+
+	item := utils.File().Save(strings.NewReader(temp), "config/storage.toml")
+
+	if item.Error != nil {
+		this.json(ctx, nil, facade.Lang(ctx, "修改失败！"), 400)
+		return
+	}
+
+	this.json(ctx, nil, facade.Lang(ctx, "修改成功！"), 200)
+}
+
+// testKODO - 测试KODO连接
+func (this *Toml) testKODO(ctx *gin.Context) {
+
+	// 请求参数
+	params := this.params(ctx)
+
+	if utils.Is.Empty(params["access_key"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "access_key"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["secret_key"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "secret_key"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["bucket"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "bucket"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["region"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "region"), 400)
+		return
+	}
+
+	// KODO 对象存储
+	client := qbox.NewMac(cast.ToString(params["access_key"]), cast.ToString(params["secret_key"]))
+
+	bucket := storage.NewBucketManager(client, nil)
+	_, err := bucket.GetBucketInfo(cast.ToString(params["bucket"]))
+
+	if err != nil {
+		this.json(ctx, err.Error(), facade.Lang(ctx, "测试KODO连接失败！"), 400)
+		return
+	}
+
+	this.json(ctx, nil, facade.Lang(ctx, "测试KODO连接成功！"), 200)
+}
+
+// putStorageKODO - 修改KODO存储配置
+func (this *Toml) putStorageKODO(ctx *gin.Context) {
+
+	// 请求参数
+	params := this.params(ctx)
+
+	if utils.Is.Empty(params["access_key"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "access_key"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["secret_key"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "secret_key"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["bucket"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "bucket"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["region"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "region"), 400)
+		return
+	}
+
+	if utils.Is.Empty(params["domain"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "domain"), 400)
+		return
+	}
+
+	temp := facade.TempStorage
+	temp = utils.Replace(temp, map[string]any{
+		"${kodo.access_key}":  cast.ToString(params["access_key"]),
+		"${kodo.secret_key}":  cast.ToString(params["secret_key"]),
+		"${kodo.bucket}": 	   cast.ToString(params["bucket"]),
+		"${kodo.region}": 	   cast.ToString(params["region"]),
+		"${kodo.domain}": 	   cast.ToString(params["domain"]),
+	})
+
+	// 正则匹配出所有的 ${?} 字符串
+	reg := regexp.MustCompile(`\${(.+?)}`)
+	matches := reg.FindAllStringSubmatch(temp, -1)
+
+	for _, match := range matches {
+		temp = strings.Replace(temp, match[0], cast.ToString(facade.StorageToml.Get(match[1])), -1)
+	}
+
+	item := utils.File().Save(strings.NewReader(temp), "config/storage.toml")
 
 	if item.Error != nil {
 		this.json(ctx, nil, facade.Lang(ctx, "修改失败！"), 400)
