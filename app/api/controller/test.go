@@ -93,11 +93,30 @@ func (this *Test) IDEL(ctx *gin.Context) {
 // INDEX - GET请求本体
 func (this *Test) INDEX(ctx *gin.Context) {
 
+	// 请求参数
+	// params := this.params(ctx)
+
+	// item := facade.Cipher(facade.Hash.Token(params["sn"]), facade.Hash.Token(params["mac"]))
+	// encode := item.Encrypt(utils.Json.Encode(facade.H{
+	// 	"sn":  params["sn"],
+	// 	"mac": params["mac"],
+	// }))
+	//
+	// // 整体加密MD5转大写
+	//
+	// decode := item.Decrypt(encode.Text)
+
 	res := gin.H{
+
+		// "test": facade.Hash.Token(params["sn"], params["len"], params["key"]),
+		// "key": facade.Hash.Token(params["sn"]),
+		// "iv" : facade.Hash.Token(params["mac"]),
+		// "encode": encode.Text,
+		// "decode": decode.Text,
+
 		// "root" : this.meta.root(ctx),
 		// "user" : this.meta.user(ctx),
-		"email": facade.NewToml(facade.TomlSMS).Get("email"),
-		"route": this.meta.route(ctx),
+		// "route": this.meta.route(ctx),
 		// "rules": this.meta.rules(ctx),
 		// "json" : utils.Json.Encode(params["json"]),
 	}

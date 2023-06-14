@@ -100,6 +100,7 @@ func createAuthRules() (result []AuthRules) {
 				"path=social-login&name=验证码登录&type=common",
 				"path=register&name=注册账户&type=common",
 				"path=check-token&name=校验登录&type=common",
+				"path=reset-passowd&name=重置密码&type=common",
 			},
 			"DELETE": {"path=logout&name=退出登录&type=common"},
 		},
@@ -118,7 +119,7 @@ func createAuthRules() (result []AuthRules) {
 				"path=sms-tencent&name=修改腾讯云短信服务配置",
 				"path=crypt-jwt&name=修改JWT配置",
 				"path=cache-redis&name=修改Redis缓存配置",
-				"path=sms-default&name=修改SMS默认服务类型",
+				"path=sms-drive&name=修改SMS驱动配置",
 				"path=cache-default&name=修改缓存默认服务类型",
 				"path=storage-default&name=修改存储默认服务类型",
 				"path=storage-local&name=修改本地存储配置",
@@ -327,6 +328,18 @@ func createAuthRules() (result []AuthRules) {
 			},
 			"DELETE": {"remove", "delete", "clear"},
 		},
+		"qps-warn": {
+			"GET":    {"one", "all", "count", "column"},
+			"PUT":    {"update","restore"},
+			"POST":   {"save", "create"},
+			"DELETE": {"remove", "delete", "clear"},
+		},
+		"ip-black": {
+			"GET":    {"one", "all", "count", "column"},
+			"PUT":    {"update","restore"},
+			"POST":   {"save", "create"},
+			"DELETE": {"remove", "delete", "clear"},
+		},
 	}
 
 	// 接口名称
@@ -347,6 +360,8 @@ func createAuthRules() (result []AuthRules) {
 		"placard":       "【公告 API】",
 		"config":        "【配置 API】",
 		"toml":          "【服务配置 API】",
+		"ip-black":	     "【IP黑名单 API】",
+		"qps-warn":   	 "【QPS预警 API】",
 		"api-keys":      "【接口密钥 API】",
 		"auth-group":    "【权限分组 API】",
 		"auth-pages":    "【页面权限 API】",

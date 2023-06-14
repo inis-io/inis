@@ -43,6 +43,8 @@ func InitTable() {
 		InitPages,
 		InitLevel,
 		InitEXP,
+		InitQpsWarn,
+		InitIpBlack,
 	}
 
 	for _, val := range allow {

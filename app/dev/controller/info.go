@@ -1,10 +1,10 @@
 package controller
 
 import (
+	"github.com/denisbrodbeck/machineid"
 	"github.com/gin-gonic/gin"
 	"github.com/unti-io/go-utils/utils"
 	"inis/app/facade"
-	"net"
 	"runtime"
 	"strings"
 )
@@ -96,27 +96,30 @@ func (this *Info) INDEX(ctx *gin.Context) {
 	}, facade.Lang(ctx, "好的！"), 200)
 }
 
+// sn - 获取机器码
+func sn() (result string) {
+
+	result, err := machineid.ID()
+	if err != nil {
+		return utils.Get.Mac()
+	}
+
+	return result
+}
+
 // system - 系统信息
 func (this *Info) system(ctx *gin.Context) {
 
-	// 获取本机mac地址
-	var mac string
-	addrs, err := net.InterfaceAddrs()
-	if err == nil {
-		for _, addr := range addrs {
-			if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-				mac = addr.String()
-				break
-			}
-		}
-	}
 	this.json(ctx, map[string]any{
-		"mac"   : mac,
-		"ip"    : this.get(ctx, "ip"),
+		"sn"    : sn(),
+		"mac"   : utils.Get.Mac(),
+		"port"  : facade.H{
+			"run" : this.get(ctx, "port"),
+			"real": facade.AppToml.Get("app.port"),
+		},
 		"domain": this.get(ctx, "domain"),
 		"GOOS"  : runtime.GOOS,
 		"GOARCH": runtime.GOARCH,
-		"GOROOT": runtime.GOROOT(),
 		"NumCPU": runtime.NumCPU(),
 		"NumGoroutine": runtime.NumGoroutine(),
 	}, facade.Lang(ctx, "好的！"), 200)

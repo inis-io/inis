@@ -70,7 +70,9 @@ func initSMSToml() {
 		Mode: "toml",
 		Name: "sms",
 		Content: utils.Replace(TempSMS, map[string]any{
-			"${default}": "email",
+			"${drive.sms}": "email",
+			"${drive.email}": "aliyun",
+			"${drive.default}": "email",
 			"${email.host}": "smtp.qq.com",
 			"${email.port}": 465,
 			"${email.account}": "xxx@qq.com",
@@ -163,7 +165,7 @@ func initSMS() {
 		Client: tencentClient,
 	}
 
-	switch cast.ToString(SMSToml.Get("default")) {
+	switch cast.ToString(SMSToml.Get("drive.default")) {
 	case "email":
 		SMS = GoMail
 	case "aliyun":
@@ -238,7 +240,7 @@ func (this *GoMailRequest) VerifyCode(phone any, code ...any) (response *SMSResp
 	}
 
 	if utils.Is.Empty(this.Template) {
-		this.Template = "您的验证码是：{code}，有效期5分钟。（打死也不要把验证码告诉别人）"
+		this.Template = "您的验证码是：${code}，有效期5分钟。（打死也不要把验证码告诉别人）"
 	}
 
 	item := gomail.NewMessage()
@@ -250,11 +252,11 @@ func (this *GoMailRequest) VerifyCode(phone any, code ...any) (response *SMSResp
 	// 设置邮件主题
 	item.SetHeader("Subject", cast.ToString(SMSToml.Get("email.sign_name")))
 	// 替换验证码
-	this.Template = utils.Replace(this.Template, map[string]any{
-		"{code}": code[0],
+	temp := utils.Replace(this.Template, map[string]any{
+		"${code}": code[0],
 	})
 	// 设置邮件正文
-	item.SetBody("text/html", this.Template)
+	item.SetBody("text/html", temp)
 
 	// 发送邮件
 	err := this.Client.DialAndSend(item)

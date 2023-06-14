@@ -36,10 +36,14 @@ func InitConfig() {
 
 		configs := []Config{
 			{Key: "SYSTEM_API_KEY", Value: "0", Remark: "API KEY验证"},
-			{Key: "SYSTEM_QPS", Value: "1", Json: utils.Json.Encode(map[string]any{
-				"point": 10, "global": 50,
+			{Key: "SYSTEM_QPS", Value: "1", Json: utils.Json.Encode(facade.H{
+				"point": 15, "global": 50,
 			}), Remark: "接口限流器（QPS）"},
+			{Key: "SYSTEM_QPS_BLOCK", Value: "0", Json: utils.Json.Encode(facade.H{
+				"count": 3, "second": "60 * 60",
+			}), Remark: "满足QPS阈值后自动拦截"},
 			{Key: "SYSTEM_PAGE_LIMIT", Value: "1", Text: "50", Remark: "限制分页查询单次最大数据量"},
+			{Key: "ALLOW_REGISTER", Value: "1", Remark: "是否允许用户自行注册"},
 		}
 
 		for _, item := range configs {

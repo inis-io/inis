@@ -28,7 +28,7 @@ type Comment struct {
 	DeleteTime soft_delete.DeletedAt `gorm:"comment:删除时间; default:0;" json:"delete_time"`
 }
 
-// InitComment - 初始化Article表
+// InitComment - 初始化Comment表
 func InitComment() {
 	// 迁移表
 	err := facade.DB.Drive().AutoMigrate(&Comment{})

@@ -78,6 +78,8 @@ func InitAuthPages() {
 		{Name: "权限分组", Icon: "group", Path: "/admin/auth/group", Size: "14px"},
 		{Name: "页面权限", Icon: "open", Path: "/admin/auth/pages", Size: "17px"},
 		{Name: "接口密钥", Icon: "key", Path: "/admin/api/keys", Size: "14px"},
+		{Name: "IP黑名单", Icon: "qps", Path: "/admin/ip/black", Size: "14px"},
+		{Name: "QPS预警", Icon: "black", Path: "/admin/qps/warn", Size: "14px"},
 	}
 
 	wg := sync.WaitGroup{}
@@ -88,17 +90,25 @@ func InitAuthPages() {
 		go func(item AuthPages, wg *sync.WaitGroup) {
 			defer wg.Done()
 
-			tx := facade.DB.Model(&item).Where("path", item.Path).Save(&AuthPages{
+			tx := facade.DB.Model(&item).Where("path", item.Path)
+
+			// 如果存在，就不要再添加了
+			if exist := tx.Exist(); exist {
+				return
+			}
+
+			res := tx.Save(&AuthPages{
 				Name: cast.ToString(item.Name),
 				Path: cast.ToString(item.Path),
 				Icon: cast.ToString(item.Icon),
 				Size: cast.ToString(item.Size),
 			})
-			if tx.Error != nil {
-				if strings.Contains(tx.Error.Error(), "已存在") {
+
+			if res.Error != nil {
+				if strings.Contains(res.Error.Error(), "已存在") {
 					return
 				}
-				facade.Log.Error(map[string]any{"error": tx.Error.Error()}, "自动添加页面失败")
+				facade.Log.Error(map[string]any{"error": res.Error.Error()}, "自动添加页面失败")
 			}
 		}(item, &wg)
 	}

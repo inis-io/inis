@@ -59,5 +59,8 @@
     "不存在的分享类型！": "Non-existent sharing type!",
     "不存在的文章！": "Non-existent article!",
     "不存在的页面！": "Non-existent page!",
-    "分享成功！": "Share success!"
+    "分享成功！": "Share success!",
+    "管理员关闭了注册功能！": "The administrator has closed the registration function!",
+    "请联系管理员为您手动开通账号！": "Please contact the administrator to open the account for you manually!",
+    "%s 和 %s 必须有一个不能为空！": "%s and %s must not be empty!"
 }

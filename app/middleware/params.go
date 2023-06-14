@@ -20,7 +20,9 @@ func Params() gin.HandlerFunc {
 		// 挂载域名信息
 		go domain(ctx)
 		// 挂载IP信息
-		go ip(ctx)
+		go clientIP(ctx)
+		// 挂载端口号
+		go port(ctx)
 
 		method := ctx.Request.Method
 		params := make(map[string]any)
@@ -191,8 +193,8 @@ func domain(ctx *gin.Context) (result string) {
 	return result
 }
 
-// 获取IP
-func ip(ctx *gin.Context) (result string) {
+// 获取客户端IP
+func clientIP(ctx *gin.Context) (result string) {
 
 	// 获取IP
 	result = ctx.Request.Header.Get("X-Real-IP")
@@ -205,6 +207,28 @@ func ip(ctx *gin.Context) (result string) {
 
 	// 存储到上下文中
 	ctx.Set("ip", result)
+
+	return result
+}
+
+// 获取端口号
+func port(ctx *gin.Context) (result int) {
+
+	host := ctx.Request.Header.Get("X-Host")
+	host = utils.Ternary[string](utils.Is.Empty(host), ctx.Request.Host, host)
+
+	// 得到 主机地址 和 端口号
+	if strings.Contains(host, ":") {
+		info := strings.Split(host, ":")
+		result = cast.ToInt(info[1])
+	}
+
+	if utils.Is.Empty(result) {
+		result = utils.Ternary[int](ctx.Request.Header.Get("X-Scheme") == "https", 443, 80)
+	}
+
+	// 存储到上下文中
+	ctx.Set("port", result)
 
 	return result
 }

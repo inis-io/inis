@@ -85,7 +85,7 @@ func (this *Toml) IPUT(ctx *gin.Context) {
 		"sms-email":       this.putSMSEmail,
 		"sms-aliyun":      this.putSMSAliyun,
 		"sms-tencent":     this.putSMSTencent,
-		"sms-default":     this.putSMSDefault,
+		"sms-drive":       this.putSMSDrive,
 		"crypt-jwt":       this.putCryptJWT,
 		"cache-default":   this.putCacheDefault,
 		"cache-redis":     this.putCacheRedis,
@@ -150,7 +150,7 @@ func (this *Toml) getSMS(ctx *gin.Context) {
 	}
 
 	result := cast.ToStringMap(item.Get(cast.ToString(params["name"])))
-	result["default"] = item.Get("default")
+	result["drive"] = item.Get("drive")
 
 	// 获取指定
 	this.json(ctx, result, facade.Lang(ctx, "数据请求成功！"), 200)
@@ -176,8 +176,8 @@ func (this *Toml) putSMS(ctx *gin.Context) {
 	}
 
 	switch params["name"] {
-	case "default":
-		this.putSMSDefault(ctx)
+	case "drive":
+		this.putSMSDrive(ctx)
 	case "email":
 		this.putSMSEmail(ctx)
 	case "aliyun":
@@ -185,7 +185,7 @@ func (this *Toml) putSMS(ctx *gin.Context) {
 	case "tencent":
 		this.putSMSTencent(ctx)
 	default:
-		this.putSMSDefault(ctx)
+		this.putSMSDrive(ctx)
 	}
 }
 
@@ -316,28 +316,26 @@ func (this *Toml) getLog(ctx *gin.Context) {
 	this.json(ctx, item.Get(cast.ToString(params["name"])), facade.Lang(ctx, "数据请求成功！"), 200)
 }
 
-// putSMSDefault - 修改SMS默认配置
-func (this *Toml) putSMSDefault(ctx *gin.Context) {
+// putSMSDrive - 修改SMS驱动配置
+func (this *Toml) putSMSDrive(ctx *gin.Context) {
 
 	// 请求参数
-	params := this.params(ctx)
+	params := this.params(ctx, map[string]any{
+		"default": "email",
+	})
 
-	if utils.Is.Empty(params["value"]) {
-		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "value"), 400)
-		return
-	}
+	opts  := make(map[string]any)
+	allow := []any{"email", "sms", "default"}
 
-	allow := []any{"email", "aliyun", "tencent"}
-
-	if !utils.In.Array(params["value"], allow) {
-		this.json(ctx, nil, facade.Lang(ctx, "value 只允许是 email、aliyun、tencent 其中一个！"), 400)
-		return
+	for key, value := range params {
+		if !utils.In.Array(key, allow) {
+			continue
+		}
+		opts[fmt.Sprintf("${drive.%s}", key)] = value
 	}
 
 	temp := facade.TempSMS
-	temp = utils.Replace(temp, map[string]any{
-		"${default}": params["value"],
-	})
+	temp = utils.Replace(temp, opts)
 
 	// 正则匹配出所有的 ${?} 字符串
 	reg := regexp.MustCompile(`\${(.+?)}`)

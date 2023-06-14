@@ -102,8 +102,14 @@ time_zone  = "${alipay.time_zone}"
 // TempSMS - 短信配置模板
 const TempSMS = `# ======== SMS 配置 ========
 
-# 默认驱动
-default   = "${default}"
+# 驱动
+[drive]
+# 邮件
+email     = "${drive.email}"
+# 短信
+sms	      = "${drive.sms}"
+# 默认
+default   = "${drive.default}"
 
 
 # 邮件服务配置

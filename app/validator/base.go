@@ -60,6 +60,10 @@ func NewValid(table any, params map[string]any) (err error) {
 		item = &ArticleGroup{}
 	case "exp":
 		item = &EXP{}
+	case "ip-black":
+		item = &IpBlack{}
+	case "qps-warn":
+		item = &QpsWarn{}
 	default:
 		return errors.New("未知的验证器！")
 	}

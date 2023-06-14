@@ -12,6 +12,7 @@ func Route(Gin *gin.Engine) {
 
 	// 全局中间件
 	group := Gin.Group("/api/").Use(
+		middle.IpBlack(),   // IP黑名单
 		global.QpsPoint(),  // QPS限制 - 单接口限流
 		global.QpsGlobal(), // QPS限制 - 全局限流
 		global.Params(),    // 解析参数

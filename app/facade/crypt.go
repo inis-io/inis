@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	JWT "github.com/dgrijalva/jwt-go"
@@ -295,10 +296,54 @@ func (this *CipherRequest) Decrypt(text any) (result *CipherResponse) {
 
 type HashStruct struct {}
 
+// Hash - 哈希加密
 var Hash = &HashStruct{}
 
-func (this *HashStruct) Sum32(text any) string {
+// Sum32 - 哈希加密
+func (this *HashStruct) Sum32(text any) (result string) {
 	item := fnv.New32()
 	_, err := item.Write([]byte(cast.ToString(text)))
 	return cast.ToString(utils.Ternary[any](err != nil, nil, item.Sum32()))
+}
+
+// Token 生成指定长度的指纹令牌
+/**
+ * @param value 值
+ * @param args  参数
+ * @param args[0] 令牌长度，默认长度为 16
+ * @param args[1] 令牌前缀，默认前缀为 token
+ * @return result 令牌
+ * @example：
+ * 1. token := facade.Hash.Token("test")
+ * 2. token := facade.Hash.Token("test", 32, "token")
+ */
+func (this *HashStruct) Token(value any, args ...any) (result string) {
+
+	length := 16
+	prefix := "token"
+
+	for index, item := range args {
+		switch index {
+		case 0:
+			length = utils.Ternary(cast.ToInt(item) > 0, cast.ToInt(item), length)
+		case 1:
+			prefix = cast.ToString(item)
+		}
+	}
+
+	// 先进行 hash 加密
+	hash   := Hash.Sum32(prefix + cast.ToString(value))
+	encode := md5.New()
+	encode.Write([]byte(hash))
+
+	// 再进行 hex 编码
+	item := hex.EncodeToString(encode.Sum(nil))
+
+	if len(item) > length {
+		item = item[:length]
+	} else if len(item) < length {
+		item = item + Hash.Token(item, length - len(item))
+	}
+
+	return item
 }
