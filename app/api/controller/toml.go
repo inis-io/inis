@@ -89,6 +89,8 @@ func (this *Toml) IPUT(ctx *gin.Context) {
 		"crypt-jwt":       this.putCryptJWT,
 		"cache-default":   this.putCacheDefault,
 		"cache-redis":     this.putCacheRedis,
+		"cache-file":      this.putCacheFile,
+		"cache-ram":       this.putCacheRam,
 		"storage-default": this.putStorageDefault,
 		"storage-local":   this.putStorageLocal,
 		"storage-oss":     this.putStorageOSS,
@@ -196,7 +198,7 @@ func (this *Toml) getCache(ctx *gin.Context) {
 	params := this.params(ctx)
 
 	// 允许的查询范围
-	field := []any{"redis"}
+	field := []any{"redis","file","ram"}
 
 	item := facade.CacheToml
 	if item.Error != nil {
@@ -871,6 +873,74 @@ func (this *Toml) putCacheRedis(ctx *gin.Context) {
 	this.json(ctx, nil, facade.Lang(ctx, "修改成功！"), 200)
 }
 
+// putCacheFile - 修改File缓存配置
+func (this *Toml) putCacheFile(ctx *gin.Context) {
+
+	// 请求参数
+	params := this.params(ctx, map[string]any{
+		"path":     "runtime/cache",
+		"prefix":   "inis_",
+		"expire":   "2 * 60 * 60",
+	})
+
+	temp := facade.TempCache
+	temp = utils.Replace(temp, map[string]any{
+		"${file.path}":     params["path"],
+		"${file.prefix}":   params["prefix"],
+		"${file.expire}":   params["expire"],
+		"${open}":          cast.ToBool(facade.CacheToml.Get("open")),
+	})
+
+	// 正则匹配出所有的 ${?} 字符串
+	reg := regexp.MustCompile(`\${(.+?)}`)
+	matches := reg.FindAllStringSubmatch(temp, -1)
+
+	for _, match := range matches {
+		temp = strings.Replace(temp, match[0], cast.ToString(facade.CacheToml.Get(match[1])), -1)
+	}
+
+	item := utils.File().Save(strings.NewReader(temp), "config/cache.toml")
+
+	if item.Error != nil {
+		this.json(ctx, nil, facade.Lang(ctx, "修改失败！"), 400)
+		return
+	}
+
+	this.json(ctx, nil, facade.Lang(ctx, "修改成功！"), 200)
+}
+
+// putCacheRam - 修改Ram缓存配置
+func (this *Toml) putCacheRam(ctx *gin.Context) {
+
+	// 请求参数
+	params := this.params(ctx, map[string]any{
+		"expire":   "2 * 60 * 60",
+	})
+
+	temp := facade.TempCache
+	temp = utils.Replace(temp, map[string]any{
+		"${ram.expire}":   params["expire"],
+		"${open}":         cast.ToBool(facade.CacheToml.Get("open")),
+	})
+
+	// 正则匹配出所有的 ${?} 字符串
+	reg := regexp.MustCompile(`\${(.+?)}`)
+	matches := reg.FindAllStringSubmatch(temp, -1)
+
+	for _, match := range matches {
+		temp = strings.Replace(temp, match[0], cast.ToString(facade.CacheToml.Get(match[1])), -1)
+	}
+
+	item := utils.File().Save(strings.NewReader(temp), "config/cache.toml")
+
+	if item.Error != nil {
+		this.json(ctx, nil, facade.Lang(ctx, "修改失败！"), 400)
+		return
+	}
+
+	this.json(ctx, nil, facade.Lang(ctx, "修改成功！"), 200)
+}
+
 // testRedis - 测试Redis连接
 func (this *Toml) testRedis(ctx *gin.Context) {
 
@@ -913,14 +983,14 @@ func (this *Toml) putCacheDefault(ctx *gin.Context) {
 
 	// 请求参数
 	params := this.params(ctx, map[string]any{
-		"value": "redis",
+		"value": "file",
 		"open":  "false",
 	})
 
-	allow := []any{"redis"}
+	allow := []any{"redis","file","ram"}
 
 	if !utils.In.Array(params["value"], allow) {
-		this.json(ctx, nil, facade.Lang(ctx, "value 只允许是 redis ！"), 400)
+		this.json(ctx, nil, facade.Lang(ctx, "value 只允许是 redis、file、ram ！"), 400)
 		return
 	}
 

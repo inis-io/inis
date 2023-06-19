@@ -108,7 +108,7 @@ func (this *AuthGroup) INDEX(ctx *gin.Context) {
 // 删除缓存
 func (this *AuthGroup) delCache() {
 	// 删除缓存
-	facade.Cache.DelTags([]any{"<GET>","auth-group"})
+	facade.Cache.DelTags([]any{"[GET]","auth-group"})
 }
 
 // one 获取指定数据

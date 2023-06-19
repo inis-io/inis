@@ -17,7 +17,7 @@ func Route(Gin *gin.Engine) {
 		global.QpsGlobal(), // QPS限制 - 全局限流
 		global.Params(),    // 解析参数
 		middle.Jwt(),       // 验证权限
-		middle.Rule(),      // 验证规则
+		// middle.Rule(),      // 验证规则
 		middle.ApiKey(),    // 安全校验
 	)
 
@@ -41,6 +41,8 @@ func Route(Gin *gin.Engine) {
 		"comment":       &controller.Comment{},
 		"placard":       &controller.Placard{},
 		"api-keys":      &controller.ApiKeys{},
+		"ip-black":      &controller.IpBlack{},
+		"qps-warn":   	 &controller.QpsWarn{},
 		"auth-group":    &controller.AuthGroup{},
 		"auth-pages":    &controller.AuthPages{},
 		"auth-rules":    &controller.AuthRules{},

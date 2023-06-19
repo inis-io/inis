@@ -106,7 +106,7 @@ func (this *Placard) INDEX(ctx *gin.Context) {
 // 删除缓存
 func (this *Placard) delCache() {
 	// 删除缓存
-	facade.Cache.DelTags([]any{"<GET>","placard"})
+	facade.Cache.DelTags([]any{"[GET]","placard"})
 }
 
 // one 获取指定数据

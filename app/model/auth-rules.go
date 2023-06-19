@@ -119,6 +119,8 @@ func createAuthRules() (result []AuthRules) {
 				"path=sms-tencent&name=修改腾讯云短信服务配置",
 				"path=crypt-jwt&name=修改JWT配置",
 				"path=cache-redis&name=修改Redis缓存配置",
+				"path=cache-file&name=修改文件缓存配置",
+				"path=cache-ram&name=修改内存缓存配置",
 				"path=sms-drive&name=修改SMS驱动配置",
 				"path=cache-default&name=修改缓存默认服务类型",
 				"path=storage-default&name=修改存储默认服务类型",

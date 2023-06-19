@@ -106,7 +106,7 @@ func (this *Pages) INDEX(ctx *gin.Context) {
 // 删除缓存
 func (this *Pages) delCache() {
 	// 删除缓存
-	facade.Cache.DelTags([]any{"<GET>", "pages"})
+	facade.Cache.DelTags([]any{"[GET]", "pages"})
 }
 
 // one 获取指定数据

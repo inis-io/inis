@@ -107,7 +107,7 @@ func (this *ApiKeys) INDEX(ctx *gin.Context) {
 // 删除缓存
 func (this *ApiKeys) delCache() {
 	// 删除缓存
-	facade.Cache.DelTags([]any{"<GET>","api-keys"})
+	facade.Cache.DelTags([]any{"[GET]","api-keys"})
 }
 
 // one 获取指定数据

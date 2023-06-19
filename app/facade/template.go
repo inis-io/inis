@@ -63,6 +63,20 @@ expire     = "${redis.expire}"
 prefix     = "${redis.prefix}"
 # redis数据库
 database   = ${redis.database}
+
+# 文件缓存配置
+[file]
+# 缓存过期时间(秒) - 0为永不过期
+expire     = "${file.expire}"
+# 缓存目录
+path       = "${file.path}"
+# 缓存前缀
+prefix     = "${file.prefix}"
+
+# 内存缓存配置
+[ram]
+# 缓存过期时间(秒) - 0为永不过期
+expire     = "${ram.expire}"
 `
 
 // TempLog - 日志配置模板

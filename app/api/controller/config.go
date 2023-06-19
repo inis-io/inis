@@ -107,8 +107,8 @@ func (this *Config) INDEX(ctx *gin.Context) {
 // 删除缓存
 func (this *Config) delCache() {
 	// 删除缓存
-	facade.Cache.DelTags([]any{"<GET>","config"})
-	facade.Cache.DelTags([]any{"<GET>","[?]"})
+	facade.Cache.DelTags([]any{"[GET]","config"})
+	facade.Cache.DelTags([]any{"[GET]","[?]"})
 }
 
 // one 获取指定数据
@@ -337,7 +337,7 @@ func (this *Config) update(ctx *gin.Context) {
 	}
 
 	// 监听器
-	go this.watch(ctx)
+	go this.watch()
 
 	this.json(ctx, gin.H{
 		"id": table.Id,
@@ -546,7 +546,7 @@ func (this *Config) restore(ctx *gin.Context) {
 }
 
 // watch 监听数据
-func (this *Config) watch(ctx *gin.Context) {
+func (this *Config) watch() {
 
 	item := facade.DB.Model(&model.Config{}).Where("key", "SYSTEM_API_KEY").Find()
 	if cast.ToInt(item["value"]) == 1 {

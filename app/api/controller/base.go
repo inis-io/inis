@@ -170,8 +170,9 @@ func (this cache) name(ctx *gin.Context) (name string) {
 		name = name[:len(name)-1]
 	}
 
-	// 生产缓存名称
-	name = fmt.Sprintf("<%s>%s?hash=%s", ctx.Request.Method, ctx.Request.URL.Path, facade.Hash.Sum32(name))
+	// 生产缓存名称 - 禁止包含（兼容 Windows）：\/:*?"<>|
+	path := strings.Replace(ctx.Request.URL.Path, "/", "_", -1)
+	name = fmt.Sprintf("[%s]%s&hash=%s", ctx.Request.Method, path, facade.Hash.Sum32(name))
 	return
 }
 

@@ -28,6 +28,7 @@ func (this *Test) IGET(ctx *gin.Context) {
 		"request": this.request,
 		"alipay":  this.alipay,
 		"system":  this.system,
+		"cache":   this.getCache,
 	}
 	err := this.call(allow, method, ctx)
 
@@ -49,6 +50,7 @@ func (this *Test) IPOST(ctx *gin.Context) {
 		"request":    this.request,
 		"upload":     this.upload,
 		"qq":         this.qq,
+		"cache":      this.setCache,
 	}
 	err := this.call(allow, method, ctx)
 
@@ -81,6 +83,7 @@ func (this *Test) IDEL(ctx *gin.Context) {
 
 	allow := map[string]any{
 		"request": this.request,
+		"cache":   this.delCache,
 	}
 	err := this.call(allow, method, ctx)
 
@@ -94,34 +97,66 @@ func (this *Test) IDEL(ctx *gin.Context) {
 func (this *Test) INDEX(ctx *gin.Context) {
 
 	// 请求参数
-	// params := this.params(ctx)
+	params := this.params(ctx)
 
-	// item := facade.Cipher(facade.Hash.Token(params["sn"]), facade.Hash.Token(params["mac"]))
-	// encode := item.Encrypt(utils.Json.Encode(facade.H{
-	// 	"sn":  params["sn"],
-	// 	"mac": params["mac"],
-	// }))
+	// res := gin.H{
 	//
-	// // 整体加密MD5转大写
-	//
-	// decode := item.Decrypt(encode.Text)
+	// 	// "root" : this.meta.root(ctx),
+	// 	// "user" : this.meta.user(ctx),
+	// 	// "route": this.meta.route(ctx),
+	// 	// "rules": this.meta.rules(ctx),
+	// 	// "json" : utils.Json.Encode(params["json"]),
+	// }
 
-	res := gin.H{
+	// text, ok := facade.CacheFile.Get(cast.ToString(params["key"]))
+	// if !ok {
+	// 	this.json(ctx, nil, "缓存不存在或已过期！", 400)
+	// 	return
+	// }
 
-		// "test": facade.Hash.Token(params["sn"], params["len"], params["key"]),
-		// "key": facade.Hash.Token(params["sn"]),
-		// "iv" : facade.Hash.Token(params["mac"]),
-		// "encode": encode.Text,
-		// "decode": decode.Text,
+	this.json(ctx, facade.Cache.Get(params["key"]), facade.Lang(ctx, "好的！"), 200)
+}
 
-		// "root" : this.meta.root(ctx),
-		// "user" : this.meta.user(ctx),
-		// "route": this.meta.route(ctx),
-		// "rules": this.meta.rules(ctx),
-		// "json" : utils.Json.Encode(params["json"]),
+func (this *Test) getCache(ctx *gin.Context) {
+
+	// 请求参数
+	params := this.params(ctx)
+
+	this.json(ctx, map[string]any{
+		"value": facade.Cache.Get(params["key"]),
+		// "has":  facade.CacheFile.Has(params["key"]),
+	}, facade.Lang(ctx, "好的！"), 200)
+
+	// this.json(ctx, map[string]any{
+	// 	"value": string(facade.CacheFile.Get(params["key"])),
+	// 	"has":  facade.CacheFile.Has(params["key"]),
+	// }, facade.Lang(ctx, "好的！"), 200)
+}
+
+func (this *Test) setCache(ctx *gin.Context) {
+
+	params := this.params(ctx)
+
+	key   := cast.ToString(params["key"])
+	value := cast.ToString(params["value"])
+
+	// ok := facade.CacheFile.Set(key, []byte(value), params["exp"])
+	ok := facade.Cache.Set(key, value, params["exp"])
+
+	this.json(ctx, ok, "ok", 200)
+}
+
+
+func (this *Test) delCache(ctx *gin.Context) {
+
+	ok := facade.Cache.DelTags([]any{"inis","test"}, "unti", "admin")
+
+	if !ok {
+		this.json(ctx, nil, "no", 400)
+		return
 	}
 
-	this.json(ctx, res, facade.Lang(ctx, "好的！"), 200)
+	this.json(ctx, nil, "ok", 200)
 }
 
 func (this *Test) qq(ctx *gin.Context) {

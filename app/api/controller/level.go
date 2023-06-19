@@ -106,7 +106,7 @@ func (this *Level) INDEX(ctx *gin.Context) {
 // 删除缓存
 func (this *Level) delCache() {
 	// 删除缓存
-	facade.Cache.DelTags([]any{"<GET>","level"})
+	facade.Cache.DelTags([]any{"[GET]","level"})
 }
 
 // one 获取指定数据

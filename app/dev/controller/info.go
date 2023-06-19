@@ -3,10 +3,12 @@ package controller
 import (
 	"github.com/denisbrodbeck/machineid"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/unti-io/go-utils/utils"
 	"inis/app/facade"
 	"runtime"
 	"strings"
+	"time"
 )
 
 type Info struct {
@@ -21,6 +23,7 @@ func (this *Info) IGET(ctx *gin.Context) {
 
 	allow := map[string]any{
 		"system" : this.system,
+		"device" : this.device,
 		"version": this.version,
 	}
 	err := this.call(allow, method, ctx)
@@ -110,10 +113,8 @@ func sn() (result string) {
 // system - 系统信息
 func (this *Info) system(ctx *gin.Context) {
 
-	this.json(ctx, map[string]any{
-		"sn"    : sn(),
-		"mac"   : utils.Get.Mac(),
-		"port"  : facade.H{
+	info := map[string]any{
+		"port"  : map[string]any{
 			"run" : this.get(ctx, "port"),
 			"real": facade.AppToml.Get("app.port"),
 		},
@@ -122,7 +123,9 @@ func (this *Info) system(ctx *gin.Context) {
 		"GOARCH": runtime.GOARCH,
 		"NumCPU": runtime.NumCPU(),
 		"NumGoroutine": runtime.NumGoroutine(),
-	}, facade.Lang(ctx, "好的！"), 200)
+	}
+
+	this.json(ctx, info, facade.Lang(ctx, "好的！"), 200)
 }
 
 // version - 版本信息
@@ -131,4 +134,44 @@ func (this *Info) version(ctx *gin.Context) {
 		"go": utils.Version.Go(),
 		"inis": facade.Version,
 	}, facade.Lang(ctx, "好的！"), 200)
+}
+
+func (this *Info) device(ctx *gin.Context) {
+
+	body := map[string]any{
+		"sn"    : sn(),
+		"mac"   : utils.Get.Mac(),
+		"port"  : map[string]any{
+			"run" : this.get(ctx, "port"),
+			"real": facade.AppToml.Get("app.port"),
+		},
+		"domain": this.get(ctx, "domain"),
+		"goos"  : runtime.GOOS,
+		"goarch": runtime.GOARCH,
+		"cpu"   : runtime.NumCPU(),
+	}
+
+	// X-SS-STUB(MD5) X-Argus(加密文本) X-Khronos(时间戳) X-Gorgon
+	encode := facade.Cipher(facade.Hash.Token(body["sn"]), facade.Hash.Token(body["mac"]))
+
+	unix := time.Now().Unix()
+
+	item := utils.Curl(utils.CurlRequest{
+		Method: "POST",
+		Url   : "http://localhost:8642/api/test/request",
+		Body  : body,
+		Headers: map[string]any{
+			"X-Khronos" : unix,
+			"X-Argus"   : encode.Encrypt(utils.Json.Encode(body)).Text,
+			"X-Gorgon"  : "8642" + facade.Hash.Token(uuid.New().String(), 48),
+			"X-SS-STUB" : strings.ToUpper(facade.Hash.Token(utils.Map.ToURL(body), 32, unix)),
+		},
+	}).Send()
+
+	if item.Error != nil {
+		this.json(ctx, nil, item.Error.Error(), 500)
+		return
+	}
+
+	this.json(ctx, item.Json["data"], facade.Lang(ctx, "好的！"), 200)
 }

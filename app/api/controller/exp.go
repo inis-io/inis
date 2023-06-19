@@ -110,7 +110,7 @@ func (this *EXP) INDEX(ctx *gin.Context) {
 // 删除缓存
 func (this *EXP) delCache() {
 	// 删除缓存
-	facade.Cache.DelTags([]any{"<GET>","exp"})
+	facade.Cache.DelTags([]any{"[GET]","exp"})
 }
 
 // one 获取指定数据

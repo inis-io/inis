@@ -106,7 +106,7 @@ func (this *Comment) INDEX(ctx *gin.Context) {
 // 删除缓存
 func (this *Comment) delCache() {
 	// 删除缓存
-	facade.Cache.DelTags([]any{"<GET>","comment"})
+	facade.Cache.DelTags([]any{"[GET]","comment"})
 }
 
 // one 获取指定数据

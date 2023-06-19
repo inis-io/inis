@@ -106,7 +106,7 @@ func (this *ArticleGroup) INDEX(ctx *gin.Context) {
 // 删除缓存
 func (this *ArticleGroup) delCache() {
 	// 删除缓存
-	facade.Cache.DelTags([]any{"<GET>","article-group"})
+	facade.Cache.DelTags([]any{"[GET]","article-group"})
 }
 
 // one 获取指定数据

@@ -2,7 +2,6 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"inis/app/facade"
@@ -107,7 +106,7 @@ func (this *QpsWarn) INDEX(ctx *gin.Context) {
 // 删除缓存
 func (this *QpsWarn) delCache() {
 	// 删除缓存
-	facade.Cache.DelTags([]any{"<GET>","qps-warn"})
+	facade.Cache.DelTags([]any{"[GET]","qps-warn"})
 }
 
 // one 获取指定数据
@@ -314,25 +313,6 @@ func (this *QpsWarn) update(ctx *gin.Context) {
 			}
 			async.Set(key, val)
 		}
-	}
-
-	// 判断 value 是否是空的 - 自动创建
-	if utils.Is.Empty(async.Get("value")) {
-		// 生成一个随机的UUID
-		UUID := uuid.New().String()
-		// 去除UUID中的横杠
-		UUID = strings.Replace(UUID, "-", "", -1)
-		// 转换成大写
-		async.Set("value", strings.ToUpper(UUID))
-	}
-
-	key  := cast.ToString(async.Get("value"))
-	item := facade.DB.Model(&table).Where("value", key).Find()
-
-	// 检查 value 唯一性
-	if !utils.IsEmpty(item) && item["value"] != key {
-		this.json(ctx, nil, facade.Lang(ctx, "%s 已经存在！", key), 400)
-		return
 	}
 
 	// 更新数据 - Scan() 方法用于将数据扫描到结构体中，使用的位置很重要

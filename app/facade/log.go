@@ -45,9 +45,9 @@ func init() {
 	initLog()
 
 	// 监听配置文件变化
-	CacheToml.Viper.WatchConfig()
+	LogToml.Viper.WatchConfig()
 	// 配置文件变化时，重新初始化配置文件
-	CacheToml.Viper.OnConfigChange(func(event fsnotify.Event) {
+	LogToml.Viper.OnConfigChange(func(event fsnotify.Event) {
 		initLog()
 	})
 }
