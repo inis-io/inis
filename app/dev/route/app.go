@@ -11,8 +11,6 @@ func Route(Gin *gin.Engine) {
 
 	// 全局中间件
 	install := Gin.Group("/dev/").Use(
-		// global.QpsPoint(),  // QPS限制 - 单接口限流
-		// global.QpsGlobal(), // QPS限制 - 全局限流
 		global.Params(),	// 解析参数
 	)
 

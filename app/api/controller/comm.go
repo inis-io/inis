@@ -690,7 +690,7 @@ func setToken(ctx *gin.Context, token any) {
 func (this *Comm) signInConfig() (result map[string]any) {
 
 	// 是否允许注册
-	cacheRegister := "<GET>config[ALLOW_REGISTER]"
+	cacheRegister := "[GET]config[ALLOW_REGISTER]"
 
 	// 如果缓存中存在，则直接使用缓存中的数据
 	if facade.Cache.Has(cacheRegister) {

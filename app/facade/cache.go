@@ -72,7 +72,7 @@ func initCacheToml() {
 		Name: "cache",
 		Content: utils.Replace(TempCache, map[string]any{
 			"${open}":           "false",
-			"${default}":        "redis",
+			"${default}":        "file",
 			"${local.expire}":   300,
 			"${redis.host}":     "localhost",
 			"${redis.port}":     "6379",
