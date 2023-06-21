@@ -9,8 +9,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	JWT "github.com/dgrijalva/jwt-go"
 	"github.com/fsnotify/fsnotify"
+	JWT "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
@@ -136,16 +136,19 @@ func (this *JwtStruct) Create(data map[string]any) (result JwtResponse) {
 
 	type JwtClaims struct {
 		Data map[string]any `json:"data"`
-		JWT.StandardClaims
+		JWT.RegisteredClaims
 	}
+
+	IssuedAt  := JWT.NewNumericDate(time.Now())
+	ExpiresAt := JWT.NewNumericDate(time.Now().Add(time.Second * time.Duration(this.request.Expire)))
 
 	item, err := JWT.NewWithClaims(JWT.SigningMethodHS256, JwtClaims{
 		Data: data,
-		StandardClaims: JWT.StandardClaims{
-			IssuedAt:  time.Now().Unix(),                                    // 当前时间戳
-			ExpiresAt: time.Now().Unix() + this.request.Expire,				 // 过期时间戳
-			Issuer:    this.request.Issuer,     						   	 // 颁发者签名
-			Subject:   this.request.Subject, 								 // 签名主题
+		RegisteredClaims: JWT.RegisteredClaims{
+			IssuedAt:  IssuedAt,				// 签发时间戳
+			ExpiresAt: ExpiresAt,				// 过期时间戳
+			Issuer:    this.request.Issuer,		// 颁发者签名
+			Subject:   this.request.Subject,	// 签名主题
 		},
 	}).SignedString([]byte(this.request.Key))
 
@@ -164,7 +167,7 @@ func (this *JwtStruct) Parse(token any) (result JwtResponse) {
 
 	type JwtClaims struct {
 		Data map[string]any `json:"data"`
-		JWT.StandardClaims
+		JWT.RegisteredClaims
 	}
 
 	item, err := JWT.ParseWithClaims(cast.ToString(token), &JwtClaims{}, func(token *JWT.Token) (any, error) {
@@ -184,7 +187,7 @@ func (this *JwtStruct) Parse(token any) (result JwtResponse) {
 
 	if key, _ := item.Claims.(*JwtClaims); item.Valid {
 		this.response.Data  = key.Data
-		this.response.Valid = key.StandardClaims.ExpiresAt - time.Now().Unix()
+		this.response.Valid = key.RegisteredClaims.ExpiresAt.Time.Unix() - time.Now().Unix()
 	}
 
 	return this.response

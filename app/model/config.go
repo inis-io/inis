@@ -9,10 +9,10 @@ import (
 )
 
 type Config struct {
-	Id      int    `gorm:"type:int(32); comment:主键;" json:"id"`
-	Key   	string `gorm:"size:32; comment:唯一键; default:Null;" json:"key"`
-	Value 	string `gorm:"type:text; comment:值; default:Null;" json:"value"`
-	Remark  string `gorm:"comment:备注; default:Null;" json:"remark"`
+	Id         int    				 `gorm:"type:int(32); comment:主键;" json:"id"`
+	Key   	   string 				 `gorm:"size:32; comment:唯一键; default:Null;" json:"key"`
+	Value 	   string 				 `gorm:"type:text; comment:值; default:Null;" json:"value"`
+	Remark     string 				 `gorm:"comment:备注; default:Null;" json:"remark"`
 	// 以下为公共字段
 	Json       any                   `gorm:"type:longtext; comment:用于存储JSON数据;" json:"json"`
 	Text       any                   `gorm:"type:longtext; comment:用于存储文本数据;" json:"text"`
@@ -44,6 +44,9 @@ func InitConfig() {
 			}), Remark: "满足QPS阈值后自动拦截"},
 			{Key: "SYSTEM_PAGE_LIMIT", Value: "1", Text: "50", Remark: "限制分页查询单次最大数据量"},
 			{Key: "ALLOW_REGISTER", Value: "1", Remark: "是否允许用户自行注册"},
+			{Key: "ARTICLE", Json: utils.Json.Encode(facade.H{
+				"editor": "tinymce",
+			}), Remark: "文章配置"},
 		}
 
 		for _, item := range configs {
@@ -58,7 +61,7 @@ func InitConfig() {
 }
 
 // AfterFind - 查询Hook
-func (this *Config) AfterFind(tx *gorm.DB) (err error) {
+func (this *Config) AfterFind(*gorm.DB) (err error) {
 
 	this.Text = cast.ToString(this.Text)
 	this.Json = utils.Json.Decode(this.Json)

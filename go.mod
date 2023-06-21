@@ -10,20 +10,21 @@ require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.7+incompatible
 	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/denisbrodbeck/machineid v1.0.1
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/disintegration/imaging v1.6.2
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-pay/gopay v1.5.94
+	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/jasonlvhit/gocron v0.0.1
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/qiniu/go-sdk/v7 v7.16.0
+	github.com/radovskyb/watcher v1.0.7
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/spf13/cast v1.5.1
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.681
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.681
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.683
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.683
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.41
 	github.com/unrolled/secure v1.13.0
 	github.com/unti-io/go-utils v1.2.1

@@ -15,6 +15,7 @@ type Pages struct {
 	Key        string `gorm:"size:256; comment:唯一键; default:Null;" json:"key"`
 	Title      string `gorm:"size:256; comment:标题; default:Null;" json:"title"`
 	Content    string `gorm:"type:longtext; comment:内容; default:Null;" json:"content"`
+	Editor     string `gorm:"comment:编辑器; default:'tinymce';" json:"editor"`
 	Remark     string `gorm:"comment:备注; default:Null;" json:"remark"`
 	LastUpdate int64  `gorm:"comment:最后更新时间; default:0;" json:"last_update"`
 	// 以下为公共字段

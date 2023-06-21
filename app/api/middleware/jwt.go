@@ -33,7 +33,7 @@ func Jwt() gin.HandlerFunc {
 
 		jwt := facade.Jwt().Parse(token)
 		if jwt.Error != nil {
-			result["msg"] = utils.Ternary(jwt.Valid == 0, facade.Lang(ctx, "登录已过期，请重新登录1！"), jwt.Error.Error())
+			result["msg"] = utils.Ternary(jwt.Valid == 0, facade.Lang(ctx, "登录已过期，请重新登录！"), jwt.Error.Error())
 			ctx.SetCookie(tokenName, "", -1, "/", "", false, false)
 			ctx.JSON(200, result)
 			ctx.Abort()
@@ -59,7 +59,7 @@ func Jwt() gin.HandlerFunc {
 
 		// 密码发生变化 - 强制退出
 		if jwt.Data["hash"] != facade.Hash.Sum32(user["password"]) {
-			result["msg"] = facade.Lang(ctx, "登录已过期，请重新登录2！")
+			result["msg"] = facade.Lang(ctx, "登录已过期，请重新登录！")
 			ctx.SetCookie(tokenName, "", -1, "/", "", false, false)
 			ctx.JSON(200, result)
 			ctx.Abort()

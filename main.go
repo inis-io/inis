@@ -21,7 +21,7 @@ func main() {
 	// 静默运行 - 不显示控制台
 	// go build -ldflags -H=windowsgui 或 bee pack -ba="-ldflags -H=windowsgui"
 	// 压缩二进制包 - https://github.com/upx/upx/releases
-	// upx -9 -o inis inis-pro
+	// d
 }
 
 func run() {

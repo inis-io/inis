@@ -1,12 +1,14 @@
 package route
 
 import (
-	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
+	"github.com/jasonlvhit/gocron"
+	"github.com/radovskyb/watcher"
 	"github.com/unti-io/go-utils/utils"
 	"inis/app/facade"
 	"inis/app/index/controller"
-	debugs "runtime/debug"
+	"runtime/debug"
+	"time"
 )
 
 func Route(Gin *gin.Engine) {
@@ -16,7 +18,7 @@ func Route(Gin *gin.Engine) {
 		if err := recover(); err != nil {
 			facade.Log.Error(map[string]any{
 				"error":     err,
-				"stack":     string(debugs.Stack()),
+				"stack":     string(debug.Stack()),
 				"func_name": utils.Caller().FuncName,
 				"file_name": utils.Caller().FileName,
 				"file_line": utils.Caller().Line,
@@ -24,76 +26,71 @@ func Route(Gin *gin.Engine) {
 		}
 	}()
 
+	// 开启监听
 	go watch(Gin)
-
-	Gin.LoadHTMLGlob("public/index.html")
 
 	// 注册路由
 	Gin.GET("/", controller.Index)
 }
 
-// watch - 监听 public/index.html 的文件变化
+// watch - 监听 public/index.html 文件变化
 func watch(Gin *gin.Engine) {
 
-	item, err := fsnotify.NewWatcher()
-	if err != nil {
-		facade.Log.Error(map[string]any{
-			"error":     err,
-			"stack":     string(debugs.Stack()),
-			"func_name": utils.Caller().FuncName,
-			"file_name": utils.Caller().FileName,
-			"file_line": utils.Caller().Line,
-		}, "监听 public/index.html 文件变化发生错误")
-		return
-	}
+	// 加载模板
+	Gin.LoadHTMLGlob("public/index.html")
 
-	defer func(item *fsnotify.Watcher) {
-		err := item.Close()
+	item := watcher.New()
+	defer item.Close()
+
+	// 定时器监听文件是否存在
+	timer := func() {
+		err := gocron.Every(1).Seconds().Do(html(Gin))
 		if err != nil {
-			facade.Log.Error(map[string]any{
-				"error":     err,
-				"stack":     string(debugs.Stack()),
-				"func_name": utils.Caller().FuncName,
-				"file_name": utils.Caller().FileName,
-				"file_line": utils.Caller().Line,
-			}, "监听 public/index.html 文件变化发生错误")
 			return
 		}
-	}(item)
+	}
 
-	err = item.Add("public/index.html")
-	if err != nil {
+	// 只监听public目录下的index.html文件
+	if err := item.Add("public/index.html"); err != nil {
 		facade.Log.Error(map[string]any{
 			"error":     err,
-			"stack":     string(debugs.Stack()),
+			"stack":     string(debug.Stack()),
 			"func_name": utils.Caller().FuncName,
 			"file_name": utils.Caller().FileName,
 			"file_line": utils.Caller().Line,
 		}, "监听 public/index.html 文件变化发生错误")
-		return
 	}
 
-	for {
-		select {
-		case event, ok := <-item.Events:
-			if !ok {
-				return
+	go func() {
+		for {
+			select {
+			case event := <- item.Event:
+				if event.Op == watcher.Write {
+					Gin.LoadHTMLGlob("public/index.html")
+				}
+			case <- item.Error:
+				timer()
+			case <- item.Closed:
+				timer()
 			}
-			// 重新加载模板
-			if event.Op&fsnotify.Write == fsnotify.Write {
-				Gin.LoadHTMLGlob("public/index.html")
-			}
-		case err, ok := <- item.Errors:
-			if !ok {
-				return
-			}
-			facade.Log.Error(map[string]any{
-				"error":     err,
-				"stack":     string(debugs.Stack()),
-				"func_name": utils.Caller().FuncName,
-				"file_name": utils.Caller().FileName,
-				"file_line": utils.Caller().Line,
-			}, "监听 public/index.html 文件变化发生错误")
+		}
+	}()
+
+	// 开始监听
+	if err := item.Start(time.Second); err != nil {
+		timer()
+	}
+}
+
+// html - 定时器监听 public/index.html 文件是否存在
+func html(Gin *gin.Engine) func()  {
+	return func() {
+		// 存在则加载
+		if exist := utils.File().Exist("public/index.html"); exist {
+			// 开启监听
+			go watch(Gin)
+			// 删除定时器
+			go gocron.Remove(html(Gin))
 		}
 	}
 }
