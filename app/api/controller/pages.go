@@ -209,7 +209,7 @@ func (this *Pages) all(ctx *gin.Context) {
 	page := cast.ToInt(params["page"])
 	limit := this.meta.limit(ctx)
 	var result []model.Pages
-	mold := facade.DB.Model(&result).WithoutField("content")
+	mold := facade.DB.Model(&result).WithoutField("content").OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"]))
 	mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 	count := mold.Where(table).Count()
 

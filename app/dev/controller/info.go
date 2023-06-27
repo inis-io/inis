@@ -90,7 +90,6 @@ func (this *Info) INDEX(ctx *gin.Context) {
 		"NumGoroutine": runtime.NumGoroutine(),
 		"go": utils.Version.Go(),
 		"inis": facade.Version,
-		"compare": utils.Version.Compare("v1.0.0", "1 2 0"),
 		"agent":  this.header(ctx, "User-Agent"),
 	}
 

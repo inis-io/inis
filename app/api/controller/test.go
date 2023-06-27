@@ -2,19 +2,22 @@ package controller
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/pem"
+	"errors"
 	"fmt"
+	"github.com/spf13/cast"
 	// JWT "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-pay/gopay"
 	"github.com/go-pay/gopay/alipay"
-	JWT "github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/spf13/cast"
-	"github.com/unti-io/go-utils/utils"
 	"inis/app/facade"
 	"mime/multipart"
 	"strings"
-	"time"
 )
 
 type Test struct {
@@ -30,7 +33,6 @@ func (this *Test) IGET(ctx *gin.Context) {
 	allow := map[string]any{
 		"request": this.request,
 		"alipay":  this.alipay,
-		"system":  this.system,
 	}
 	err := this.call(allow, method, ctx)
 
@@ -51,7 +53,6 @@ func (this *Test) IPOST(ctx *gin.Context) {
 		"notify-url": this.notifyUrl,
 		"request":    this.request,
 		"upload":     this.upload,
-		"qq":         this.qq,
 	}
 	err := this.call(allow, method, ctx)
 
@@ -99,171 +100,160 @@ func (this *Test) INDEX(ctx *gin.Context) {
 	// 请求参数
 	// params := this.params(ctx)
 
+	item := RSA.Generate(2048)
+
+	if item.Error != nil {
+		this.json(ctx, nil, item.Error.Error(), 400)
+		return
+	}
+
+	PrivateKey := item.PrivateKey
+	PublicKey  := item.PublicKey
+
+	// 私钥加密
+	encode := RSA.Encrypt(PublicKey, "123456")
+	decode := RSA.Decrypt(PrivateKey, encode.Text)
+
 	res := gin.H{
 		// "root" : this.meta.root(ctx),
-		"user" : this.meta.user(ctx),
+		// "user" : this.meta.user(ctx),
 		// "route": this.meta.route(ctx),
 		// "rules": this.meta.rules(ctx),
 		// "json" : utils.Json.Encode(params["json"]),
+		"encode": encode.Text,
+		"decode": decode.Text,
+		// "rsa": RSA.Generate(2048),
 	}
 
 	this.json(ctx, res, facade.Lang(ctx, "好的！"), 200)
 }
 
-type JwtStruct struct {
-	request  JwtRequest
-	response JwtResponse
+var RSA *RSAStruct
+
+type RSAStruct struct {}
+
+type RSAResponse struct {
+	// 私钥
+	PrivateKey string
+	// 公钥
+	PublicKey  string
+	// 错误信息
+	Error error
+	// 文本
+	Text string
 }
 
-// JwtRequest - JWT请求
-type JwtRequest struct {
-	// 过期时间
-	Expire  int64        `json:"expire"`
-	// 颁发者签名
-	Issuer  string       `json:"issuer"`
-	// 主题
-	Subject string       `json:"subject"`
-	// 密钥
-	Key     string       `json:"key"`
-}
+// Generate 生成 RSA 密钥对
+func (this *RSAStruct) Generate(bits any) (result *RSAResponse) {
 
-// JwtResponse - JWT响应
-type JwtResponse struct {
-	Text  string         `json:"text"`
-	Data  map[string]any `json:"data"`
-	Error error          `json:"error"`
-	Valid int64          `json:"valid"`
-}
+	result = &RSAResponse{}
 
-// Jwt - 入口
-func Jwt(request ...JwtRequest) *JwtStruct {
-
-	if len(request) == 0 {
-		request = append(request, JwtRequest{})
-	}
-
-	// 过期时间
-	if request[0].Expire == 0 {
-		request[0].Expire = cast.ToInt64(utils.Calc(facade.CryptToml.Get("jwt.expire", "7200")))
-	}
-
-	// 颁发者签名
-	if utils.Is.Empty(request[0].Issuer) {
-		request[0].Issuer = cast.ToString(facade.CryptToml.Get("jwt.issuer", "inis.cn"))
-	}
-
-	// 主题
-	if utils.Is.Empty(request[0].Subject) {
-		request[0].Subject = cast.ToString(facade.CryptToml.Get("jwt.subject", "inis"))
-	}
-
-	// 密钥
-	if utils.Is.Empty(request[0].Key) {
-		request[0].Key = cast.ToString(facade.CryptToml.Get("jwt.key", "inis"))
-	}
-
-	return &JwtStruct{
-		request: request[0],
-		response: JwtResponse{
-			Data: make(map[string]any),
-		},
-	}
-}
-
-// Create - 创建JWT
-func (this *JwtStruct) Create(data map[string]any) (result JwtResponse) {
-
-	type JwtClaims struct {
-		Data map[string]any `json:"data"`
-		JWT.RegisteredClaims
-	}
-
-	IssuedAt  := JWT.NewNumericDate(time.Now())
-	ExpiresAt := JWT.NewNumericDate(time.Now().Add(time.Second * time.Duration(this.request.Expire)))
-
-	item, err := JWT.NewWithClaims(JWT.SigningMethodHS256, JwtClaims{
-		Data: data,
-		RegisteredClaims: JWT.RegisteredClaims{
-			IssuedAt:  IssuedAt,				// 签发时间戳
-			ExpiresAt: ExpiresAt,				// 过期时间戳
-			Issuer:    this.request.Issuer,		// 颁发者签名
-			Subject:   this.request.Subject,	// 签名主题
-		},
-	}).SignedString([]byte(this.request.Key))
-
+	private, err := rsa.GenerateKey(rand.Reader, cast.ToInt(bits))
 	if err != nil {
-		this.response.Error = err
-		return this.response
+		result.Error = err
+		return result
 	}
 
-	this.response.Text = item
-
-	return this.response
-}
-
-// Parse - 解析JWT
-func (this *JwtStruct) Parse(token any) (result JwtResponse) {
-
-	type JwtClaims struct {
-		Data map[string]any `json:"data"`
-		JWT.RegisteredClaims
+	privateKeyBytes := x509.MarshalPKCS1PrivateKey(private)
+	privateKeyBlock := pem.Block{
+		Type:    "RSA PRIVATE KEY",
+		Headers: nil,
+		Bytes:   privateKeyBytes,
 	}
 
-	item, err := JWT.ParseWithClaims(cast.ToString(token), &JwtClaims{}, func(token *JWT.Token) (any, error) {
-		return []byte(this.request.Key), nil
-	})
+	// 生成私钥
+	result.PrivateKey = string(pem.EncodeToMemory(&privateKeyBlock))
 
+	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&private.PublicKey)
 	if err != nil {
-		facade.Log.Error(map[string]any{
-			"error":     err,
-			"func_name": utils.Caller().FuncName,
-			"file_name": utils.Caller().FileName,
-			"file_line": utils.Caller().Line,
-		}, "JWT解析错误")
-		this.response.Error = err
-		return this.response
+		result.Error = err
+		return result
+	}
+	publicKeyBlock := pem.Block{
+		Type:    "RSA PUBLIC KEY",
+		Headers: nil,
+		Bytes:   publicKeyBytes,
 	}
 
-	if key, _ := item.Claims.(*JwtClaims); item.Valid {
-		this.response.Data  = key.Data
-		this.response.Valid = key.RegisteredClaims.ExpiresAt.Time.Unix() - time.Now().Unix()
-	}
+	// 生成公钥
+	result.PublicKey = string(pem.EncodeToMemory(&publicKeyBlock))
 
-	return this.response
+	return result
 }
 
-func (this *Test) qq(ctx *gin.Context) {
+// Encrypt 加密
+func (this *RSAStruct) Encrypt(publicKey, text string) (result *RSAResponse) {
 
-	params := this.params(ctx)
+	result = &RSAResponse{}
 
-	if params["message_type"] == "private" {
-		fmt.Println(utils.Json.Encode(params))
-
-		item := utils.Curl(utils.CurlRequest{
-			Method: "GET",
-			Url:    "http://localhost:5700/send_private_msg",
-			Query: map[string]any{
-				"user_id": cast.ToString(params["user_id"]),
-				"message": cast.ToString(params["message"]),
-			},
-		}).Send()
-
-		if item.Error != nil {
-			fmt.Println("发送失败", item.Error.Error())
-			return
+	defer func() {
+		if r := recover(); r != nil {
+			result.Error = fmt.Errorf("%v", r)
 		}
+	}()
 
-		fmt.Println("发送成功", item.Json)
+	block, _ := pem.Decode([]byte(publicKey))
+	if block == nil {
+		result.Error = errors.New("public key error")
+		return result
 	}
 
-	this.json(ctx, params, facade.Lang(ctx, "好的！"), 200)
+	pubInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		result.Error = err
+		return result
+	}
+
+	pub := pubInterface.(*rsa.PublicKey)
+	encode, err := rsa.EncryptPKCS1v15(rand.Reader, pub, []byte(text))
+	if err != nil {
+		result.Error = err
+		return result
+	}
+
+	result.Text = base64.StdEncoding.EncodeToString(encode)
+
+	return result
 }
 
-func (this *Test) system(ctx *gin.Context) {
+// Decrypt 解密
+func (this *RSAStruct) Decrypt(privateKey, text string) (result *RSAResponse) {
 
-	params := this.params(ctx)
+	result = &RSAResponse{}
 
-	this.json(ctx, params, facade.Lang(ctx, "好的！"), 200)
+	defer func() {
+		if r := recover(); r != nil {
+			result.Error = fmt.Errorf("%v", r)
+		}
+	}()
+
+	block, _ := pem.Decode([]byte(privateKey))
+	if block == nil {
+		result.Error = errors.New("private key error")
+		return result
+	}
+
+	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		result.Error = err
+		return result
+	}
+
+	decode, err := base64.StdEncoding.DecodeString(text)
+	if err != nil {
+		result.Error = err
+		return result
+	}
+
+	encode, err := rsa.DecryptPKCS1v15(rand.Reader, priv, decode)
+	if err != nil {
+		result.Error = err
+		return result
+	}
+
+	result.Text = string(encode)
+
+	return result
 }
 
 // INDEX - GET请求本体
