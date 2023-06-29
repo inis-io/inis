@@ -529,7 +529,21 @@ func (this *Comm) password(ctx *gin.Context, user map[string]any) {
 	if !utils.Is.Empty(params["social"]) {
 		var unknown string
 		unknown = utils.Ternary(utils.Is.Email(params["social"]), "email", mode)
-		unknown = utils.Ternary(utils.Is.Phone(params["social"]), "sms", mode)
+		unknown = utils.Ternary(utils.Is.Phone(params["social"]), "sms", unknown)
+		// 如果提交的 social 是 email - 并且和数据库的 email 不一致
+		if unknown == "email" {
+			if !utils.Is.Empty(user["email"]) && user["email"] != params["social"] {
+				this.json(ctx, nil, facade.Lang(ctx, "提交的邮箱与注册时的邮箱不一致！"), 400)
+				return
+			}
+		}
+		// 如果提交的 social 是 phone - 并且和数据库的 phone 不一致
+		if unknown == "sms" {
+			if !utils.Is.Empty(user["phone"]) && user["phone"] != params["social"] {
+				this.json(ctx, nil, facade.Lang(ctx, "提交的手机号与注册时的手机号不一致！"), 400)
+				return
+			}
+		}
 		// 如果驱动存在，且提交的 social 也存在
 		if !utils.Is.Empty(drives[mode]) && !utils.Is.Empty(unknown) {
 			mode   = unknown

@@ -62,5 +62,7 @@
     "分享成功！": "Share success!",
     "管理员关闭了注册功能！": "The administrator has closed the registration function!",
     "请联系管理员为您手动开通账号！": "Please contact the administrator to open the account for you manually!",
-    "%s 和 %s 必须有一个不能为空！": "%s and %s must not be empty!"
+    "%s 和 %s 必须有一个不能为空！": "%s and %s must not be empty!",
+    "提交的邮箱与注册时的邮箱不一致！": "The submitted email is inconsistent with the registered email!",
+    "提交的手机号与注册时的手机号不一致！": "The submitted mobile is inconsistent with the registered mobile!"
 }
