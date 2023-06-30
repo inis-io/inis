@@ -66,6 +66,8 @@ func (this *Users) IPUT(ctx *gin.Context) {
 	allow := map[string]any{
 		"update":  this.update,
 		"restore": this.restore,
+		"email":   this.email,
+		"phone":   this.phone,
 	}
 	err := this.call(allow, method, ctx)
 
@@ -272,7 +274,7 @@ func (this *Users) create(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Users{CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
-	allow := []any{"account", "password", "nickname", "email", "phone", "avatar", "description", "source", "pages", "remark", "title", "json", "text"}
+	allow := []any{"account", "password", "nickname", "email", "phone", "avatar", "description", "source", "pages", "remark", "title", "gender", "json", "text"}
 
 	if utils.Is.Empty(params["email"]) {
 		this.json(ctx, nil, facade.Lang(ctx, "邮箱不能为空！"), 400)
@@ -324,20 +326,24 @@ func (this *Users) update(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Users{}
-	allow := []any{"id", "account", "password", "nickname", "email", "phone", "avatar", "description", "json", "text"}
+	allow := []any{"id", "account", "password", "nickname", "avatar", "description", "gender", "json", "text"}
 	async := utils.Async[map[string]any]()
 
 	root := this.meta.root(ctx)
 
 	// 越权 - 增加可选字段
 	if root {
-		allow = append(allow, "source", "pages", "remark", "title")
+		allow = append(allow, "source", "pages", "remark", "title", "email", "phone")
 	}
 
 	// 动态给结构体赋值
 	for key, val := range params {
 		// 加密密码
 		if key == "password" {
+			// 密码为空时不更新此项
+			if utils.Is.Empty(val) {
+				continue
+			}
 			val = utils.Password.Create(params["password"])
 		}
 		// 防止恶意传入字段
@@ -571,4 +577,160 @@ func (this *Users) restore(ctx *gin.Context) {
 	}
 
 	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "恢复成功！"), 200)
+}
+
+// email 修改邮箱
+func (this *Users) email(ctx *gin.Context) {
+
+	// 请求参数
+	params := this.params(ctx)
+
+	if utils.Is.Empty(params["email"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "邮箱不能为空！"), 400)
+		return
+	}
+
+	if !utils.Is.Email(params["email"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "邮箱格式错误！"), 400)
+		return
+	}
+
+	user := this.meta.user(ctx)
+	if user.Id == 0 {
+		this.json(ctx, nil, "请先登录！", 400)
+		return
+	}
+
+	// 驱动
+	drive := cast.ToString(facade.SMSToml.Get("drive.email"))
+
+	if utils.Is.Empty(drive) {
+		this.json(ctx, nil, facade.Lang(ctx, "管理员未开启邮箱服务，无法发送验证码！"), 400)
+		return
+	}
+
+	// 从数据库里面找一下这个邮箱是否已经存在
+	exist := facade.DB.Model(&model.Users{}).Where("email", params["email"]).Where("id", "!=", user.Id).Exist()
+	if exist {
+		this.json(ctx, nil, facade.Lang(ctx, "该邮箱已绑定其它账号！"), 400)
+		return
+	}
+
+	// 缓存名称
+	cacheName := fmt.Sprintf("%v-%v", drive, params["email"])
+
+	// 验证码为空，发送验证码
+	if utils.Is.Empty(params["code"]) {
+
+		sms := facade.NewSMS(drive).VerifyCode(params["email"])
+		if sms.Error != nil {
+			this.json(ctx, nil, sms.Error.Error(), 400)
+			return
+		}
+
+		// 缓存验证码 - 5分钟
+		go facade.Cache.Set(cacheName, sms.VerifyCode, 5 * time.Minute)
+
+		msg := fmt.Sprintf("验证码发送至您的邮箱：%s，请注意查收！", params["email"])
+		this.json(ctx, nil, facade.Lang(ctx, msg), 201)
+		return
+	}
+
+	// 获取缓存里面的验证码
+	cacheCode := facade.Cache.Get(cacheName)
+
+	if cast.ToString(params["code"]) != cast.ToString(cacheCode) {
+		this.json(ctx, nil, facade.Lang(ctx, "验证码错误！"), 400)
+		return
+	}
+
+	// 更新邮箱
+	tx := facade.DB.Model(&model.Users{}).Where("id", user.Id).UpdateColumn("email", params["email"])
+	if tx.Error != nil {
+		this.json(ctx, nil, tx.Error.Error(), 400)
+		return
+	}
+
+	// 删除验证码
+	go facade.Cache.Del(cacheName)
+
+	this.json(ctx, gin.H{ "id": user.Id }, facade.Lang(ctx, "修改成功！"), 200)
+}
+
+// phone 修改手机号
+func (this *Users) phone(ctx *gin.Context) {
+
+	// 请求参数
+	params := this.params(ctx)
+
+	if utils.Is.Empty(params["phone"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "手机号不能为空！"), 400)
+		return
+	}
+
+	if !utils.Is.Phone(params["phone"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "手机号格式错误！"), 400)
+		return
+	}
+
+	user := this.meta.user(ctx)
+	if user.Id == 0 {
+		this.json(ctx, nil, "请先登录！", 400)
+		return
+	}
+
+	// 驱动
+	drive := cast.ToString(facade.SMSToml.Get("drive.sms"))
+
+	if utils.Is.Empty(drive) {
+		this.json(ctx, nil, facade.Lang(ctx, "管理员未开启短信服务，无法发送验证码！"), 400)
+		return
+	}
+
+	// 从数据库里面找一下这个手机号是否已经存在
+	exist := facade.DB.Model(&model.Users{}).Where("phone", params["phone"]).Where("id", "!=", user.Id).Exist()
+	if exist {
+		this.json(ctx, nil, facade.Lang(ctx, "该邮箱已绑定其它账号！"), 400)
+		return
+	}
+
+	// 缓存名称
+	cacheName := fmt.Sprintf("%v-%v", drive, params["phone"])
+
+	// 验证码为空，发送验证码
+	if utils.Is.Empty(params["code"]) {
+
+		sms := facade.NewSMS(drive).VerifyCode(params["phone"])
+		if sms.Error != nil {
+			this.json(ctx, nil, sms.Error.Error(), 400)
+			return
+		}
+
+		// 缓存验证码 - 5分钟
+		go facade.Cache.Set(cacheName, sms.VerifyCode, 5 * time.Minute)
+
+		msg := fmt.Sprintf("验证码发送至您的手机：%s，请注意查收！", params["phone"])
+		this.json(ctx, nil, facade.Lang(ctx, msg), 201)
+		return
+	}
+
+	// 获取缓存里面的验证码
+	cacheCode := facade.Cache.Get(cacheName)
+
+	if cast.ToString(params["code"]) != cast.ToString(cacheCode) {
+		this.json(ctx, nil, facade.Lang(ctx, "验证码错误！"), 400)
+		return
+	}
+
+	// 更新手机号
+	tx := facade.DB.Model(&model.Users{}).Where("id", user.Id).UpdateColumn("phone", params["phone"])
+	if tx.Error != nil {
+		this.json(ctx, nil, tx.Error.Error(), 400)
+		return
+	}
+
+	// 删除验证码
+	go facade.Cache.Del(cacheName)
+
+	this.json(ctx, gin.H{ "id": user.Id }, facade.Lang(ctx, "修改成功！"), 200)
 }

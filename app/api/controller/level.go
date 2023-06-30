@@ -255,7 +255,7 @@ func (this *Level) create(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Level{CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
-	allow := []any{"name", "value", "description", "experience", "remark", "json", "text"}
+	allow := []any{"name", "value", "description", "exp", "remark", "json", "text"}
 
 	// 动态给结构体赋值
 	for key, val := range params {
@@ -298,7 +298,7 @@ func (this *Level) update(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Level{}
-	allow := []any{"name", "value", "description", "experience", "remark", "json", "text"}
+	allow := []any{"name", "value", "description", "exp", "remark", "json", "text"}
 	async := utils.Async[map[string]any]()
 
 	// 动态给结构体赋值

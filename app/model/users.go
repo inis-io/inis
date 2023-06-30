@@ -23,6 +23,7 @@ type Users struct {
 	Avatar      string `gorm:"comment:头像; default:Null;" json:"avatar"`
 	Description string `gorm:"comment:描述; default:Null;" json:"description"`
 	Title       string `gorm:"comment:头衔; default:Null;" json:"title"`
+	Gender		string `gorm:"comment:性别; default:Null;" json:"gender"`
 	Exp  		int    `gorm:"type:int(32); comment:经验值; default:0;" json:"exp"`
 	Pages       string `gorm:"comment:页面权限; default:Null;" json:"pages"`
 	Source      string `gorm:"size:32; default:'default'; comment:注册来源;" json:"source"`
@@ -243,15 +244,15 @@ func (this *Users) getAuthAttr() (result map[string]any) {
 func (this *Users) getLevelAttr() (result map[string]any) {
 
 	// 查询字段
-	field := []string{"name", "value", "description", "experience"}
+	field := []string{"name", "value", "description", "exp"}
 
 	// 查询当前等级
 	item1 := facade.DB.Model(&Level{}).Field(field).Limit(1)
-	item1.Where("experience", "<=", this.Exp).Order("experience desc")
+	item1.Where("exp", "<=", this.Exp).Order("exp desc")
 
 	// 查询下一等级
 	item2 := facade.DB.Model(&Level{}).Field(field).Limit(1)
-	item2.Where("experience", ">", this.Exp).Order("experience asc")
+	item2.Where("exp", ">", this.Exp).Order("exp asc")
 
 	currents := cast.ToSlice(item1.Column())
 	var current any
