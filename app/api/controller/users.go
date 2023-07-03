@@ -144,7 +144,7 @@ func (this *Users) one(ctx *gin.Context) {
 
 	} else {
 
-		mold := facade.DB.Model(&table)
+		mold := facade.DB.Model(&table).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"]))
 		mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 
 		mold.WithoutField("password")
