@@ -247,8 +247,15 @@ func (this *Comm) register(ctx *gin.Context) {
 	// 验证码为空 - 发送验证码
 	if utils.Is.Empty(params["code"]) {
 
-		drive := utils.Ternary(social == "email", "email", "sms")
-		sms   := facade.NewSMS(drive).VerifyCode(params["social"])
+		drives := cast.ToStringMap(facade.SMSToml.Get("drive"))
+		drive  := utils.Ternary(social == "email", "email", "sms")
+
+		if utils.Is.Empty(drives[drive]) {
+			this.json(ctx, nil, facade.Lang(ctx, "发送验证码失败！管理员未开启短信服务！"), 400)
+			return
+		}
+
+		sms    := facade.NewSMS(drives[drive]).VerifyCode(params["social"])
 		if sms.Error != nil {
 			this.json(ctx, nil, sms.Error.Error(), 400)
 			return

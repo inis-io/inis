@@ -19,8 +19,16 @@ type Comment struct {
 
 // IGET - GET请求本体
 func (this *Comment) IGET(ctx *gin.Context) {
+
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
+
+	// show := cast.ToBool(cast.ToStringMap(this.config()["comment"])["show"])
+	//
+	// if !show {
+	// 	this.json(ctx, nil, facade.Lang(ctx, "评论功能已关闭！"), 202)
+	// 	return
+	// }
 
 	allow := map[string]any{
 		"one":    this.one,
@@ -41,6 +49,13 @@ func (this *Comment) IPOST(ctx *gin.Context) {
 
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
+
+	// permit := cast.ToBool(cast.ToStringMap(this.config()["comment"])["allow"])
+	//
+	// if !permit {
+	// 	this.json(ctx, nil, facade.Lang(ctx, "评论功能已关闭！"), 202)
+	// 	return
+	// }
 
 	allow := map[string]any{
 		"save":   this.save,
@@ -585,4 +600,31 @@ func (this *Comment) restore(ctx *gin.Context) {
 	}
 
 	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "恢复成功！"), 200)
+}
+
+// config 配置
+func (this *Comment) config() (json map[string]any) {
+
+	var config map[string]any
+
+	// 缓存名称
+	cacheName := "config[ARTICLE]"
+	// 是否开启了缓存
+	cacheState := cast.ToBool(facade.CacheToml.Get("open"))
+
+	// 检查缓存是否存在
+	if cacheState && facade.Cache.Has(cacheName) {
+
+		config = cast.ToStringMap(facade.Cache.Get(cacheName))
+
+	} else {
+
+		config = facade.DB.Model(&model.Config{}).Where("key", "ARTICLE").Find()
+		// 存储到缓存中
+		if cacheState {
+			go facade.Cache.Set(cacheName, config)
+		}
+	}
+
+	return cast.ToStringMap(config["json"])
 }

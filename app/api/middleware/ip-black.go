@@ -15,7 +15,7 @@ func IpBlack() gin.HandlerFunc {
 		var column []string
 
 		// 缓存名字
-		cacheName  := "<GET>[ip-black][column]"
+		cacheName  := "[GET][ip-black][column]"
 		cacheState := cast.ToBool(facade.CacheToml.Get("open"))
 
 		// 检查缓存是否存在

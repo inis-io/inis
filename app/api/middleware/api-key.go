@@ -55,7 +55,7 @@ func ApiKey() gin.HandlerFunc {
 		}
 
 		var keys []string
-		cacheColumn := "<GET>/api/api-keys/column[value]"
+		cacheColumn := "[GET]/api/api-keys/column[value]"
 
 		// 检查缓存是否存在
 		if cacheState && facade.Cache.Has(cacheColumn) {

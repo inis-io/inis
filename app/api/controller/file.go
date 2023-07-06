@@ -133,7 +133,7 @@ func (this *File) rand(ctx *gin.Context) {
 	params := this.params(ctx)
 
 	root := "public"
-	path := root + "/storage/rand/"
+	path := root + "/assets/rand/"
 
 	// 分别获取  目录下的文件和目录
 	info := utils.File().DirInfo(path)
@@ -289,10 +289,6 @@ func (this *File) toBase64(ctx *gin.Context) {
 	// 转 base64
 	res := fmt.Sprintf("data:image/jpeg;base64,%s", base64.StdEncoding.EncodeToString(item.Byte))
 	this.json(ctx, res, facade.Lang(ctx, "成功！"), 200)
-
-	// ctx.Writer.Header().Set("Content-Type", "image/jpeg")
-	// ctx.Writer.Header().Set("Content-Length", cast.ToString(len(item.Byte)))
-	// ctx.Writer.Write(item.Byte)
 }
 
 // compress - 图片压缩
