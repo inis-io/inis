@@ -281,18 +281,36 @@ func (this *Comment) create(ctx *gin.Context) {
 		return
 	}
 
+	// 评论配置
+	var comment map[string]any
+
 	// 从数据库里面找一下存不存在这个类型的数据
 	switch params["bind_type"] {
 	case "article":
-		if exist := facade.DB.Model(&model.Article{}).Where("id", params["bind_id"]).Exist(); !exist {
+		article := facade.DB.Model(&model.Article{}).Where("id", params["bind_id"]).Find()
+		if utils.Is.Empty(article) {
 			this.json(ctx, nil, facade.Lang(ctx, "不存在的文章！"), 400)
 			return
 		}
+		comment = cast.ToStringMap(cast.ToStringMap(article["json"])["comment"])
 	case "page":
-		if exist := facade.DB.Model(&model.Pages{}).Where("id", params["bind_id"]).Exist(); !exist {
+		page := facade.DB.Model(&model.Pages{}).Where("id", params["bind_id"]).Find()
+		if utils.Is.Empty(page) {
 			this.json(ctx, nil, facade.Lang(ctx, "不存在的页面！"), 400)
 			return
 		}
+		comment = cast.ToStringMap(cast.ToStringMap(page["json"])["comment"])
+	}
+
+	// 允许评论选项继承了父级配置
+	if cast.ToInt(comment["allow"]) == 0 {
+		comment["allow"] = this.config("comment")["allow"]
+	}
+
+	// 评论开关
+	if cast.ToInt(comment["allow"]) == 0 {
+		this.json(ctx, nil, facade.Lang(ctx, "评论功能已关闭！"), 400)
+		return
 	}
 
 	// 表数据结构体
@@ -603,7 +621,7 @@ func (this *Comment) restore(ctx *gin.Context) {
 }
 
 // config 配置
-func (this *Comment) config() (json map[string]any) {
+func (this *Comment) config(key ...any) (json map[string]any) {
 
 	var config map[string]any
 
@@ -624,6 +642,10 @@ func (this *Comment) config() (json map[string]any) {
 		if cacheState {
 			go facade.Cache.Set(cacheName, config)
 		}
+	}
+
+	if len(key) > 0 {
+		return cast.ToStringMap(cast.ToStringMap(config["json"])[cast.ToString(key[0])])
 	}
 
 	return cast.ToStringMap(config["json"])
