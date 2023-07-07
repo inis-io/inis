@@ -188,6 +188,8 @@ func domain(ctx *gin.Context) (result string) {
 		}
 		// 存储到上下文中
 		ctx.Set("domain", result)
+		// 存储到全局变量中
+		facade.Var.Set("domain", result)
 	}()
 
 	return result
@@ -229,6 +231,8 @@ func port(ctx *gin.Context) (result int) {
 
 	// 存储到上下文中
 	ctx.Set("port", result)
+	// 存储到全局变量中
+	facade.Var.Set("port", result)
 
 	return result
 }

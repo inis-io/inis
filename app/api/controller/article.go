@@ -159,24 +159,9 @@ func (this *Article) one(ctx *gin.Context) {
 	}
 
 	// 更新用户经验
-	go func() {
-		user := this.meta.user(ctx)
-		// 用户未登录
-		if user.Id == 0 {
-			return
-		}
-		item := cast.ToStringMap(data)
-		// 数据不存在
-		if utils.Is.Empty(item) {
-			return
-		}
-		_ = (&model.EXP{}).Add(model.EXP{
-			Uid:  user.Id,
-			Type: "visit",
-			BindId: cast.ToInt(item["id"]),
-			BindType: "article",
-		})
-	}()
+	go this.updateExp(ctx, cast.ToStringMap(data))
+	// 更新文章浏览量
+	go this.updateViews(cast.ToStringMap(data))
 
 	this.json(ctx, data, facade.Lang(ctx, strings.Join(msg, "")), code)
 }
@@ -578,3 +563,25 @@ func (this *Article) restore(ctx *gin.Context) {
 
 	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "恢复成功！"), 200)
 }
+
+// 更新用户经验值
+func (this *Article) updateExp(ctx *gin.Context, data map[string]any) {
+
+	user := this.meta.user(ctx)
+	// 用户未登录 或 数据不存在
+	if user.Id == 0 || utils.Is.Empty(data) {
+		return
+	}
+	_ = (&model.EXP{}).Add(model.EXP{
+		Uid:  user.Id,
+		Type: "visit",
+		BindId: cast.ToInt(data["id"]),
+		BindType: "article",
+	})
+}
+
+// 更新文章浏览量
+func (this *Article) updateViews(data map[string]any) {
+	facade.DB.Model(&model.Article{}).Where("id", data["id"]).Inc("views", 1)
+}
+

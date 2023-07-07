@@ -17,7 +17,9 @@ func Index(ctx *gin.Context) {
 	ctx.HTML(200, "index.html", gin.H{
 		"title": "欢迎使用",
 		"INIS":  utils.Json.Encode(map[string]any{
-			"API_KEY": key["value"],
+			"api": map[string]any{
+				"key": key["value"],
+			},
 		}),
 	})
 }

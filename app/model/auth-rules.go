@@ -443,7 +443,7 @@ func createAuthRules() (result []AuthRules) {
 func saveAuthRules(item AuthRules) {
 
 	method := strings.ToUpper(cast.ToString(item.Method))
-	hash   := facade.Hash.Sum32(fmt.Sprintf("[%s]%s", method, item.Route))
+	hash   := utils.Hash.Sum32(fmt.Sprintf("[%s]%s", method, item.Route))
 
 	table := AuthRules{
 		Hash:   hash,

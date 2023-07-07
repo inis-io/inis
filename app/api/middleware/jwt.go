@@ -58,7 +58,7 @@ func Jwt() gin.HandlerFunc {
 		}
 
 		// 密码发生变化 - 强制退出
-		if jwt.Data["hash"] != facade.Hash.Sum32(user["password"]) {
+		if jwt.Data["hash"] != utils.Hash.Sum32(user["password"]) {
 			result["msg"] = facade.Lang(ctx, "登录已过期，请重新登录！")
 			ctx.SetCookie(tokenName, "", -1, "/", "", false, false)
 			ctx.JSON(200, result)

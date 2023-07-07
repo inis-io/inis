@@ -8,6 +8,7 @@ import (
 	index "inis/app/index/route"
 	"inis/app/middleware"
 	socket "inis/app/socket/route"
+	"inis/app/timer"
 	app "inis/config"
 )
 
@@ -35,7 +36,9 @@ func run() {
 	// 注册路由
 	app.Use(api.Route, dev.Route, index.Route, socket.Route)
 	// 运行服务
-	app.Run()
+	app.Run(func() {
+		timer.Run()
+	})
 }
 
 // 监听配置文件变化

@@ -115,7 +115,7 @@ func (this *Comm) login(ctx *gin.Context) {
 	// 密文解密
 	if match != nil {
 
-		cipher := facade.Cipher(match[1], match[2])
+		cipher := utils.AES(match[1], match[2])
 
 		deAccount := cipher.Decrypt([]byte(cast.ToString(params["account"])))
 		dePassword := cipher.Decrypt(params["password"])
@@ -153,7 +153,7 @@ func (this *Comm) login(ctx *gin.Context) {
 
 	jwt := facade.Jwt().Create(facade.H{
 		"uid":  table.Id,
-		"hash": facade.Hash.Sum32(table.Password),
+		"hash": utils.Hash.Sum32(table.Password),
 	})
 
 	// 删除 item 中的密码
@@ -309,7 +309,7 @@ func (this *Comm) register(ctx *gin.Context) {
 
 	jwt := facade.Jwt().Create(facade.H{
 		"uid":  table.Id,
-		"hash": facade.Hash.Sum32(table.Password),
+		"hash": utils.Hash.Sum32(table.Password),
 	})
 
 	// 删除密码
@@ -419,7 +419,7 @@ func (this *Comm) socialLogin(ctx *gin.Context) {
 
 	jwt := facade.Jwt().Create(facade.H{
 		"uid":  table.Id,
-		"hash": facade.Hash.Sum32(table.Password),
+		"hash": utils.Hash.Sum32(table.Password),
 	})
 
 	// 删除密码
@@ -671,7 +671,7 @@ func (this *Comm) checkToken(ctx *gin.Context) {
 	if cast.ToBool(params["renew"]) {
 		jwt = facade.Jwt().Create(facade.H{
 			"uid":  table.Id,
-			"hash": facade.Hash.Sum32(table.Password),
+			"hash": utils.Hash.Sum32(table.Password),
 		})
 		valid = cast.ToInt64(utils.Calc(facade.AppToml.Get("jwt.expire", "7200")))
 		// 往客户端写入cookie - 存储登录token

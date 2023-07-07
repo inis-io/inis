@@ -268,7 +268,7 @@ func (this *AuthRules) create(ctx *gin.Context) {
 
 	// 计算哈希值
 	method := strings.ToUpper(cast.ToString(table.Method))
-	table.Hash = facade.Hash.Sum32(fmt.Sprintf("[%s]%s", method, table.Route))
+	table.Hash = utils.Hash.Sum32(fmt.Sprintf("[%s]%s", method, table.Route))
 
 	// 添加数据
 	tx := facade.DB.Model(&table).Create(&table)
@@ -316,7 +316,7 @@ func (this *AuthRules) update(ctx *gin.Context) {
 
 	// 计算哈希值
 	method := strings.ToUpper(cast.ToString(async.Get("method")))
-	hash := facade.Hash.Sum32(fmt.Sprintf("[%s]%s", method, async.Get("route")))
+	hash := utils.Hash.Sum32(fmt.Sprintf("[%s]%s", method, async.Get("route")))
 	async.Set("hash", hash)
 
 	// 更新数据
