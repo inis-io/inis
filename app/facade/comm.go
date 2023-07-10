@@ -8,14 +8,12 @@ import (
 	"time"
 )
 
-type CommStruct struct {
-
-}
+type CommStruct struct {}
 
 var Comm *CommStruct
 
-// sn - 获取机器码
-func (this *CommStruct) sn() (result string) {
+// Sn - 获取机器序列号
+func (this *CommStruct) Sn() (result string) {
 
 	result, err := machineid.ID()
 	if err != nil {
@@ -30,8 +28,8 @@ func (this *CommStruct) Device() *utils.CurlResponse {
 
 	// 1、把原始的 body 传输进行原样传递
 	body := map[string]any{
-		"sn":  this.sn(),
-		"mac": utils.Get.Mac(),
+		"sn":   this.Sn(),
+		"mac":  utils.Get.Mac(),
 		"port": map[string]any{
 			"run":  Var.Get("port"),
 			"real": AppToml.Get("app.port"),

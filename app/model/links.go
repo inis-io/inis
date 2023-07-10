@@ -56,16 +56,15 @@ func (this *Links) AfterFind(tx *gorm.DB) (err error) {
 	}
 
 	if this.Group != 0 {
-		allow := []any{"id", "avatar", "name", "description"}
+
 		item := facade.DB.Model(&LinksGroup{}).Find(this.Group)
+
 		if !utils.Is.Empty(item) {
-			// 过滤字段
-			for key := range item {
-				if !utils.In.Array(key, allow) {
-					delete(group, key)
-				}
-			}
+
+			group = utils.Map.WithField(item, []string{"id", "avatar", "name", "description"})
+
 		} else {
+
 			// 如果分组不存在，则将分组设置为默认分组
 			tx.Model(this).UpdateColumn("group", 0)
 		}

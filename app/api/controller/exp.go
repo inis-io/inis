@@ -552,7 +552,7 @@ func (this *EXP) restore(ctx *gin.Context) {
 func (this *EXP) checkIn(ctx *gin.Context) {
 
 	user := this.user(ctx)
-
+	// 即便中间件已经校验过登录了，这里还进行二次校验是未了防止接口权限被改，而 uid 又是强制的，从而导致的意外情况
 	if user.Id == 0 {
 		this.json(ctx, nil, facade.Lang(ctx, "请先登录！"), 401)
 		return
@@ -592,7 +592,7 @@ func (this *EXP) share(ctx *gin.Context)  {
 	}
 
 	user := this.user(ctx)
-
+	// 即便中间件已经校验过登录了，这里还进行二次校验是未了防止接口权限被改，而 uid 又是强制的，从而导致的意外情况
 	if user.Id == 0 {
 		this.json(ctx, nil, facade.Lang(ctx, "请先登录！"), 401)
 		return
@@ -655,7 +655,7 @@ func (this *EXP) collect(ctx *gin.Context)  {
 	}
 
 	user := this.user(ctx)
-
+	// 即便中间件已经校验过登录了，这里还进行二次校验是未了防止接口权限被改，而 uid 又是强制的，从而导致的意外情况
 	if user.Id == 0 {
 		this.json(ctx, nil, facade.Lang(ctx, "请先登录！"), 401)
 		return
@@ -764,7 +764,7 @@ func (this *EXP) like(ctx *gin.Context)  {
 	}
 
 	user := this.user(ctx)
-
+	// 即便中间件已经校验过登录了，这里还进行二次校验是未了防止接口权限被改，而 uid 又是强制的，从而导致的意外情况
 	if user.Id == 0 {
 		this.json(ctx, nil, facade.Lang(ctx, "请先登录！"), 401)
 		return
@@ -792,7 +792,7 @@ func (this *EXP) like(ctx *gin.Context)  {
 	// 检查是否已经收藏过了
 	item := facade.DB.Model(&model.EXP{}).Where([]any{
 		[]any{"uid", "=", user.Id},
-		[]any{"type", "=", "collect"},
+		[]any{"type", "=", "like"},
 		[]any{"bind_id", "=", params["bind_id"]},
 		[]any{"bind_type", "=", params["bind_type"]},
 	}).Find()
@@ -836,7 +836,7 @@ func (this *EXP) like(ctx *gin.Context)  {
 	}
 
 	err := (&model.EXP{}).Add(model.EXP{
-		Type:	  	 "collect",
+		Type:	  	 "like",
 		Uid:	  	 user.Id,
 		State: 		 cast.ToInt(params["state"]),
 		BindId:   	 cast.ToInt(params["bind_id"]),

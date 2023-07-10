@@ -125,7 +125,7 @@ func (this *Info) device(ctx *gin.Context) {
 	item := facade.Comm.Device()
 
 	if item.Error != nil {
-		this.json(ctx, nil, item.Error.Error(), 500)
+		this.json(ctx, nil, item.Error.Error(), 400)
 		return
 	}
 
