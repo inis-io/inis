@@ -436,7 +436,13 @@ func createAuthRules() (result []AuthRules) {
 		}
 	}
 
-	return result
+	// 社区接口
+	inis := []AuthRules{
+		{ Method: "POST", Route: "/inis/device/bind", Name : "【社区 API】设备绑定", Type : "default" },
+		{ Method: "GET", Route: "/inis/device/user", Name : "【社区 API】绑定的用户信息", Type : "common" },
+	}
+
+	return append(result, inis...)
 }
 
 // saveAuthRules 保存权限规则

@@ -255,7 +255,7 @@ func (this *Links) create(ctx *gin.Context) {
 
 	uid := this.meta.user(ctx).Id
 	if uid == 0 {
-		this.json(ctx, nil, "请先登录！", 400)
+		this.json(ctx, nil, facade.Lang(ctx, "请先登录！"), 401)
 		return
 	}
 

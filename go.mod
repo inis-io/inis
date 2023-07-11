@@ -23,8 +23,8 @@ require (
 	github.com/radovskyb/watcher v1.0.7
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/spf13/cast v1.5.1
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.696
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.696
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.697
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.697
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.42
 	github.com/unrolled/secure v1.13.0
 	github.com/unti-io/go-utils v1.2.3

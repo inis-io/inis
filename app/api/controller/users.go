@@ -598,7 +598,7 @@ func (this *Users) email(ctx *gin.Context) {
 	user := this.meta.user(ctx)
 	// 即便中间件已经校验过登录了，这里还进行二次校验是未了防止接口权限被改，而 uid 又是强制的，从而导致的意外情况
 	if user.Id == 0 {
-		this.json(ctx, nil, "请先登录！", 400)
+		this.json(ctx, nil, facade.Lang(ctx, "请先登录！"), 401)
 		return
 	}
 
@@ -677,7 +677,7 @@ func (this *Users) phone(ctx *gin.Context) {
 	user := this.meta.user(ctx)
 	// 即便中间件已经校验过登录了，这里还进行二次校验是未了防止接口权限被改，而 uid 又是强制的，从而导致的意外情况
 	if user.Id == 0 {
-		this.json(ctx, nil, "请先登录！", 400)
+		this.json(ctx, nil, facade.Lang(ctx, "请先登录！"), 401)
 		return
 	}
 

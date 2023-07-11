@@ -2,6 +2,7 @@ package facade
 
 import (
 	"github.com/denisbrodbeck/machineid"
+	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"runtime"
 	"strings"
@@ -64,4 +65,32 @@ func (this *CommStruct) Device() *utils.CurlResponse {
 		},
 		Url: Uri + "/dev/device/record",
 	}).Send()
+}
+
+// Signature - 签名算法
+func (this *CommStruct) Signature(body map[string]any) (result map[string]any) {
+
+	// 运行端口
+	port  := AppToml.Get("app.port")
+	// 当前时间戳
+	unix  := time.Now().Unix()
+	// AES加密密钥
+	key   := utils.Hash.Token(port, 16, "AesKey")
+	// AES加密向量
+	iv    := utils.Hash.Token(unix, 16, "AesIv")
+
+	return map[string]any{
+		// X-Khronos(时间戳) - 当前的时间戳
+		"X-Khronos": unix,
+		// X-Argus(加密文本) - 真实有效的数据
+		"X-Argus"  : utils.AES(key, iv).Encrypt(utils.Json.Encode(map[string]any{
+			"sn"   : this.Sn(),
+			"port" : port,
+			"mac"  : utils.Get.Mac(),
+		})).Text,
+		// X-Gorgon(加密文本)
+		"X-Gorgon" : cast.ToString(port) + utils.Hash.Token(this.Sn(), 48, unix),
+		// X-SS-STUB(MD5) - 用于检查 body 数据是否被篡改
+		"X-SS-STUB": strings.ToUpper(utils.Hash.Token(utils.Map.ToURL(body), 32, unix)),
+	}
 }

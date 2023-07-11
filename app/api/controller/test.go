@@ -2,14 +2,7 @@ package controller
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/base64"
-	"encoding/pem"
-	"errors"
 	"fmt"
-	"github.com/spf13/cast"
 	// JWT "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-pay/gopay"
@@ -98,162 +91,20 @@ func (this *Test) IDEL(ctx *gin.Context) {
 func (this *Test) INDEX(ctx *gin.Context) {
 
 	// 请求参数
-	// params := this.params(ctx)
+	params := this.params(ctx)
 
-	item := RSA.Generate(2048)
+	facade.Comm.Signature(params)
 
-	if item.Error != nil {
-		this.json(ctx, nil, item.Error.Error(), 400)
-		return
-	}
+	// res := gin.H{
+	// 	// "root" : this.meta.root(ctx),
+	// 	// "user" : this.meta.user(ctx),
+	// 	// "route": this.meta.route(ctx),
+	// 	// "rules": this.meta.rules(ctx),
+	// 	// "json" : utils.Json.Encode(params["json"]),
+	// 	// "rsa": RSA.Generate(2048),
+	// }
 
-	PrivateKey := item.PrivateKey
-	PublicKey  := item.PublicKey
-
-	// 私钥加密
-	encode := RSA.Encrypt(PublicKey, "123456")
-	decode := RSA.Decrypt(PrivateKey, encode.Text)
-
-	res := gin.H{
-		// "root" : this.meta.root(ctx),
-		// "user" : this.meta.user(ctx),
-		// "route": this.meta.route(ctx),
-		// "rules": this.meta.rules(ctx),
-		// "json" : utils.Json.Encode(params["json"]),
-		"encode": encode.Text,
-		"decode": decode.Text,
-		// "rsa": RSA.Generate(2048),
-	}
-
-	this.json(ctx, res, facade.Lang(ctx, "好的！"), 200)
-}
-
-var RSA *RSAStruct
-
-type RSAStruct struct {}
-
-type RSAResponse struct {
-	// 私钥
-	PrivateKey string
-	// 公钥
-	PublicKey  string
-	// 错误信息
-	Error error
-	// 文本
-	Text string
-}
-
-// Generate 生成 RSA 密钥对
-func (this *RSAStruct) Generate(bits any) (result *RSAResponse) {
-
-	result = &RSAResponse{}
-
-	private, err := rsa.GenerateKey(rand.Reader, cast.ToInt(bits))
-	if err != nil {
-		result.Error = err
-		return result
-	}
-
-	privateKeyBytes := x509.MarshalPKCS1PrivateKey(private)
-	privateKeyBlock := pem.Block{
-		Type:    "RSA PRIVATE KEY",
-		Headers: nil,
-		Bytes:   privateKeyBytes,
-	}
-
-	// 生成私钥
-	result.PrivateKey = string(pem.EncodeToMemory(&privateKeyBlock))
-
-	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&private.PublicKey)
-	if err != nil {
-		result.Error = err
-		return result
-	}
-	publicKeyBlock := pem.Block{
-		Type:    "RSA PUBLIC KEY",
-		Headers: nil,
-		Bytes:   publicKeyBytes,
-	}
-
-	// 生成公钥
-	result.PublicKey = string(pem.EncodeToMemory(&publicKeyBlock))
-
-	return result
-}
-
-// Encrypt 加密
-func (this *RSAStruct) Encrypt(publicKey, text string) (result *RSAResponse) {
-
-	result = &RSAResponse{}
-
-	defer func() {
-		if r := recover(); r != nil {
-			result.Error = fmt.Errorf("%v", r)
-		}
-	}()
-
-	block, _ := pem.Decode([]byte(publicKey))
-	if block == nil {
-		result.Error = errors.New("public key error")
-		return result
-	}
-
-	pubInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		result.Error = err
-		return result
-	}
-
-	pub := pubInterface.(*rsa.PublicKey)
-	encode, err := rsa.EncryptPKCS1v15(rand.Reader, pub, []byte(text))
-	if err != nil {
-		result.Error = err
-		return result
-	}
-
-	result.Text = base64.StdEncoding.EncodeToString(encode)
-
-	return result
-}
-
-// Decrypt 解密
-func (this *RSAStruct) Decrypt(privateKey, text string) (result *RSAResponse) {
-
-	result = &RSAResponse{}
-
-	defer func() {
-		if r := recover(); r != nil {
-			result.Error = fmt.Errorf("%v", r)
-		}
-	}()
-
-	block, _ := pem.Decode([]byte(privateKey))
-	if block == nil {
-		result.Error = errors.New("private key error")
-		return result
-	}
-
-	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		result.Error = err
-		return result
-	}
-
-	decode, err := base64.StdEncoding.DecodeString(text)
-	if err != nil {
-		result.Error = err
-		return result
-	}
-
-	encode, err := rsa.DecryptPKCS1v15(rand.Reader, priv, decode)
-	if err != nil {
-		result.Error = err
-		return result
-	}
-
-	result.Text = string(encode)
-
-	return result
+	this.json(ctx, facade.Comm.Signature(params), facade.Lang(ctx, "好的！"), 200)
 }
 
 // INDEX - GET请求本体

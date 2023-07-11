@@ -16,7 +16,7 @@ func Route(Gin *gin.Engine) {
 		global.QpsPoint(),  // QPS限制 - 单接口限流
 		global.QpsGlobal(), // QPS限制 - 全局限流
 		global.Params(),    // 解析参数
-		middle.Jwt(),       // 验证权限
+		middle.Jwt(),       // 解析JWT
 		middle.Rule(),      // 验证规则
 		middle.ApiKey(),    // 安全校验
 	)
