@@ -282,6 +282,11 @@ func (this *Config) create(ctx *gin.Context) {
 	for key, val := range params {
 		// 防止恶意传入字段
 		if utils.In.Array(key, allow) {
+			if utils.Is.Map(val) {
+				val = utils.Json.Encode(val)
+			} else if utils.Is.Slice(val) {
+				val = strings.Join(cast.ToStringSlice(val), ",")
+			}
 			utils.Struct.Set(&table, key, val)
 		}
 	}
@@ -324,6 +329,11 @@ func (this *Config) update(ctx *gin.Context) {
 	for key, val := range params {
 		// 防止恶意传入字段
 		if utils.In.Array(key, allow) {
+			if utils.Is.Map(val) {
+				val = utils.Json.Encode(val)
+			} else if utils.Is.Slice(val) {
+				val = strings.Join(cast.ToStringSlice(val), ",")
+			}
 			async.Set(key, val)
 		}
 	}

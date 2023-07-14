@@ -264,6 +264,11 @@ func (this *IpBlack) create(ctx *gin.Context) {
 			if key == "value" {
 				val = strings.ToUpper(cast.ToString(val))
 			}
+			if utils.Is.Map(val) {
+				val = utils.Json.Encode(val)
+			} else if utils.Is.Slice(val) {
+				val = strings.Join(cast.ToStringSlice(val), ",")
+			}
 			utils.Struct.Set(&table, key, val)
 		}
 	}
@@ -310,6 +315,11 @@ func (this *IpBlack) update(ctx *gin.Context) {
 		if utils.In.Array(key, allow) {
 			if key == "value" {
 				val = strings.ToUpper(cast.ToString(val))
+			}
+			if utils.Is.Map(val) {
+				val = utils.Json.Encode(val)
+			} else if utils.Is.Slice(val) {
+				val = strings.Join(cast.ToStringSlice(val), ",")
 			}
 			async.Set(key, val)
 		}
