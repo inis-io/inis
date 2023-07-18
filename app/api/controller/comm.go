@@ -242,7 +242,7 @@ func (this *Comm) register(ctx *gin.Context) {
 		}
 	}
 
-	cacheName := fmt.Sprintf("%v-%v", social, params["social"])
+	cacheName := fmt.Sprintf("[register][%v=%v]", social, params["social"])
 
 	// 验证码为空 - 发送验证码
 	if utils.Is.Empty(params["code"]) {
@@ -386,7 +386,7 @@ func (this *Comm) socialLogin(ctx *gin.Context) {
 		facade.DB.Model(&table).Create(user)
 	}
 
-	cacheName := fmt.Sprintf("%v-%v", social, params["social"])
+	cacheName := fmt.Sprintf("[login][%v=%v]", social, params["social"])
 
 	// 验证码为空 - 发送验证码
 	if utils.Is.Empty(params["code"]) {
@@ -583,7 +583,7 @@ func (this *Comm) password(ctx *gin.Context, user map[string]any) {
 	}
 
 	// 缓存名称
-	cacheName := fmt.Sprintf("%v-%v", drive, social)
+	cacheName := fmt.Sprintf("[reset-password][%v=%v]", drive, social)
 
 	// 验证码为空 - 发送验证码
 	if utils.Is.Empty(params["code"]) {

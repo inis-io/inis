@@ -698,7 +698,9 @@ func (this *EXP) collect(ctx *gin.Context)  {
 
 		// 取消收藏
 		if cast.ToInt(params["state"]) == 0 {
-			tx := facade.DB.Model(&model.EXP{}).Where(item["id"]).UpdateColumn("state", 0)
+			tx := facade.DB.Model(&model.EXP{}).Where(item["id"]).Update(map[string]any{
+				"state": 0,
+			})
 			if tx.Error != nil {
 				this.json(ctx, nil, tx.Error.Error(), 400)
 				return
@@ -714,7 +716,9 @@ func (this *EXP) collect(ctx *gin.Context)  {
 		}
 
 		// 重新收藏
-		tx := facade.DB.Model(&model.EXP{}).Where(item["id"]).UpdateColumn("state", 1)
+		tx := facade.DB.Model(&model.EXP{}).Where(item["id"]).Update(map[string]any{
+			"state": 1,
+		})
 		if tx.Error != nil {
 			this.json(ctx, gin.H{ "value": 0 }, tx.Error.Error(), 400)
 			return
@@ -812,7 +816,9 @@ func (this *EXP) like(ctx *gin.Context)  {
 
 		// 取消点赞
 		if cast.ToInt(params["state"]) == 0 {
-			tx := facade.DB.Model(&model.EXP{}).Where(item["id"]).UpdateColumn("state", 0)
+			tx := facade.DB.Model(&model.EXP{}).Where(item["id"]).Update(map[string]any{
+				"state": 0,
+			})
 			if tx.Error != nil {
 				this.json(ctx, nil, tx.Error.Error(), 400)
 				return
@@ -821,14 +827,16 @@ func (this *EXP) like(ctx *gin.Context)  {
 			return
 		}
 
-		// 重复收藏
+		// 重复点赞
 		if cast.ToInt(params["state"]) == 1 && cast.ToInt(item["state"]) == 1 {
 			this.json(ctx, gin.H{ "value": 0 }, facade.Lang(ctx, "已经点过赞啦！"), 400)
 			return
 		}
 
-		// 重新收藏
-		tx := facade.DB.Model(&model.EXP{}).Where(item["id"]).UpdateColumn("state", 1)
+		// 重新点赞
+		tx := facade.DB.Model(&model.EXP{}).Where(item["id"]).Update(map[string]any{
+			"state": 1,
+		})
 		if tx.Error != nil {
 			this.json(ctx, gin.H{ "value": 0 }, tx.Error.Error(), 400)
 			return

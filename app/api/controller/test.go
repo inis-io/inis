@@ -93,8 +93,6 @@ func (this *Test) INDEX(ctx *gin.Context) {
 	// 请求参数
 	params := this.params(ctx)
 
-	facade.Comm.Signature(params)
-
 	// res := gin.H{
 	// 	// "root" : this.meta.root(ctx),
 	// 	// "user" : this.meta.user(ctx),
@@ -104,7 +102,7 @@ func (this *Test) INDEX(ctx *gin.Context) {
 	// 	// "rsa": RSA.Generate(2048),
 	// }
 
-	this.json(ctx, facade.Comm.Signature(params), facade.Lang(ctx, "好的！"), 200)
+	this.json(ctx, params, facade.Lang(ctx, "好的！"), 200)
 }
 
 // INDEX - GET请求本体

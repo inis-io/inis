@@ -16,11 +16,25 @@
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <script src="https://api.inis.cn/admin/utils/helper.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
 
 <div id="app">
     <h1>{{.title}} 1</h1>
+
+    <script type="module">
+        const text = 'VtlyGpWMdTjVHLNVGpfao0qPun+rRIwJGn2PWWkKhOSjGMgYKrn/5Dgzj2lykV/z'
+        const key  = CryptoJS.enc.Utf8.parse('aed326757678edd7')
+        const iv   = CryptoJS.enc.Utf8.parse('7f12ff8efb4aee3e')
+        // 解密
+        const decrypted = CryptoJS.AES.decrypt(text, key, {
+            iv: iv,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7,
+        })
+        console.log(JSON.parse(decrypted.toString(CryptoJS.enc.Utf8)))
+    </script>
 </div>
 </body>
 </html>

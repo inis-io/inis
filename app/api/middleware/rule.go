@@ -92,8 +92,9 @@ func rules(ctx *gin.Context) (result map[string]any) {
 
 	// 缓存状态
 	cacheState := cast.ToBool(facade.CacheToml.Get("open"))
+	path       := strings.ReplaceAll(ctx.Request.URL.Path, "/", ".")
 	// 缓存名字
-	cacheName := fmt.Sprintf("rule[%v][%v]", strings.ToUpper(ctx.Request.Method), ctx.Request.URL.Path)
+	cacheName  := fmt.Sprintf("rule[%v][%v]", strings.ToUpper(ctx.Request.Method), path)
 
 	// 如果开启了缓存 - 且缓存存在 - 直接返回缓存
 	if cacheState && facade.Cache.Has(cacheName) {

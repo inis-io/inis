@@ -29,6 +29,7 @@ type ApiInterface interface {
 }
 
 func (this base) json(ctx *gin.Context, data, msg, code any) {
+	// 如果 data 为空，则返回空数组 utils.Ternary[any](utils.Is.Empty(data), []any{}, data)
 	ctx.JSON(http.StatusOK, gin.H{
 		"code": cast.ToInt(code),
 		"msg":  cast.ToString(msg),
@@ -172,7 +173,7 @@ func (this cache) name(ctx *gin.Context) (name string) {
 	}
 
 	// 生产缓存名称 - 禁止包含（兼容 Windows）：\/:*?"<>|
-	path := strings.Replace(ctx.Request.URL.Path, "/", "_", -1)
+	path := strings.Replace(ctx.Request.URL.Path, "/", ".", -1)
 	name = fmt.Sprintf("[%s]%s&hash=%s", ctx.Request.Method, path, utils.Hash.Sum32(name))
 	return
 }

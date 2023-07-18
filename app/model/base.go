@@ -89,6 +89,11 @@ func DomainTemp1() (replace map[string]any) {
 			}
 		}
 	}
+	// 本地域名
+	localhost := facade.Var.Get("domain")
+	if !utils.Is.Empty(localhost) {
+		replace["{{localhost}}"] = cast.ToString(localhost)
+	}
 	if !utils.Is.Empty(facade.Cache.Get("domain")) {
 		replace["{{localhost}}"] = cast.ToString(facade.Cache.Get("domain"))
 	}
@@ -106,6 +111,11 @@ func DomainTemp2() (replace map[string]any) {
 		if !utils.Is.Empty(toml.Get(val + ".domain")) {
 			replace[cast.ToString(toml.Get(val+".domain"))] = "{{" + val + "}}"
 		}
+	}
+	// 拼接本地域名
+	localhost := facade.Var.Get("domain")
+	if !utils.Is.Empty(localhost) {
+		replace[cast.ToString(localhost)] = "{{localhost}}"
 	}
 	if !utils.Is.Empty(facade.Cache.Get("domain")) {
 		replace[cast.ToString(facade.Cache.Get("domain"))] = "{{localhost}}"

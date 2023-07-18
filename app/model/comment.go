@@ -42,9 +42,10 @@ func InitComment() {
 func (this *Comment) AfterFind(tx *gorm.DB) (err error) {
 
 	wg := sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(3)
 
-	var author map[string]any
+	var page    map[string]any
+	var author  map[string]any
 	var article map[string]any
 
 	go func(wg *sync.WaitGroup) {
@@ -56,14 +57,25 @@ func (this *Comment) AfterFind(tx *gorm.DB) (err error) {
 
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
-		// 文章信息
-		article = utils.Map.WithField(facade.DB.Model(&Article{}).Find(this.BindId), []string{"id", "title"})
+		if this.BindType == "page" {
+			// 页面信息
+			page = utils.Map.WithField(facade.DB.Model(&Pages{}).Find(this.BindId), []string{"id", "title"})
+		}
+	}(&wg)
+
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		if this.BindType == "article" {
+			// 文章信息
+			article = utils.Map.WithField(facade.DB.Model(&Article{}).Find(this.BindId), []string{"id", "title"})
+		}
 	}(&wg)
 
 	wg.Wait()
 
 	this.Result = map[string]any{
-		"author": author,
+		"page"   : page,
+		"author" : author,
 		"article": article,
 	}
 	this.Text = cast.ToString(this.Text)
