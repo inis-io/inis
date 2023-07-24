@@ -68,7 +68,7 @@ func (this *CommStruct) Device() *utils.CurlResponse {
 }
 
 // Signature - 签名算法
-func (this *CommStruct) Signature(body map[string]any) (result map[string]any) {
+func (this *CommStruct) Signature(params map[string]any) (result map[string]any) {
 
 	// 运行端口
 	port  := AppToml.Get("app.port")
@@ -91,6 +91,6 @@ func (this *CommStruct) Signature(body map[string]any) (result map[string]any) {
 		// X-Gorgon(加密文本)
 		"X-Gorgon" : cast.ToString(port) + utils.Hash.Token(this.Sn(), 48, unix),
 		// X-SS-STUB(MD5) - 用于检查 body 数据是否被篡改
-		"X-SS-STUB": strings.ToUpper(utils.Hash.Token(utils.Map.ToURL(body), 32, unix)),
+		"X-SS-STUB": strings.ToUpper(utils.Hash.Token(utils.Map.ToURL(params), 32, unix)),
 	}
 }

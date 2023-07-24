@@ -439,6 +439,7 @@ func createAuthRules() (result []AuthRules) {
 	inis := []AuthRules{
 		{ Method: "POST", Route: "/inis/device/bind", Name : "【社区 API】设备绑定", Type : "default" },
 		{ Method: "GET", Route: "/inis/device/user", Name : "【社区 API】绑定的用户信息", Type : "common" },
+		{ Method: "GET", Route: "/inis/theme-version/next", Name : "【社区 API】获取主题下个版本", Type : "common" },
 		{ Method: "GET", Route: "/inis/theme-version/download", Name : "【社区 API】获取主题下载地址", Type : "default" },
 	}
 

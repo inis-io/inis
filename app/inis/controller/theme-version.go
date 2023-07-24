@@ -19,6 +19,7 @@ func (this *ThemeVersion) IGET(ctx *gin.Context) {
 	method := strings.ToLower(ctx.Param("method"))
 
 	allow := map[string]any{
+		"next":     this.next,
 		"download": this.download,
 	}
 	err := this.call(allow, method, ctx)
@@ -76,6 +77,37 @@ func (this *ThemeVersion) IDEL(ctx *gin.Context) {
 // INDEX - GET请求本体
 func (this *ThemeVersion) INDEX(ctx *gin.Context) {
 	this.json(ctx, nil, facade.Lang(ctx, "好的！"), 200)
+}
+
+// next - 获取下个版本
+func (this *ThemeVersion) next(ctx *gin.Context) {
+
+	// 请求参数
+	params := this.params(ctx)
+
+	if utils.Is.Empty(params["theme_id"]) && utils.Is.Empty(params["theme_key"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "theme_id 或 theme_key"), 400)
+		return
+	}
+
+	item := utils.Curl(utils.CurlRequest{
+		Url:    facade.Uri + "/sn/theme-version/next",
+		Method: "GET",
+		Headers: facade.Comm.Signature(params),
+		Query:   params,
+	}).Send()
+
+	if item.Error != nil {
+		this.json(ctx, nil, facade.Lang(ctx, "远程服务器错误：%v", item.Error.Error()), 500)
+		return
+	}
+
+	if cast.ToInt(item.Json["code"]) != 200 {
+		this.json(ctx, item.Json["data"], item.Json["msg"], item.Json["code"])
+		return
+	}
+
+	this.json(ctx, item.Json["data"], facade.Lang(ctx, "好的！"), 200)
 }
 
 // download - 获取下载地址
