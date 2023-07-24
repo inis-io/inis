@@ -323,7 +323,6 @@ func (this *Article) update(ctx *gin.Context) {
 	async := utils.Async[map[string]any]()
 
 	root := this.meta.root(ctx)
-
 	// 越权 - 增加可选字段
 	if root {
 		allow = append(allow, "top")

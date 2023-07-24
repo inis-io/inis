@@ -25,6 +25,7 @@ func Route(Gin *gin.Engine) {
 	allow := map[string]controller.ApiInterface{
 		"test":          &controller.Test{},
 		"device":        &controller.Device{},
+		"theme-version": &controller.ThemeVersion{},
 	}
 
 	// 动态配置路由

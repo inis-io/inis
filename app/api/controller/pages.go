@@ -281,7 +281,7 @@ func (this *Pages) create(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Pages{Uid: uid, CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix(), LastUpdate: time.Now().Unix()}
-	allow := []any{"key", "title", "content", "remark", "tags", "json", "text"}
+	allow := []any{"key", "title", "content", "remark", "tags", "editor", "json", "text"}
 
 	// 动态给结构体赋值
 	for key, val := range params {
@@ -329,7 +329,7 @@ func (this *Pages) update(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Pages{}
-	allow := []any{"key", "title", "content", "remark", "tags", "json", "text"}
+	allow := []any{"key", "title", "content", "remark", "tags", "editor", "json", "text"}
 	async := utils.Async[map[string]any]()
 
 	// 动态给结构体赋值

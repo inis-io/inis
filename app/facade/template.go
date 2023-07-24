@@ -185,6 +185,8 @@ default    = "${default}"
 [local]
 # 本地存储域名
 domain     = "${local.domain}"
+# 本地存储目录
+path       = "${local.path}"
 
 
 # 阿里OSS配置
@@ -199,6 +201,8 @@ endpoint		  = "${oss.endpoint}"
 bucket			  = "${oss.bucket}"
 # OSS 外网域名 - 用于访问 - 不填写则使用默认域名
 domain			  = "${oss.domain}"
+# OSS 存储目录
+path			  = "${oss.path}"
 
 
 # 腾讯云COS配置
@@ -215,6 +219,8 @@ bucket            = "${cos.bucket}"
 region            = "${cos.region}"
 # COS 外网域名 - 用于访问 - 不填写则使用默认域名
 domain            = "${cos.domain}"
+# COS 存储目录
+path              = "${cos.path}"
 
 
 # 七牛云KODO配置

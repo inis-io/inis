@@ -73,7 +73,7 @@ func QpsPoint() gin.HandlerFunc {
 		limit := QoSPoint[key]
 		// 如果不存在则创建一个新的访问频率限制器
 		if limit == nil {
-			limit = rate.NewLimiter(rate.Every(time.Second/10), speed)
+			limit = rate.NewLimiter(rate.Every(10 * time.Millisecond), speed)
 			QoSPoint[key] = limit
 		}
 		mutex.Unlock()
@@ -131,7 +131,7 @@ func QpsGlobal() gin.HandlerFunc {
 		limit := QoSGlobal[ip]
 		// 如果不存在则创建一个新的访问频率限制器
 		if limit == nil {
-			limit = rate.NewLimiter(rate.Every(time.Second/10), speed)
+			limit = rate.NewLimiter(rate.Every(10 * time.Millisecond), speed)
 			QoSGlobal[ip] = limit
 		}
 		mutex.Unlock()

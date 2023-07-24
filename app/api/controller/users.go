@@ -116,7 +116,7 @@ func (this *Users) delCache() {
 func (this *Users) one(ctx *gin.Context) {
 
 	code := 204
-	msg := []string{"无数据！", ""}
+	msg  := []string{"无数据！", ""}
 	var data any
 
 	// 获取请求参数

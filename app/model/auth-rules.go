@@ -43,8 +43,7 @@ func (this *AuthRules) AfterFind(tx *gorm.DB) (err error) {
 func (this *AuthRules) BeforeCreate(tx *gorm.DB) (err error) {
 
 	// 检查 hash 是否存在
-	exist := facade.DB.Model(&AuthRules{}).Where("hash", this.Hash).Exist()
-	if exist {
+	if exist := facade.DB.Model(&AuthRules{}).Where("hash", this.Hash).Exist(); exist {
 		return errors.New(fmt.Sprintf("hash: %s 已存在", this.Hash))
 	}
 
@@ -440,6 +439,7 @@ func createAuthRules() (result []AuthRules) {
 	inis := []AuthRules{
 		{ Method: "POST", Route: "/inis/device/bind", Name : "【社区 API】设备绑定", Type : "default" },
 		{ Method: "GET", Route: "/inis/device/user", Name : "【社区 API】绑定的用户信息", Type : "common" },
+		{ Method: "GET", Route: "/inis/theme-version/download", Name : "【社区 API】获取主题下载地址", Type : "default" },
 	}
 
 	return append(result, inis...)

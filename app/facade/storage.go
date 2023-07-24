@@ -80,18 +80,21 @@ func initStorageToml() {
 		Name: "storage",
 		Content: utils.Replace(TempStorage, map[string]any{
 			"${default}": "local",
-			"${local.domain}": "",
+			"${local.domain}": "storage",
+			"${local.path}": "storage",
 			"${oss.access_key_id}": "",
 			"${oss.access_key_secret}": "",
 			"${oss.endpoint}": "",
 			"${oss.bucket}": "inis-oss",
 			"${oss.domain}": "",
+			"${oss.path}": "inis",
 			"${cos.app_id}": "",
 			"${cos.secret_id}": "",
 			"${cos.secret_key}": "",
 			"${cos.bucket}": "inis-cos",
 			"${cos.region}": "ap-guangzhou",
 			"${cos.domain}": "",
+			"${cos.path}": "inis",
 			"${kodo.access_key}": "",
 			"${kodo.secret_key}": "",
 			"${kodo.bucket}": "inis-kodo",
@@ -248,7 +251,11 @@ func (this *LocalStorageStruct) Path() string {
 	dir := time.Now().Format("2006-01/02/")
 	// 生成文件名 - 年月日+毫秒时间戳
 	name := cast.ToString(time.Now().UnixNano() / 1e6)
-	return "public/storage/" + dir + name
+	path := cast.ToString(StorageToml.Get("oss.path"))
+	if !strings.HasSuffix(path, "/") {
+		path += "/"
+	}
+	return "public/" + path + dir + name
 }
 
 // ================================== 阿里云对象存储 - 开始 ==================================
@@ -332,10 +339,14 @@ func (this *OSSStruct) Upload(key string, reader io.Reader) (result *StorageResp
 // Path - OSS存储位置 - 生成文件路径
 func (this *OSSStruct) Path() string {
 	// 生成年月日目录 - 如：2023-04/10
-	dir := time.Now().Format("2006-01/02/")
+	dir  := time.Now().Format("2006-01/02/")
 	// 生成文件名 - 年月日+毫秒时间戳
 	name := cast.ToString(time.Now().UnixNano() / 1e6)
-	return "storage/" + dir + name
+	path := cast.ToString(StorageToml.Get("oss.path"))
+	if !strings.HasSuffix(path, "/") {
+		path += "/"
+	}
+	return path + dir + name
 }
 
 // ================================== 腾讯云对象存储 - 开始 ==================================
@@ -418,7 +429,11 @@ func (this *COSStruct) Path() string {
 	dir := time.Now().Format("2006-01/02/")
 	// 生成文件名 - 年月日+毫秒时间戳
 	name := cast.ToString(time.Now().UnixNano() / 1e6)
-	return "storage/" + dir + name
+	path := cast.ToString(StorageToml.Get("oss.path"))
+	if !strings.HasSuffix(path, "/") {
+		path += "/"
+	}
+	return path + dir + name
 }
 
 // ================================== 七牛云对象存储 - 开始 ==================================
