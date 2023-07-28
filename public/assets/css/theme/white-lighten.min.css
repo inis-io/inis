@@ -1,0 +1,771 @@
+:root{
+    --theme-color: 255, 255, 255;
+    --theme-font-color: 255, 255, 255;
+    --vice-color: 0, 0, 0;
+    --vice-font-color: 0, 0, 0;
+    --theme-opacity: 0.4;
+    --theme-blur: blur(10px) saturate(160%);
+    --symmetry-color: 48, 49, 51;
+    --symmetry-opacity: 0.55;
+    --box-shadow: 0px 5px 40px 0px rgba(17,58,93,.1);
+    --color-info: 64, 158, 255;
+    --el-color-primary: #000000;
+    --svg-color: 255, 255, 255;
+    --icon-color: 255, 255, 255;
+}
+body[inis-theme=white-lighten] *{
+    color: rgb(var(--theme-font-color));
+}
+body[inis-theme=white-lighten] *, body[inis-theme=white-lighten] a, body[inis-theme=white-lighten] p {
+    cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' width='10px' height='10px'><circle cx='4' cy='4' r='4' fill='white' /></svg>") 4 4, auto !important;
+}
+body[inis-theme=white-lighten] .card{
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.65));
+    backdrop-filter: var(--theme-blur);
+    border-radius: 6px;
+    box-shadow: unset !important;
+}
+body[inis-theme=white-lighten] .card:hover{
+    /*transform: scale(1.01);*/
+    transition: 0.5s;
+}
+body[inis-theme=white-lighten] .card-header{
+    background: unset;
+}
+body[inis-theme=white-lighten] #app.admin .topnav{
+    background: rgba(var(--theme-color), var(--theme-opacity)) !important;
+    backdrop-filter: var(--theme-blur);
+    transform: translate(0);
+    transition: transform .3s;
+    box-shadow: 0px 5px 40px 0px rgba(17,58,93,.1);
+    position: fixed;
+    top: 0;
+    z-index: 99;
+    width: 100%;
+}
+body[inis-theme=white-lighten] .navbar-dark .dropdown-menu{
+    background: rgba(var(--theme-color), var(--theme-opacity));
+    backdrop-filter: var(--theme-blur);
+    border-radius: 4px;
+}
+body[inis-theme=white-lighten] #footer{
+    backdrop-filter: var(--theme-blur);
+    background: rgba(var(--theme-color), var(--theme-opacity));
+    transform: translate(0);
+    transition: transform .3s;
+    box-shadow: 0px -5px 40px 0px rgba(17,58,93,.1);
+}
+body[inis-theme=white-lighten] .navbar-dark .dropdown-item:focus, body[inis-theme=white-lighten] .dropdown-item:hover {
+    border-radius: 4px !important;
+    background-color: rgba(var(--theme-color), var(--theme-opacity));
+}
+body[inis-theme=white-lighten] .container-box {
+    margin-top: 80px;
+    margin-bottom: 70px;
+}
+body[inis-theme=white-lighten] .inis-save button, body[inis-theme=white-lighten] .inis-save a{
+    background: rgba(var(--theme-color), var(--theme-opacity));
+    backdrop-filter: var(--theme-blur);
+    transform: translate(0);
+    transition: transform .3s;
+    box-shadow: 0px 5px 40px 0px rgba(17,58,93,.1);
+}
+
+
+
+
+
+/* ==================== 新增的内容 - dark.min.css 未兼容 ==================== */
+body[inis-theme=white-lighten] .input-group.custom-search{
+    width: unset !important;
+}
+body[inis-theme=white-lighten] .input-group.custom-search input{
+    color: var(--theme-font-color);
+    height: 35px;
+    padding-left: 40px;
+    border-radius: 4px !important;
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.65));
+    backdrop-filter: var(--theme-blur);
+}
+body[inis-theme=white-lighten] input::placeholder {
+    color: #dcdcdc;
+}
+body[inis-theme=white-lighten] .input-group.custom-search input::placeholder {
+    color: #dcdcdc;
+}
+body[inis-theme=white-lighten] .input-group.custom-search svg{
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    z-index: 9;
+}
+body[inis-theme=white-lighten] .form-control:disabled, .form-control[readonly]{
+    background-color: #ffffff00;
+}
+body[inis-theme=white-lighten] .btn-auto{
+    color: rgb(var(--theme-font-color));
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.65));
+    backdrop-filter: var(--theme-blur);
+    -webkit-box-shadow: var(--box-shadow);
+    box-shadow: var(--box-shadow);
+}
+body[inis-theme=white-lighten] .btn-auto:hover {
+    color: rgb(var(--theme-font-color));
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8));
+    border-color: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8));
+}
+body[inis-theme=white-lighten] .btn-auto:focus {
+    color: rgb(var(--theme-font-color));
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8));
+    border-color: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8));
+    -webkit-box-shadow: var(--box-shadow);
+    box-shadow: var(--box-shadow);
+}
+body[inis-theme=white-lighten] .nav-tabs.nav-bordered{
+    border-bottom: unset;
+}
+body[inis-theme=white-lighten] .nav-tabs.nav-bordered li a.active{
+    border-bottom: 2px solid rgba(var(--theme-color), var(--theme-opacity));
+}
+body[inis-theme=white-lighten] .__menu__wrapper.i-table-menu::before, body[inis-theme=white-lighten] .__menu__wrapper.i-table-menu .__menu__sub__wrapper::before{
+    content: '';
+    top: 0;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: -1;
+    filter: blur(3px);
+    -webkit-filter: blur(3px);
+    backdrop-filter: var(--theme-blur);
+}
+body[inis-theme=white-lighten] .__menu__wrapper.i-table-menu, body[inis-theme=white-lighten] .__menu__wrapper.i-table-menu .__menu__sub__wrapper{
+    border: unset;
+    border-radius: 5px;
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.65));
+    box-shadow: 0px 5px 40px 0px rgb(17 58 93 / 10%);
+    transition: unset !important;
+}
+body[inis-theme=white-lighten] .__menu__wrapper.i-table-menu .__menu__item:hover, body[inis-theme=white-lighten] .__menu__wrapper.i-table-menu .__menu__sub__item:hover{
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8));
+    border-color: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8));
+}
+body[inis-theme=white-lighten] .text-muted{
+    color: #DADDE2 !important;
+}
+body[inis-theme=white-lighten] .__menu__wrapper .__menu__sub__item-label, body[inis-theme=white-lighten] .__menu__wrapper .__menu__item,
+body[inis-theme=white-lighten] .__menu__wrapper .__menu__sub__item-tips, body[inis-theme=white-lighten] .__menu__wrapper .__menu__sub__item{
+    transition: 0s !important;
+}
+body[inis-theme=white-lighten] .__menu__item-arrow.show .__menu__item-arrow-after{
+    border-left: var(--menu-item-arrowRealSize) solid #ffffff;
+}
+
+/* ==================== 自定义 el-table - 开始 ==================== */
+body[inis-theme=white-lighten] .custom .el-table__inner-wrapper::before{
+    height: 0;
+}
+body[inis-theme=white-lighten] .custom .el-table__header{
+    width: 100% !important;
+}
+body[inis-theme=white-lighten] .custom .el-table__body{
+    width: 100% !important;
+}
+body[inis-theme=white-lighten] .custom .is-scrolling-right .el-table-fixed-column--left, body[inis-theme=white-lighten] .custom .is-scrolling-middle .el-table-fixed-column--left,
+body[inis-theme=white-lighten] .custom .is-scrolling-right .el-table__body-wrapper td.el-table-fixed-column--left{
+    backdrop-filter: var(--theme-blur) !important;
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8)) !important;
+}
+body[inis-theme=white-lighten] .custom .is-scrolling-left .el-table-fixed-column--right, body[inis-theme=white-lighten] .custom .is-scrolling-middle .el-table-fixed-column--right,
+body[inis-theme=white-lighten] .custom .is-scrolling-left .el-table__body-wrapper td.el-table-fixed-column--right{
+    backdrop-filter: var(--theme-blur) !important;
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8)) !important;
+}
+body[inis-theme=white-lighten] .custom table tr.el-table__row:hover{
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 1.2)) !important;
+    border-color: rgba(var(--theme-color), calc(var(--theme-opacity) * 1.2)) !important;
+}
+body[inis-theme=white-lighten] .el-table--border .el-table__inner-wrapper::after,
+body[inis-theme=white-lighten] .el-table--border::after,
+body[inis-theme=white-lighten] .el-table--border::before,
+body[inis-theme=white-lighten] .el-table__inner-wrapper::before {
+    background-color: transparent !important;
+}
+body[inis-theme=white-lighten] .el-table .hidden-columns{
+    display: none;
+}
+body[inis-theme=white-lighten] .el-loading-mask{
+    background-color: rgb(255 255 255 / 72%);
+    backdrop-filter: var(--theme-blur);
+}
+body[inis-theme=white-lighten] .el-loading-mask .el-loading-spinner svg{
+    width: 20px;
+    height: 20px;
+}
+/* ==================== 自定义 el-table - 结束 ==================== */
+/* ==================== 自定义 el-tabs - 开始 ==================== */
+body[inis-theme=white-lighten] .el-tabs__header{
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.65));
+    backdrop-filter: var(--theme-blur);
+    border-radius: 6px;
+    box-shadow: unset !important;
+    padding: 6px 20px;
+}
+body[inis-theme=white-lighten] .el-tabs__nav-wrap::after{
+    background-color: unset;
+}
+body[inis-theme=white-lighten] .el-tabs__item:focus-visible {
+    outline: none;
+    box-shadow: unset;
+}
+/* ==================== 自定义 el-tabs - 结束 ==================== */
+
+/* ================== 自定义 el-pagination - 结束 ================== */
+body[inis-theme=white-lighten] .custom .el-pagination.is-background .btn-next,
+body[inis-theme=white-lighten] .custom .el-pagination.is-background .btn-prev,
+body[inis-theme=white-lighten] .custom .el-pagination.is-background .el-pager li {
+    color: #DADDE2;
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.65));
+    backdrop-filter: var(--theme-blur);
+    -webkit-box-shadow: var(--box-shadow);
+    box-shadow: var(--box-shadow);
+}
+body[inis-theme=white-lighten] .custom .el-input__wrapper {
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.65));
+    backdrop-filter: var(--theme-blur);
+    box-shadow: unset;
+}
+body[inis-theme=white-lighten] .el-select__popper.el-popper{
+    border: unset;
+    backdrop-filter: var(--theme-blur);
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.65));
+}
+body[inis-theme=white-lighten] .el-popper.custom .el-popper__arrow::before{
+    border: unset;
+    backdrop-filter: var(--theme-blur);
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.65));
+}
+body[inis-theme=white-lighten] .el-popper.custom .el-select-dropdown__item.hover,
+body[inis-theme=white-lighten] .el-select-dropdown__item:hover{
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8)) !important;
+    border-color: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8)) !important;
+}
+body[inis-theme=white-lighten] .el-popper.custom .el-select .el-input.is-focus .el-input__wrapper{
+    box-shadow: 0px 0px 0px rgb(0 0 0 / 10%), 0px 0px 0px rgb(255 255 255 / 80%), inset 18px 18px 30px rgb(0 0 0 / 6%), inset -18px -18px 30px rgb(255 255 255 / 30%) !important;
+    transition: box-shadow .2s ease-out;
+}
+body[inis-theme=white-lighten] .el-select .el-input__wrapper.is-focus{
+    box-shadow: unset !important;
+}
+body[inis-theme=white-lighten] .custom .el-pagination.is-background .el-pager li.is-active{
+    color: var(--theme-font-color) !important;
+    box-shadow: 0px 0px 0px rgb(0 0 0 / 10%), 0px 0px 0px rgb(255 255 255 / 80%), inset 18px 18px 30px rgb(0 0 0 / 6%), inset -18px -18px 30px rgb(255 255 255 / 30%) !important;
+    transition: box-shadow .2s ease-out;
+}
+body[inis-theme=white-lighten] .custom .el-pagination.is-background .el-pager li:hover{
+    box-shadow: 0px 0px 0px rgb(0 0 0 / 10%), 0px 0px 0px rgb(255 255 255 / 80%), inset 18px 18px 30px rgb(0 0 0 / 6%), inset -18px -18px 30px rgb(255 255 255 / 30%) !important;
+    transition: box-shadow .2s ease-out;
+}
+body[inis-theme=white-lighten] .custom .el-select:hover:not(.el-select--disabled) .el-input__wrapper{
+    box-shadow: 0px 0px 0px rgb(0 0 0 / 10%), 0px 0px 0px rgb(255 255 255 / 80%), inset 18px 18px 30px rgb(0 0 0 / 6%), inset -18px -18px 30px rgb(255 255 255 / 30%) !important;
+    transition: box-shadow .2s ease-out;
+    border: unset;
+}
+body[inis-theme=white-lighten] .el-select-dropdown__item.is-disabled{
+    text-decoration: line-through !important;
+}
+body[inis-theme=white-lighten] .el-select-dropdown.is-multiple .el-select-dropdown__item.selected{
+    background: unset !important;
+}
+body[inis-theme=white-lighten] .el-tag.el-tag--info{
+    background: rgba(240,242,245,0.3) !important;
+}
+body[inis-theme=white-lighten] .el-select-dropdown__item.is-disabled{
+    color: red;
+}
+/* ================== 自定义 el-pagination - 结束 ================== */
+
+/* ==================== 自定义 el-button - 开始 ==================== */
+body[inis-theme=white-lighten] .el-button--custom{
+    border-color: transparent;
+    background: 0 0;
+    padding-left: 0;
+    padding-right: 0;
+}
+/* ==================== 自定义 el-button - 结束 ==================== */
+
+/* =================== 自定义 el-dropdown - 结束 =================== */
+body[inis-theme=white-lighten] .el-dropdown.custom {
+    font-weight: 400;
+    line-height: 1.5;
+    padding: .45rem .9rem;
+    font-size: .9rem;
+    border-radius: .15rem;
+    color: rgb(var(--theme-font-color));
+    border: 1px solid transparent;
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.65));
+    backdrop-filter: var(--theme-blur);
+    -webkit-box-shadow: var(--box-shadow);
+    box-shadow: var(--box-shadow);
+}
+body[inis-theme=white-lighten] .el-dropdown__popper.el-popper {
+    border: unset;
+    backdrop-filter: var(--theme-blur);
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.65));
+}
+body[inis-theme=white-lighten] .el-popper.is-light .el-popper__arrow::before {
+    border: unset;
+    backdrop-filter: var(--theme-blur);
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 1.2)) !important;
+    border-color: rgba(var(--theme-color), calc(var(--theme-opacity) * 1.2)) !important;
+}
+body[inis-theme=white-lighten] .el-dropdown-menu__item:not(.is-disabled):focus {
+    color: var(--theme-font-color) !important;
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8));
+    border-color: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8));
+}
+/* =================== 自定义 el-dropdown - 开始 =================== */
+/* =================== 自定义 el-menu - 开始 =================== */
+body[inis-theme=white-lighten] .el-menu{
+
+}
+body[inis-theme=white-lighten] .el-menu-item, body[inis-theme=white-lighten]  .el-sub-menu__title{
+    font-size: 13px;
+    padding: 0 10px;
+}
+body[inis-theme=white-lighten] .el-menu--horizontal{
+    border-bottom: unset;
+}
+body[inis-theme=white-lighten] .el-menu--horizontal > .el-menu-item.is-active{
+    border-bottom: unset;
+    color: unset !important;
+}
+body[inis-theme=white-lighten] .el-menu--horizontal > .el-menu-item{
+    border-bottom: unset;
+}
+body[inis-theme=white-lighten] .el-menu--horizontal .el-menu-item:not(.is-disabled):focus,
+body[inis-theme=white-lighten] .el-menu--horizontal .el-menu-item:not(.is-disabled):hover{
+    background-color: unset;
+    color: unset;
+}
+body[inis-theme=white-lighten] .el-menu--horizontal .el-menu--popup .el-menu-item:not(.is-disabled):hover{
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 1.2)) !important;
+    border-color: rgba(var(--theme-color), calc(var(--theme-opacity) * 1.2)) !important;
+}
+body[inis-theme=white-lighten] .el-menu--horizontal > .el-sub-menu .el-sub-menu__title,
+body[inis-theme=white-lighten] .el-menu--horizontal > .el-menu-item{
+    color: var(--theme-font-color);
+    border-bottom: unset;
+}
+body[inis-theme=white-lighten] .el-menu--horizontal .el-menu .el-menu-item.is-active,
+body[inis-theme=white-lighten] .el-menu--horizontal .el-menu .el-sub-menu.is-active > .el-sub-menu__title{
+    color: var(--theme-font-color);
+}
+body[inis-theme=white-lighten] .el-menu--horizontal .el-menu .el-menu-item,
+body[inis-theme=white-lighten] .el-menu--horizontal .el-menu .el-sub-menu__title{
+    color: var(--theme-font-color);
+}
+body[inis-theme=white-lighten] .el-popper.is-light{
+    background: rgba(var(--theme-color), var(--theme-opacity)) !important;
+    backdrop-filter: var(--theme-blur);
+    -webkit-backdrop-filter: var(--theme-blur);
+    border: unset;
+    box-shadow: 0px 5px 40px 0px rgb(17 58 93 / 10%);
+    -webkit-box-shadow: 0px 5px 40px 0px rgb(17 58 93 / 10%);
+}
+body[inis-theme=white-lighten] .el-sub-menu__title{
+    line-height: unset;
+}
+body[inis-theme=white-lighten] .el-menu .icon-none i, body[inis-theme=white-lighten] .el-menu .icon-none svg{
+    display: none;
+}
+    /* =================== 自定义 el-menu - 开始 =================== */
+/* ==================== 自定义 el-select - 开始 ==================== */
+body[inis-theme=white-lighten] .el-select.custom:hover{
+    border: unset !important;
+}
+body[inis-theme=white-lighten] .el-select.custom .el-input__wrapper {
+    height: 26px;
+    padding: 0;
+    background: unset;
+    backdrop-filter: unset;
+    border-radius: 0;
+    font-size: 13px;
+    border-bottom: 1px solid #ccc!important;
+}
+body[inis-theme=white-lighten] .el-select.custom.multiple .el-input__wrapper {
+    height: unset !important;
+}
+body[inis-theme=white-lighten] .el-select.custom .el-input.is-focus .el-input__wrapper,
+body[inis-theme=white-lighten] .el-select.custom:hover:not(.el-select--disabled) .el-input__wrapper{
+    box-shadow: unset !important;
+    border-bottom: 2px solid #ccc!important;
+}
+body[inis-theme=white-lighten] .el-select-dropdown__item.hover{
+    background-color: transparent;
+    /*background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8));*/
+    /*border-color: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8));*/
+}
+/* ==================== 自定义 el-select - 结束 ==================== */
+/* ==================== 自定义 el-cascader - 结束 ==================== */
+body[inis-theme=white-lighten] .el-cascader.custom.multiple .el-input__wrapper{
+    background: unset !important;
+    backdrop-filter: unset !important;
+}
+body[inis-theme=white-lighten] .el-cascader-panel .el-cascader-node > .el-checkbox{
+    margin: 0 !important;
+}
+body[inis-theme=white-lighten] .el-cascader-node:not(.is-disabled):focus, body[inis-theme=white-lighten] .el-cascader-node:not(.is-disabled):hover{
+    background-color: rgba(var(--theme-color), var(--theme-opacity));
+}
+/* ==================== 自定义 el-cascader - 结束 ==================== */
+/* ==================== 自定义 el-tooltip - 开始 ==================== */
+body[inis-theme=white-lighten] .el-popper.is-dark{
+    background: rgba(var(--symmetry-color), calc(var(--symmetry-opacity) * 1.5)) !important;
+    backdrop-filter: var(--symmetry-color);
+    -webkit-backdrop-filter: var(--theme-blur);
+    border: unset;
+    box-shadow: 0px 5px 40px 0px rgb(17 58 93 / 10%);
+    -webkit-box-shadow: 0px 5px 40px 0px rgb(17 58 93 / 10%);
+}
+body[inis-theme=white-lighten] .el-popper.is-dark .el-popper__arrow::before{
+    border: unset;
+    backdrop-filter: var(--symmetry-color);
+    background: rgba(var(--symmetry-color), calc(var(--symmetry-opacity) * 1.5)) !important;
+    border-color: rgba(var(--symmetry-color), calc(var(--symmetry-opacity) * 1.5)) !important;
+}
+/* ==================== 自定义 el-tooltip - 结束 ==================== */
+/* ==================== 自定义 el-collapse - 开始 ==================== */
+body[inis-theme=white-lighten] .el-collapse{
+    border-top: unset;
+    border-bottom: unset;
+}
+body[inis-theme=white-lighten] .el-collapse-item__header, body[inis-theme=white-lighten] .el-collapse-item__wrap{
+    background: unset;
+    border-bottom: unset;
+}
+/* ==================== 自定义 el-collapse - 结束 ==================== */
+/* ==================== 自定义 el-upload - 开始 ==================== */
+body[inis-theme=white-lighten] .el-upload-list--picture .el-upload-list__item{
+    background-color: unset;
+    border-radius: unset;
+    padding: 6px;
+}
+body[inis-theme=white-lighten] .el-upload-list__item:hover{
+    background-color: rgba(var(--theme-color), var(--theme-opacity));
+}
+body[inis-theme=white-lighten] .el-upload-list--picture .el-upload-list__item-thumbnail{
+    height: unset;
+    background-color: unset;
+}
+body[inis-theme=white-lighten] .custom.upload > .el-upload{
+    width: 100%;
+}
+/* ==================== 自定义 el-upload - 结束 ==================== */
+/* ==================== 自定义 el-steps - 开始 ==================== */
+body[inis-theme=white-lighten] .el-steps--simple{
+    background: rgba(var(--theme-color), var(--theme-opacity)) !important;
+    backdrop-filter: var(--theme-blur);
+    -webkit-backdrop-filter: var(--theme-blur);
+}
+body[inis-theme=white-lighten] .el-step__title.is-finish{
+    color: rgb(var(--theme-font-color));
+}
+body[inis-theme=white-lighten] .el-step.is-simple .el-step__title{
+    font-size: 14px;
+    font-weight: bolder;
+}
+body[inis-theme=white-lighten] .el-step__title.is-process, body[inis-theme=white-lighten] .el-step__title.is-wait{
+    /*color: var(--theme-font-color);*/
+    color: #DADDE2 !important;
+}
+body[inis-theme=white-lighten] .el-step.is-simple .el-step__arrow::after, body[inis-theme=white-lighten] .el-step.is-simple .el-step__arrow::before{
+    background-color: rgb(var(--theme-color));
+}
+/* ==================== 自定义 el-steps - 结束 ==================== */
+/* ==================== 自定义 el-input-number - 开始 ==================== */
+body[inis-theme=white-lighten] .el-input-number__decrease, body[inis-theme=white-lighten] .el-input-number__increase{
+    background: unset;
+}
+body[inis-theme=white-lighten] .el-input-number .el-input__wrapper{
+    background: unset;
+}
+body[inis-theme=white-lighten] .el-input-number .el-input__wrapper.is-focus{
+    box-shadow: 0 0 0 1px var(--el-input-border-color,var(--el-border-color)) inset;
+}
+/* ==================== 自定义 el-input-number - 结束 ==================== */
+/* ==================== 自定义 el-dialog - 开始 ==================== */
+body[inis-theme=white-lighten] .el-dialog{
+    --el-dialog-bg-color: unset;
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) / 2)) !important;
+    backdrop-filter: var(--theme-blur);
+}
+/* ==================== 自定义 el-dialog - 结束 ==================== */
+
+
+
+/* ==================== 自定义 bootstrap modal - 开始 ==================== */
+body[inis-theme=white-lighten] .modal .modal-dialog{
+}
+body[inis-theme=white-lighten] .modal .modal-content{
+    background: rgba(var(--theme-color), var(--theme-opacity)) !important;
+    backdrop-filter: var(--theme-blur);
+}
+body[inis-theme=white-lighten] .modal .modal-header{
+    border-radius: 4px 4px 0 0;
+}
+body[inis-theme=white-lighten] .modal .modal-body{
+}
+body[inis-theme=white-lighten] .modal .modal-footer{
+    border-radius: 0 0 4px 4px !important;
+}
+/* ==================== 自定义 bootstrap modal - 结束 ==================== */
+
+/* ==================== 自定义 bootstrap btn - 开始 ==================== */
+body[inis-theme=white-lighten] .btn-info{
+    color: var(--theme-font-color);
+    background-color: rgba(var(--color-info), 1);
+    border-color: rgba(var(--color-info), 1);
+}
+body[inis-theme=white-lighten] .btn-info:hover{
+    background-color: rgba(var(--color-info), 0.8);
+    border-color: rgba(var(--color-info), 0.8);
+    backdrop-filter: var(--theme-blur);
+}
+body[inis-theme=white-lighten] .btn-info:not(:disabled):not(.disabled).active,
+body[inis-theme=white-lighten] .btn-info:not(:disabled):not(.disabled):active,
+body[inis-theme=white-lighten] .show>.btn-info.dropdown-toggle{
+    color: var(--theme-font-color);
+    background-color: rgba(var(--color-info), 0.8);
+    border-color: rgba(var(--color-info), 0.8);
+}
+body[inis-theme=white-lighten] .btn-info:not(:disabled):not(.disabled).active:focus,
+body[inis-theme=white-lighten] .btn-info:not(:disabled):not(.disabled):active:focus,
+body[inis-theme=white-lighten] .show>.btn-info.dropdown-toggle:focus{
+    box-shadow: 0 0 0 0.2rem rgba(var(--color-info), 0.5);
+}
+body[inis-theme=white-lighten] .btn.disabled,
+body[inis-theme=white-lighten] .btn:disabled,
+body[inis-theme=white-lighten] fieldset:disabled .btn{
+    opacity: unset;
+    border: unset;
+}
+body[inis-theme=white-lighten] .btn-outline-light:hover{
+    color: rgb(var(--theme-font-color));
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8));
+    border-color: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8));
+}
+body[inis-theme=white-lighten] btn-outline-light:not(:disabled):not(.disabled).active,
+body[inis-theme=white-lighten] .btn-outline-light:not(:disabled):not(.disabled):active,
+body[inis-theme=white-lighten] .show>.btn-outline-light.dropdown-toggle{
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.65));
+    backdrop-filter: var(--theme-blur);
+}
+/* ==================== 自定义 bootstrap btn - 结束 ==================== */
+/* ==================== 自定义 bootstrap alert - 开始 ==================== */
+body[inis-theme=white-lighten] .alert-primary{
+    background: unset;
+}
+/* ==================== 自定义 bootstrap btn - 结束 ==================== */
+
+
+
+/* ==================== 自定义 Tinymce 编辑器 - 开始 ==================== */
+body[inis-theme=white-lighten] .tox .tox-mbtn, body[inis-theme=white-lighten] .tox .tox-tbtn svg,
+body[inis-theme=white-lighten] .tox .tox-tbtn{
+    color: rgba(var(--theme-font-color), 1);
+    fill: rgba(var(--theme-font-color), 1);
+}
+body[inis-theme=white-lighten] .tox .tox-pop__dialog{
+    background: rgba(var(--theme-color), var(--theme-opacity)) !important;
+    backdrop-filter: var(--theme-blur);
+    -webkit-backdrop-filter: var(--theme-blur);
+    border: unset;
+    box-shadow: 0px 5px 40px 0px rgb(17 58 93 / 10%);
+    -webkit-box-shadow: 0px 5px 40px 0px rgb(17 58 93 / 10%);
+}
+body[inis-theme=white-lighten] .tox .tox-edit-area__iframe, body[inis-theme=white-lighten] .tox .tox-menubar,
+body[inis-theme=white-lighten] .tox:not(.tox-tinymce-inline) .tox-editor-header, body[inis-theme=white-lighten] .tox .tox-toolbar-overlord,
+body[inis-theme=white-lighten] .tox .tox-toolbar, body[inis-theme=white-lighten] .tox .tox-toolbar__overflow, body[inis-theme=white-lighten] .tox .tox-toolbar__primary{
+    background: unset;
+}
+body[inis-theme=white-lighten] .tox .tox-tbtn--bespoke{
+    background: unset;
+}
+body[inis-theme=white-lighten] .tox .tox-tbtn:hover{
+    background: unset;
+}
+body[inis-theme=white-lighten] .tox-tinymce{
+    border: unset;
+}
+body[inis-theme=white-lighten] .tox .tox-menu{
+    background: rgba(var(--theme-color), var(--theme-opacity)) !important;
+    backdrop-filter: var(--theme-blur);
+    -webkit-backdrop-filter: var(--theme-blur);
+    border: unset;
+    box-shadow: 0px 5px 40px 0px rgb(17 58 93 / 10%);
+    -webkit-box-shadow: 0px 5px 40px 0px rgb(17 58 93 / 10%);
+}
+body[inis-theme=white-lighten] .tox .tox-collection--list .tox-collection__item--active{
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8)) !important;
+    border-color: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8)) !important;
+}
+body[inis-theme=white-lighten] .tox .tox-mbtn--active, body[inis-theme=white-lighten] .tox .tox-mbtn:hover:not(:disabled):not(.tox-mbtn--active){
+    background: rgba(var(--theme-color), var(--theme-opacity)) !important;
+    margin-bottom: 2px;
+    color: var(--theme-font-color);
+    font-weight: bolder;
+}
+body[inis-theme=white-lighten] .tox .tox-tbtn--enabled, body[inis-theme=white-lighten] .tox .tox-tbtn--enabled:hover{
+    background: unset;
+    border-radius: unset;
+    border-bottom: 3px solid rgba(var(--theme-color), var(--theme-opacity));
+}
+body[inis-theme=white-lighten] .tox .tox-menu.tox-collection.tox-collection--list{
+    margin-top: 4px;
+}
+body[inis-theme=white-lighten] .tox .tox-dialog{
+    max-width: 70%;
+    background-color: unset;
+}
+body[inis-theme=white-lighten] .tox .tox-dialog__header, body[inis-theme=white-lighten] .tox .tox-dialog__footer,
+body[inis-theme=white-lighten] .tox .tox-dropzone, body[inis-theme=white-lighten] .tox .tox-dialog__body-nav-item:focus{
+    background-color: unset;
+}
+body[inis-theme=white-lighten] .tox .tox-dialog__table tbody tr{
+    border-bottom: unset;
+}
+body[inis-theme=white-lighten] .tox .tox-dialog-wrap__backdrop{
+    background-color: rgb(0 0 0 / 22%);
+    filter: blur(10px);
+    z-index: 1;
+    backdrop-filter: var(--theme-blur);
+    -webkit-backdrop-filter: var(--theme-blur);
+}
+body[inis-theme=white-lighten] .tox input {
+    border: unset;
+    background: unset;
+    border-bottom: 1px solid #ccc!important;
+    border-radius: 0;
+    padding-left: 0!important;
+}
+body[inis-theme=white-lighten] .tox input:focus{
+    cursor: pointer;
+    background: unset;
+    border-bottom: 2px solid #ccc!important;
+    transition: all .4s ease;
+    -moz-transition: all .4s ease;
+    -webkit-transition: all .4s ease;
+    -o-transition: all .4s ease;
+    box-shadow: unset;
+}
+body[inis-theme=white-lighten] .tox .tox-textarea{
+    height: 100%;
+    border: unset;
+    background: unset;
+    border-bottom: 1px solid #ccc!important;
+    border-radius: 0;
+    padding-left: 0!important;
+}
+body[inis-theme=white-lighten] .tox-textarea-wrap{height: 100% !important}
+body[inis-theme=white-lighten] .tox .tox-textarea:focus{
+    cursor: pointer;
+    background: unset;
+    border-bottom: 2px solid #ccc!important;
+    transition: all .4s ease;
+    -moz-transition: all .4s ease;
+    -webkit-transition: all .4s ease;
+    -o-transition: all .4s ease;
+    box-shadow: unset;
+    border: unset;
+    border-radius: unset;
+}
+body[inis-theme=white-lighten] .tox .tox-listboxfield .tox-listbox--select{
+    border: unset;
+    background: unset;
+    border-radius: unset;
+    box-shadow: unset;
+    border-bottom: 1px solid #ccc!important;
+}
+body[inis-theme=white-lighten] .tox .tox-listboxfield .tox-listbox--select:focus{
+    border-bottom: 2px solid #ccc!important;
+}
+body[inis-theme=white-lighten] .tox .tox-dialog__body-content, body[inis-theme=white-lighten] .tox .tox-textarea{
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,0,0,.2) transparent;
+}
+body[inis-theme=white-lighten] .tox .tox-dialog__body-content::-webkit-scrollbar, body[inis-theme=white-lighten] .tox .tox-textarea::-webkit-scrollbar{
+    width:4px;height:10px;
+    background-color:rgba(0,0,0,0);
+}
+body[inis-theme=white-lighten] .tox .tox-dialog__body-content::-webkit-scrollbar-thumb, body[inis-theme=white-lighten] .tox .tox-textarea::-webkit-scrollbar{
+    border-radius:6px;
+    background-color:rgba(0,0,0,.2);
+    transition:all .4s ease;
+    -moz-transition:all .4s ease;
+    -webkit-transition:all .4s ease;
+    -o-transition:all .4s ease
+}
+body[inis-theme=white-lighten] .tox .tox-dialog__body-content::-webkit-scrollbar-track, body[inis-theme=white-lighten] .tox .tox-textarea::-webkit-scrollbar{
+    background-color:rgba(0,0,0,.1)
+}
+.tox .tox-dialog--width-lg {
+    max-width: 1200px !important;
+}
+body[inis-theme=white-lighten] .tox .tox-collection--list .tox-collection__item--enabled{
+    background: unset;
+}
+/* ==================== 自定义 Tinymce 编辑器 - 结束 ==================== */
+
+/* ==================== 自定义 Vditor 编辑器 - 开始 ==================== */
+body[inis-theme=white-lighten] .vditor{
+    border: unset;
+}
+body[inis-theme=white-lighten] .vditor-toolbar{
+    background-color: unset;
+    border-bottom: unset;
+    box-shadow: 0 2px 2px -2px rgba(34,47,62,.1), 0 8px 8px -4px rgba(34,47,62,.07);
+    padding-bottom: 10px;
+}
+body[inis-theme=white-lighten] .vditor-ir pre.vditor-reset, body[inis-theme=white-lighten] .vditor-wysiwyg pre.vditor-reset{
+    background-color: unset;
+}
+body[inis-theme=white-lighten] .vditor-reset{
+    padding: unset !important;
+}
+body[inis-theme=white-lighten] .vditor-hint, body[inis-theme=white-lighten] .vditor-panel{
+    background: rgba(var(--theme-color), var(--theme-opacity)) !important;
+    backdrop-filter: var(--theme-blur);
+    -webkit-backdrop-filter: var(--theme-blur);
+    border: unset;
+    box-shadow: 0px 5px 40px 0px rgb(17 58 93 / 10%);
+    -webkit-box-shadow: 0px 5px 40px 0px rgb(17 58 93 / 10%);
+}
+body[inis-theme=white-lighten] .vditor-panel--arrow:before{
+    border-bottom-color: rgba(var(--theme-color), var(--theme-opacity)) !important;
+    backdrop-filter: var(--theme-blur);
+    -webkit-backdrop-filter: var(--theme-blur);
+}
+body[inis-theme=white-lighten] .vditor-hint--current, body[inis-theme=white-lighten] .vditor-hint button:not(.vditor-menu--disabled):hover{
+    background: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8)) !important;
+    border-color: rgba(var(--theme-color), calc(var(--theme-opacity) * 0.8)) !important;
+}
+body[inis-theme=white-lighten] .vditor-reset table tr, body[inis-theme=white-lighten] .vditor-reset table tbody tr:nth-child(2n){
+    background-color: unset;
+}
+body[inis-theme=white-lighten] .hljs{
+    background: rgba(var(--vice-color), 0.7) !important;
+    backdrop-filter: var(--theme-blur);
+    -webkit-backdrop-filter: var(--theme-blur);
+}
+body[inis-theme=white-lighten] .vditor-input, body[inis-theme=white-lighten] .vditor-sv, body[inis-theme=white-lighten] .vditor-preview,
+body[inis-theme=white-lighten] .vditor-preview__action, body[inis-theme=white-lighten] .vditor-preview__action button.vditor-preview__action--current,
+body[inis-theme=white-lighten] .vditor-preview__action button:hover, body[inis-theme=white-lighten] .vditor-preview__action button{
+    background-color: unset;
+}
+body[inis-theme=white-lighten] .vditor-input::placeholder {
+    color: rgb(var(--theme-font-color));
+}
+body[inis-theme=white-lighten] .vditor-resize > div{
+    background-color: #f6f8fa38;
+}
+/* ==================== 自定义 Vditor 编辑器 - 结束 ==================== */
