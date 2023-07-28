@@ -23,9 +23,10 @@ func Route(Gin *gin.Engine) {
 
 	// 允许动态挂载的路由
 	allow := map[string]controller.ApiInterface{
-		"test":          &controller.Test{},
-		"device":        &controller.Device{},
-		"theme-version": &controller.ThemeVersion{},
+		"test":           &controller.Test{},
+		"device":         &controller.Device{},
+		"theme-version":  &controller.ThemeVersion{},
+		"system-version": &controller.SystemVersion{},
 	}
 
 	// 动态配置路由

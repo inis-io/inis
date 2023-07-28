@@ -37,6 +37,7 @@ func Route(Gin *gin.Engine) {
 		"level":         &controller.Level{},
 		"banner":        &controller.Banner{},
 		"config":        &controller.Config{},
+		"upgrade":       &controller.Upgrade{},
 		"article":       &controller.Article{},
 		"comment":       &controller.Comment{},
 		"placard":       &controller.Placard{},

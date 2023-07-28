@@ -1,40 +1,13 @@
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="renderer" content="webkit">
-    <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1">
-    <!--让IE使用最新的渲染模式，支持CSS3-->
-    <meta http-equiv="X-UA-Compatible" content="IE-edge,chrome=1">
-
-    <title>Title {{.title}}</title>
-    <script>
-        globalThis.inis = JSON.parse('{{.INIS}}')
-    </script>
-    <!-- favicon.ico -->
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <script src="https://api.inis.cn/admin/utils/helper.js"></script>
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-</head>
-<body>
-
-<div id="app">
-    <h1>{{.title}} 1</h1>
-
-    <script type="module">
-        const text = 'VtlyGpWMdTjVHLNVGpfao0qPun+rRIwJGn2PWWkKhOSjGMgYKrn/5Dgzj2lykV/z'
-        const key  = CryptoJS.enc.Utf8.parse('aed326757678edd7')
-        const iv   = CryptoJS.enc.Utf8.parse('7f12ff8efb4aee3e')
-        // 解密
-        const decrypted = CryptoJS.AES.decrypt(text, key, {
-            iv: iv,
-            mode: CryptoJS.mode.CBC,
-            padding: CryptoJS.pad.Pkcs7,
-        })
-        console.log(JSON.parse(decrypted.toString(CryptoJS.enc.Utf8)))
-    </script>
-</div>
-</body>
-</html>
+<!doctype html><html lang="zh"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover"><title>inis pro</title><link rel="icon" type="image/svg+xml" href="/favicon.ico"><script async>try {
+            // inis配置
+            globalThis.inis = JSON.parse('{{.INIS}}')
+        } catch(e) {
+            // 加载 /config.js 文件
+            !function(url){
+                var item    = document.createElement('script');
+                item.src    = url;
+                item.async  = !0;
+                item.onload = function(){this.remove()};
+                document.head.appendChild(item)
+            }('/config.js')
+        }</script><style>.font-13{font-size:13px}.font-18{font-size:18px}.fw-bolder{font-weight:bolder}#loading-box{position:absolute;top:0;left:0;right:0}#loading-box .loading-word{font-family:'楷体','Hiragino Sans GB',sans-serif}#loading-box .loading-left-bg,#loading-box .loading-right-bg{position:fixed;z-index:999998;width:50%;height:100%;background-color:rgb(81 81 81 / 80%);transition:all .7s cubic-bezier(.42,0,0,1.01);backdrop-filter:blur(10px)}#loading-box .loading-right-bg{right:0}#loading-box>.spinner-box{position:fixed;z-index:999999;display:flex;justify-content:center;align-items:center;width:100%;height:100vh}#loading-box .spinner-box .loading-word{position:absolute;color:#fff;font-size:.95rem;transform:translateY(64px);text-align:center}p.loading-title{font-size:1.25rem;margin:20px 10px 4px 10px}div.loaded div.loading-left-bg{transform:translate(-100%,0)}div.loaded div.loading-right-bg{transform:translate(100%,0)}div.loaded div.spinner-box{display:none!important}.loader{position:absolute;top:calc(50% - 32px);left:calc(50% - 32px);width:64px;height:64px;border-radius:50%;perspective:800px;transition:all .7s cubic-bezier(.42,0,0,1.01)}.loader .item{position:absolute;box-sizing:border-box;width:100%;height:100%;border-radius:50%}.loader .item:first-child{left:0;top:0;animation:rotate-one 1s linear infinite;border-bottom:3px solid #efeffa}.loader .item:nth-child(2){right:0;top:0;animation:rotate-two 1s linear infinite;border-right:3px solid #efeffa}.loader .item:nth-child(3){right:0;bottom:0;animation:rotate-three 1s linear infinite;border-top:3px solid #efeffa}@keyframes rotate-one{0%{transform:rotateX(35deg) rotateY(-45deg) rotateZ(0)}100%{transform:rotateX(35deg) rotateY(-45deg) rotateZ(360deg)}}@keyframes rotate-two{0%{transform:rotateX(50deg) rotateY(10deg) rotateZ(0)}100%{transform:rotateX(50deg) rotateY(10deg) rotateZ(360deg)}}@keyframes rotate-three{0%{transform:rotateX(35deg) rotateY(55deg) rotateZ(0)}100%{transform:rotateX(35deg) rotateY(55deg) rotateZ(360deg)}}</style><script type="module" crossorigin src="/static/js/1690460619.index.js"></script><link rel="stylesheet" href="/static/css/1690460619.index.css"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="loader"><div class="item"></div><div class="item"></div><div class="item"></div></div><div class="loading-word"><p class="loading-title font-18 fw-bolder">兔子の主页</p><span class="font-13" style="color:#eef2f7">字体及文件加载可能需要一定时间</span></div></div></div><div id="app"></div></body></html>

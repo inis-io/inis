@@ -343,6 +343,9 @@ func createAuthRules() (result []AuthRules) {
 			"POST":   {"save", "create"},
 			"DELETE": {"remove", "delete", "clear"},
 		},
+		"upgrade": {
+			"POST":   {"path=theme&name=主题升级","path=system&name=系统升级"},
+		},
 	}
 
 	// 接口名称
@@ -362,6 +365,7 @@ func createAuthRules() (result []AuthRules) {
 		"comment":       "【评论 API】",
 		"placard":       "【公告 API】",
 		"config":        "【配置 API】",
+		"upgrade":       "【升级 API】",
 		"toml":          "【服务配置 API】",
 		"ip-black":	     "【IP黑名单 API】",
 		"qps-warn":   	 "【QPS预警 API】",
@@ -441,6 +445,8 @@ func createAuthRules() (result []AuthRules) {
 		{ Method: "GET", Route: "/inis/device/user", Name : "【社区 API】绑定的用户信息", Type : "common" },
 		{ Method: "GET", Route: "/inis/theme-version/next", Name : "【社区 API】获取主题下个版本", Type : "common" },
 		{ Method: "GET", Route: "/inis/theme-version/download", Name : "【社区 API】获取主题下载地址", Type : "default" },
+		{ Method: "GET", Route: "/inis/system-version/next", Name : "【社区 API】获取系统下个版本", Type : "common" },
+		{ Method: "GET", Route: "/inis/system-version/download", Name : "【社区 API】获取系统下载地址", Type : "default" },
 	}
 
 	return append(result, inis...)

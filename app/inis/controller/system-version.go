@@ -8,13 +8,13 @@ import (
 	"strings"
 )
 
-type ThemeVersion struct {
+type SystemVersion struct {
 	// 继承
 	base
 }
 
 // IGET - GET请求本体
-func (this *ThemeVersion) IGET(ctx *gin.Context) {
+func (this *SystemVersion) IGET(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
@@ -31,14 +31,12 @@ func (this *ThemeVersion) IGET(ctx *gin.Context) {
 }
 
 // IPOST - POST请求本体
-func (this *ThemeVersion) IPOST(ctx *gin.Context) {
+func (this *SystemVersion) IPOST(ctx *gin.Context) {
 
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
-	allow := map[string]any{
-		"upgrade":  this.upgrade,
-	}
+	allow := map[string]any{}
 	err := this.call(allow, method, ctx)
 
 	if err != nil {
@@ -48,7 +46,7 @@ func (this *ThemeVersion) IPOST(ctx *gin.Context) {
 }
 
 // IPUT - PUT请求本体
-func (this *ThemeVersion) IPUT(ctx *gin.Context) {
+func (this *SystemVersion) IPUT(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
@@ -62,7 +60,7 @@ func (this *ThemeVersion) IPUT(ctx *gin.Context) {
 }
 
 // IDEL - DELETE请求本体
-func (this *ThemeVersion) IDEL(ctx *gin.Context) {
+func (this *SystemVersion) IDEL(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
@@ -76,25 +74,18 @@ func (this *ThemeVersion) IDEL(ctx *gin.Context) {
 }
 
 // INDEX - GET请求本体
-func (this *ThemeVersion) INDEX(ctx *gin.Context) {
+func (this *SystemVersion) INDEX(ctx *gin.Context) {
 	this.json(ctx, nil, facade.Lang(ctx, "好的！"), 200)
 }
 
 // next - 获取下个版本
-func (this *ThemeVersion) next(ctx *gin.Context) {
+func (this *SystemVersion) next(ctx *gin.Context) {
 
 	// 请求参数
-	params := this.params(ctx, map[string]any{
-		"libs": facade.Version,
-	})
-
-	if utils.Is.Empty(params["theme_id"]) && utils.Is.Empty(params["theme_key"]) {
-		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "theme_id 或 theme_key"), 400)
-		return
-	}
+	params := this.params(ctx)
 
 	item := utils.Curl(utils.CurlRequest{
-		Url:    facade.Uri + "/sn/theme-version/next",
+		Url:    facade.Uri + "/sn/system-version/next",
 		Method: "GET",
 		Headers: facade.Comm.Signature(params),
 		Query:   params,
@@ -114,7 +105,7 @@ func (this *ThemeVersion) next(ctx *gin.Context) {
 }
 
 // download - 获取下载地址
-func (this *ThemeVersion) download(ctx *gin.Context) {
+func (this *SystemVersion) download(ctx *gin.Context) {
 
 	// 请求参数
 	params := this.params(ctx)
@@ -140,7 +131,7 @@ func (this *ThemeVersion) download(ctx *gin.Context) {
 	}
 
 	item := utils.Curl(utils.CurlRequest{
-		Url:    facade.Uri + "/sn/theme-version/download",
+		Url:    facade.Uri + "/sn/system-version/download",
 		Method: "GET",
 		Headers: facade.Comm.Signature(body),
 		Body:   body,
@@ -157,9 +148,4 @@ func (this *ThemeVersion) download(ctx *gin.Context) {
 	}
 
 	this.json(ctx, item.Json["data"], facade.Lang(ctx, "好的！"), 200)
-}
-
-// upgrade - 升级主题
-func (this *ThemeVersion) upgrade(ctx *gin.Context) {
-
 }

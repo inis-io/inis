@@ -92,11 +92,13 @@ func (this *Comm) INDEX(ctx *gin.Context) {
 func (this *Comm) login(ctx *gin.Context) {
 
 	// 表数据结构体
-	table := model.Users{}
+	table   := model.Users{}
 	// 请求参数
-	params := this.params(ctx, map[string]any{
+	params  := this.params(ctx, map[string]any{
 		"source": "default",
 	})
+	// 请求头信息
+	headers := this.headers(ctx)
 
 	if utils.Is.Empty(params["account"]) {
 		this.json(ctx, nil, facade.Lang(ctx, "请提交帐号（或邮箱和手机号）！"), 400)
@@ -110,22 +112,50 @@ func (this *Comm) login(ctx *gin.Context) {
 
 	// 正则表达式，匹配通过空格分割的两个16位任意字符 `^(\w{16}) (\w{16})$`
 	reg := regexp.MustCompile(`^([\w+]{16})\D+([\w+]{16})$`)
-	match := reg.FindStringSubmatch(ctx.GetHeader("i-cipher"))
+	match := reg.FindStringSubmatch(cast.ToString(headers["X-Gorgon"]))
 
 	// 密文解密
 	if match != nil {
 
 		cipher := utils.AES(match[1], match[2])
 
-		deAccount := cipher.Decrypt([]byte(cast.ToString(params["account"])))
-		dePassword := cipher.Decrypt(params["password"])
-		if deAccount.Error != nil || dePassword.Error != nil {
-			this.json(ctx, nil, facade.Lang(ctx, "帐号或密码解密失败！"), 400)
+		// 只要有一个为空，就不是我们要的数据
+		if utils.Is.Empty(headers["X-Khronos"]) || utils.Is.Empty(headers["X-Argus"]) {
+			this.json(ctx, nil, facade.Lang(ctx, "账号或密码错误！"), 400)
 			return
 		}
 
-		params["account"] = deAccount.Text
-		params["password"] = dePassword.Text
+		decode := cipher.Decrypt([]byte(cast.ToString(headers["X-Argus"])))
+		if decode.Error != nil {
+			this.json(ctx, nil, facade.Lang(ctx, "账号或密码错误！"), 400)
+			return
+		}
+
+		// 解密后的数据
+		text := cast.ToStringMap(utils.Json.Decode(decode.Text))
+
+		if utils.Is.Empty(text["account"]) || utils.Is.Empty(text["password"]) || utils.Is.Empty(text["unix"]) {
+			this.json(ctx, nil, facade.Lang(ctx, "账号或密码错误！"), 400)
+			return
+		}
+
+		// 验证时间戳
+		if cast.ToString(text["unix"]) != cast.ToString(headers["X-Khronos"]) {
+			this.json(ctx, nil, facade.Lang(ctx, "账号或密码错误！"), 400)
+			return
+		}
+
+		// 1、当前时间戳 - 提交的时间戳 > 60秒 = 过期
+		// 2、如果结果为负数，说明提交的时间戳大于当前时间戳，也是过期
+		diff := time.Now().Unix() - cast.ToInt64(text["unix"])
+		if diff > 60 || diff < 0 {
+			this.json(ctx, nil, facade.Lang(ctx, "账号或密码错误！"), 400)
+			return
+		}
+
+		// 赋值
+		params["account"]  = text["account"]
+		params["password"] = text["password"]
 	}
 
 	// 查询用户是否存在

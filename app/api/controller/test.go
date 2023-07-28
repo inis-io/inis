@@ -91,18 +91,18 @@ func (this *Test) IDEL(ctx *gin.Context) {
 func (this *Test) INDEX(ctx *gin.Context) {
 
 	// 请求参数
-	params := this.params(ctx)
+	// params := this.params(ctx)
 
-	// res := gin.H{
-	// 	// "root" : this.meta.root(ctx),
-	// 	// "user" : this.meta.user(ctx),
-	// 	// "route": this.meta.route(ctx),
-	// 	// "rules": this.meta.rules(ctx),
-	// 	// "json" : utils.Json.Encode(params["json"]),
-	// 	// "rsa": RSA.Generate(2048),
-	// }
+	result := gin.H{
+		// "root" : this.meta.root(ctx),
+		// "user" : this.meta.user(ctx),
+		// "route": this.meta.route(ctx),
+		// "rules": this.meta.rules(ctx),
+		// "json" : utils.Json.Encode(params["json"]),
+		// "rsa": RSA.Generate(2048),
+	}
 
-	this.json(ctx, params, facade.Lang(ctx, "好的！"), 200)
+	this.json(ctx, result, facade.Lang(ctx, "好的！"), 200)
 }
 
 // INDEX - GET请求本体

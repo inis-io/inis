@@ -65,7 +65,7 @@ func (this *Users) AfterFind(tx *gorm.DB) (err error) {
 			avatars := utils.File(utils.FileRequest{
 				Ext:    ".png, .jpg, .jpeg, .gif",
 				Dir:    "public/assets/rand/avatar/",
-				Domain: fmt.Sprintf("%v/", facade.Cache.Get("domain")),
+				Domain: fmt.Sprintf("%v/", facade.Var.Get("domain")),
 				Prefix: "public/",
 			}).List()
 

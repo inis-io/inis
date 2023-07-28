@@ -65,5 +65,7 @@
     "%s 和 %s 必须有一个不能为空！": "%s and %s must not be empty!",
     "提交的邮箱与注册时的邮箱不一致！": "The submitted email is inconsistent with the registered email!",
     "提交的手机号与注册时的手机号不一致！": "The submitted mobile is inconsistent with the registered mobile!",
-    "安装引导未完成，禁止访问！": "Installation guide is not completed, access is prohibited!"
+    "安装引导未完成，禁止访问！": "Installation guide is not completed, access is prohibited!",
+    "程序已完成安装，禁止访问！": "The program has been installed, access is prohibited!",
+    "这是一个奇迹！": "This is a miracle!"
 }

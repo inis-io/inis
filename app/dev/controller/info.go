@@ -97,6 +97,8 @@ func (this *Info) INDEX(ctx *gin.Context) {
 func (this *Info) system(ctx *gin.Context) {
 
 	info := map[string]any{
+		"path"  : utils.Get.Pwd(),
+		"pid"   : utils.Get.Pid(),
 		"port"  : map[string]any{
 			"run" : this.get(ctx, "port"),
 			"real": facade.AppToml.Get("app.port"),

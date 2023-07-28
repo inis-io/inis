@@ -9,13 +9,13 @@ import (
 )
 
 type Banner struct {
-	Id      int    `gorm:"type:int(32); comment:主键;" json:"id"`
-	Title   string `gorm:"size:32; comment:标题; default:Null;" json:"title"`
-	Content string `gorm:"comment:内容; default:Null;" json:"content"`
-	Url     string `gorm:"size:256; comment:链接; default:Null;" json:"url"`
-	Image   string `gorm:"size:256; comment:图片; default:Null;" json:"image"`
-	Target  string `gorm:"size:32; comment:打开方式; default:'_blank';" json:"target"`
-	Remark  string `gorm:"comment:备注; default:Null;" json:"remark"`
+	Id         int    				 `gorm:"type:int(32); comment:主键;" json:"id"`
+	Title      string 				 `gorm:"size:32; comment:标题; default:Null;" json:"title"`
+	Content    string 				 `gorm:"comment:内容; default:Null;" json:"content"`
+	Url        string 				 `gorm:"size:256; comment:链接; default:Null;" json:"url"`
+	Image      string 				 `gorm:"size:256; comment:图片; default:Null;" json:"image"`
+	Target     string 				 `gorm:"size:32; comment:打开方式; default:'_blank';" json:"target"`
+	Remark     string 				 `gorm:"comment:备注; default:Null;" json:"remark"`
 	// 以下为公共字段
 	Json       any                   `gorm:"type:longtext; comment:用于存储JSON数据;" json:"json"`
 	Text       any                   `gorm:"type:longtext; comment:用于存储文本数据;" json:"text"`
