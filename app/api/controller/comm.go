@@ -703,16 +703,17 @@ func (this *Comm) checkToken(ctx *gin.Context) {
 			"uid":  table.Id,
 			"hash": utils.Hash.Sum32(table.Password),
 		})
+		token = jwt.Text
 		valid = cast.ToInt64(utils.Calc(facade.AppToml.Get("jwt.expire", "7200")))
 		// 往客户端写入cookie - 存储登录token
-		setToken(ctx, jwt.Text)
+		setToken(ctx, token)
 	}
 
 	delete(item, "password")
 
 	this.json(ctx, gin.H{
 		"user":       item,
-		"token":      jwt.Text,
+		"token":      token,
 		"valid_time": valid,
 	}, facade.Lang(ctx, facade.Lang(ctx, "合法的token！")), 200)
 }

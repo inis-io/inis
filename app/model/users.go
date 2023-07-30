@@ -220,7 +220,7 @@ func (this *Users) Rules(uid any) (slice []any) {
 func (this *Users) getAuthAttr() (result map[string]any) {
 
 	// 查询自己拥有的权限
-	group := facade.DB.Model(&AuthGroup{}).Like("uids", "%|"+cast.ToString(this.Id)+"|%").Column("id", "rules")
+	group := facade.DB.Model(&AuthGroup{}).Like("uids", "%|"+cast.ToString(this.Id)+"|%").Column("id", "rules", "name", "root")
 
 	var ids []int
 	var rules []string
@@ -232,12 +232,11 @@ func (this *Users) getAuthAttr() (result map[string]any) {
 		rules = append(rules, strings.Split(cast.ToString(item["rules"]), ",")...)
 	}
 
-	result = map[string]any{
-		"all": utils.InArray("all", rules),
+	return map[string]any{
+		"all"  : utils.InArray("all", rules),
 		"group": ids,
+		"list" : group,
 	}
-
-	return
 }
 
 // getLevelAttr - 解析用户等级

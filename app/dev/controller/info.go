@@ -2,10 +2,14 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"inis/app/facade"
+	"os"
+	"os/exec"
 	"runtime"
 	"strings"
+	"time"
 )
 
 type Info struct {
@@ -118,6 +122,7 @@ func (this *Info) version(ctx *gin.Context) {
 	this.json(ctx, map[string]any{
 		"go": utils.Version.Go(),
 		"inis": facade.Version,
+		"text": "这是一个奇迹！",
 	}, facade.Lang(ctx, "好的！"), 200)
 }
 
@@ -132,4 +137,50 @@ func (this *Info) device(ctx *gin.Context) {
 	}
 
 	this.json(ctx, item.Json["data"], facade.Lang(ctx, "好的！"), 200)
+}
+
+// renew - 更新
+func (this *Info) renew(ctx *gin.Context) {
+
+	path, err := os.Executable()
+	if err != nil {
+		this.json(ctx, nil, err.Error(), 400)
+		return
+	}
+
+	args := os.Args[1:]
+
+	_, err = os.StartProcess(path, append([]string{path}, args...), &os.ProcAttr{
+		Files: []*os.File{os.Stdin, os.Stdout, os.Stderr},
+	})
+	if err != nil {
+		this.json(ctx, nil, err.Error(), 400)
+		return
+	}
+
+	this.json(ctx, nil, facade.Lang(ctx, "好的！"), 200)
+}
+
+// kill 杀死进程
+func (this *Info) kill(ctx *gin.Context) {
+
+	time.Sleep(5 * time.Second)
+
+	// 根据操作系统选择不同的命令
+	var cmd *exec.Cmd
+	// kill -SIGHUP PID
+	// kill -HUP pid
+	cmd = exec.Command("kill", "-SIGHUP", cast.ToString(utils.Get.Pid()))
+	// cmd = exec.Command("kill", "-SIGHUP", cast.ToString(utils.Get.Pid()))
+	// cmd = exec.Command("taskkill", "/F", "/PID", cast.ToString(utils.Get.Pid()))
+	// 守护进程
+	// nohup /www/wwwroot/inis.cn/inis 1>/dev/null 2>&1 &
+
+	// 执行命令
+	err := cmd.Run()
+	if err != nil {
+		this.json(ctx, nil, facade.Lang(ctx, "关闭进程失败：%v", err.Error()), 400)
+		os.Exit(1)
+		return
+	}
 }

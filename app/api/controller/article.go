@@ -277,9 +277,12 @@ func (this *Article) create(ctx *gin.Context) {
 	for key, val := range params {
 		// 防止恶意传入字段
 		if utils.In.Array(key, allow) {
-			if utils.Is.Map(val) {
+			switch utils.Get.Type(val) {
+			case "map":
 				val = utils.Json.Encode(val)
-			} else if utils.Is.Slice(val) {
+			case "2d slice":
+				val = utils.Json.Encode(val)
+			case "slice":
 				val = strings.Join(cast.ToStringSlice(val), ",")
 			}
 			utils.Struct.Set(&table, key, val)
@@ -332,9 +335,12 @@ func (this *Article) update(ctx *gin.Context) {
 	for key, val := range params {
 		// 防止恶意传入字段
 		if utils.In.Array(key, allow) {
-			if utils.Is.Map(val) {
+			switch utils.Get.Type(val) {
+			case "map":
 				val = utils.Json.Encode(val)
-			} else if utils.Is.Slice(val) {
+			case "2d slice":
+				val = utils.Json.Encode(val)
+			case "slice":
 				val = strings.Join(cast.ToStringSlice(val), ",")
 			}
 			async.Set(key, val)

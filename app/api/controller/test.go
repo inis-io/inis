@@ -3,6 +3,10 @@ package controller
 import (
 	"context"
 	"fmt"
+	"github.com/spf13/cast"
+	"github.com/unti-io/go-utils/utils"
+	"reflect"
+
 	// JWT "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-pay/gopay"
@@ -87,20 +91,71 @@ func (this *Test) IDEL(ctx *gin.Context) {
 	}
 }
 
+func checkIsMultiDimensionalArray(data any) bool {
+
+	value := reflect.ValueOf(data)
+	if value.Kind() != reflect.Slice {
+		return false
+	}
+
+	// 遍历所有元素
+	for i := 0; i < value.Len(); i++ {
+		elem := reflect.ValueOf(value.Index(i).Interface())
+		if elem.Kind() == reflect.Map {
+			return true
+		}
+	}
+
+	return false
+}
+
 // INDEX - GET请求本体
 func (this *Test) INDEX(ctx *gin.Context) {
 
 	// 请求参数
-	// params := this.params(ctx)
+	params := this.params(ctx)
 
-	result := gin.H{
-		// "root" : this.meta.root(ctx),
-		// "user" : this.meta.user(ctx),
-		// "route": this.meta.route(ctx),
-		// "rules": this.meta.rules(ctx),
-		// "json" : utils.Json.Encode(params["json"]),
-		// "rsa": RSA.Generate(2048),
+	result := make(map[string]any)
+
+	// 重构这里 =============================
+	for key, val := range params {
+		switch utils.Get.Type(val) {
+		case "map":
+			result[key] = utils.Json.Encode(val)
+		case "slice":
+			result[key] = strings.Join(cast.ToStringSlice(val), ",")
+		case "2d slice":
+			result[key] = utils.Json.Encode(val)
+		default:
+			result[key] = val
+		}
 	}
+
+	// for _, val := range params {
+	// 	switch utils.Get.Type(val) {
+	// 	case "map":
+	// 		val = utils.Json.Encode(val)
+	// 	case "slice":
+	// 		val = strings.Join(cast.ToStringSlice(val), ",")
+	// 	case "2d slice":
+	// 		val = utils.Json.Encode(val)
+	// 	}
+	// }
+
+	// if utils.Is.Map(val) {
+	// 	val = utils.Json.Encode(val)
+	// } else if utils.Is.Slice(val) {
+	// 	val = strings.Join(cast.ToStringSlice(val), ",")
+	// }
+
+	// result := gin.H{
+	// 	// "root" : this.meta.root(ctx),
+	// 	// "user" : this.meta.user(ctx),
+	// 	// "route": this.meta.route(ctx),
+	// 	// "rules": this.meta.rules(ctx),
+	// 	// "json" : utils.Json.Encode(params["json"]),
+	// 	// "rsa": RSA.Generate(2048),
+	// }
 
 	this.json(ctx, result, facade.Lang(ctx, "好的！"), 200)
 }

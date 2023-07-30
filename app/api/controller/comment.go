@@ -23,12 +23,12 @@ func (this *Comment) IGET(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
-	// show := cast.ToBool(cast.ToStringMap(this.config()["comment"])["show"])
-	//
-	// if !show {
-	// 	this.json(ctx, nil, facade.Lang(ctx, "评论功能已关闭！"), 202)
-	// 	return
-	// }
+	show := cast.ToBool(cast.ToStringMap(this.config()["comment"])["show"])
+
+	if !show {
+		this.json(ctx, nil, facade.Lang(ctx, "评论功能已关闭！"), 202)
+		return
+	}
 
 	allow := map[string]any{
 		"one":    this.one,
@@ -50,12 +50,12 @@ func (this *Comment) IPOST(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
-	// permit := cast.ToBool(cast.ToStringMap(this.config()["comment"])["allow"])
-	//
-	// if !permit {
-	// 	this.json(ctx, nil, facade.Lang(ctx, "评论功能已关闭！"), 202)
-	// 	return
-	// }
+	permit := cast.ToBool(cast.ToStringMap(this.config()["comment"])["allow"])
+
+	if !permit {
+		this.json(ctx, nil, facade.Lang(ctx, "评论功能已关闭！"), 202)
+		return
+	}
 
 	allow := map[string]any{
 		"save":   this.save,
@@ -327,9 +327,12 @@ func (this *Comment) create(ctx *gin.Context) {
 	for key, val := range params {
 		// 防止恶意传入字段
 		if utils.In.Array(key, allow) {
-			if utils.Is.Map(val) {
+			switch utils.Get.Type(val) {
+			case "map":
 				val = utils.Json.Encode(val)
-			} else if utils.Is.Slice(val) {
+			case "2d slice":
+				val = utils.Json.Encode(val)
+			case "slice":
 				val = strings.Join(cast.ToStringSlice(val), ",")
 			}
 			utils.Struct.Set(&table, key, val)
@@ -393,9 +396,12 @@ func (this *Comment) update(ctx *gin.Context) {
 	for key, val := range params {
 		// 防止恶意传入字段
 		if utils.In.Array(key, allow) {
-			if utils.Is.Map(val) {
+			switch utils.Get.Type(val) {
+			case "map":
 				val = utils.Json.Encode(val)
-			} else if utils.Is.Slice(val) {
+			case "2d slice":
+				val = utils.Json.Encode(val)
+			case "slice":
 				val = strings.Join(cast.ToStringSlice(val), ",")
 			}
 			async.Set(key, val)
