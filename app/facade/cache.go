@@ -103,40 +103,17 @@ func initCacheToml() {
 // 初始化缓存
 func initCache() {
 
-	host := cast.ToString(CacheToml.Get("redis.host"))
-	port := cast.ToString(CacheToml.Get("redis.port"))
-
-	redisPrefix := cast.ToString(CacheToml.Get("redis.prefix"))
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     host + ":" + port,
-		DB:       cast.ToInt(CacheToml.Get("redis.database")),
-		Password: cast.ToString(CacheToml.Get("redis.password")),
-	})
-	redisExpire := time.Duration(cast.ToInt(utils.Calc(CacheToml.Get("redis.expire", 7200)))) * time.Second
-
 	// Redis 缓存
-	Redis = &RedisCacheStruct{
-		Client: redisClient,
-		Prefix: redisPrefix,
-		Expire: redisExpire,
-	}
-
-	// 文件缓存
-	FileClient, _ := utils.NewFileCache(
-		CacheToml.Get("file.path"),
-		utils.Calc(CacheToml.Get("file.expire", 7200)),
-		CacheToml.Get("file.prefix"),
-	)
+	Redis = &RedisCacheStruct{}
+	Redis.init()
 
 	// File 缓存
-	FileCache = &FileCacheStruct{
-		Client: FileClient,
-	}
+	FileCache = &FileCacheStruct{}
+	FileCache.init()
 
 	// BigCache 缓存
-	BigCache = &BigCacheStruct{
-		Client: NewBigCache(utils.Calc(CacheToml.Get("file.expire", 7200))),
-	}
+	BigCache = &BigCacheStruct{}
+	BigCache.init()
 
 	switch cast.ToString(CacheToml.Get("default")) {
 	case CacheModeRedis:
@@ -222,6 +199,21 @@ type RedisCacheStruct struct {
 	Client *redis.Client
 	Prefix string
 	Expire time.Duration
+}
+
+// init - 初始化 Redis 缓存
+func (this *RedisCacheStruct) init() {
+
+	host := cast.ToString(CacheToml.Get("redis.host"))
+	port := cast.ToString(CacheToml.Get("redis.port"))
+
+	this.Prefix = cast.ToString(CacheToml.Get("redis.prefix"))
+	this.Client = redis.NewClient(&redis.Options{
+		Addr:     host + ":" + port,
+		DB:       cast.ToInt(CacheToml.Get("redis.database")),
+		Password: cast.ToString(CacheToml.Get("redis.password")),
+	})
+	this.Expire = time.Duration(cast.ToInt(utils.Calc(CacheToml.Get("redis.expire", 7200)))) * time.Second
 }
 
 func (this *RedisCacheStruct) Has(key any) (ok bool) {
@@ -373,6 +365,16 @@ type FileCacheStruct struct {
 	Client *utils.FileCacheClient
 }
 
+// init 初始化 文件缓存
+func (this *FileCacheStruct) init() {
+
+	this.Client, _ = utils.NewFileCache(
+		CacheToml.Get("file.path"),
+		utils.Calc(CacheToml.Get("file.expire", 7200)),
+		CacheToml.Get("file.prefix"),
+	)
+}
+
 func (this *FileCacheStruct) Has(key any) (ok bool) {
 	return this.Client.Has(key)
 }
@@ -407,6 +409,11 @@ func (this *FileCacheStruct) Clear() (ok bool) {
 
 type BigCacheStruct struct {
 	Client *BigCacheClient
+}
+
+// init 初始化 内存缓存
+func (this *BigCacheStruct) init() {
+	this.Client = NewBigCache(utils.Calc(CacheToml.Get("file.expire", 7200)))
 }
 
 func (this *BigCacheStruct) Has(key any) (ok bool) {

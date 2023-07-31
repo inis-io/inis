@@ -23,13 +23,6 @@ func (this *Comment) IGET(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
-	show := cast.ToBool(cast.ToStringMap(this.config()["comment"])["show"])
-
-	if !show {
-		this.json(ctx, nil, facade.Lang(ctx, "评论功能已关闭！"), 202)
-		return
-	}
-
 	allow := map[string]any{
 		"one":    this.one,
 		"all":    this.all,
@@ -49,13 +42,6 @@ func (this *Comment) IPOST(ctx *gin.Context) {
 
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
-
-	permit := cast.ToBool(cast.ToStringMap(this.config()["comment"])["allow"])
-
-	if !permit {
-		this.json(ctx, nil, facade.Lang(ctx, "评论功能已关闭！"), 202)
-		return
-	}
 
 	allow := map[string]any{
 		"save":   this.save,

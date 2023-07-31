@@ -119,67 +119,19 @@ func initStorageToml() {
 // 初始化缓存
 func initStorage() {
 
-	accessKeyId := cast.ToString(StorageToml.Get("oss.access_key_id"))
-	accessKeySecret := cast.ToString(StorageToml.Get("oss.access_key_secret"))
-	endpoint := cast.ToString(StorageToml.Get("oss.endpoint"))
-
-	ossClient, err := oss.New(endpoint, accessKeyId, accessKeySecret)
-
-	if err != nil {
-		Log.Error(map[string]any{
-			"error":     err,
-			"func_name": utils.Caller().FuncName,
-			"file_name": utils.Caller().FileName,
-			"file_line": utils.Caller().Line,
-		}, "OSS 初始化错误")
-	}
-
-	appId := cast.ToString(StorageToml.Get("cos.app_id"))
-	secretId := cast.ToString(StorageToml.Get("cos.secret_id"))
-	secretKey := cast.ToString(StorageToml.Get("cos.secret_key"))
-	bucket := cast.ToString(StorageToml.Get("cos.bucket"))
-	region := cast.ToString(StorageToml.Get("cos.region"))
-
-	cosUrl, err := url.Parse(fmt.Sprintf("https://%s-%s.cos.%s.myqcloud.com", bucket, appId, region))
-	if err != nil {
-		Log.Error(map[string]any{
-			"error":     err,
-			"func_name": utils.Caller().FuncName,
-			"file_name": utils.Caller().FileName,
-			"file_line": utils.Caller().Line,
-		}, "COS URL 解析错误")
-	}
-
-	cosClient := cos.NewClient(&cos.BaseURL{
-		BucketURL: cosUrl,
-	}, &http.Client{
-		// 设置超时时间
-		Timeout: 100 * time.Second,
-		Transport: &cos.AuthorizationTransport{
-			SecretID:  secretId,
-			SecretKey: secretKey,
-		},
-	})
-
 	// OSS 对象存储
-	OSS = &OSSStruct{
-		Client: ossClient,
-	}
+	OSS = &OSSStruct{}
+	OSS.init()
 
 	// COS 对象存储
-	COS = &COSStruct{
-		Client: cosClient,
-	}
+	COS = &COSStruct{}
+	COS.init()
 	// 初始化COS Bucket
 	COS.Object()
 
 	// KODO 对象存储
-	KODO = &KODOStruct{
-		Client: qbox.NewMac(
-			cast.ToString(StorageToml.Get("kodo.access_key")),
-			cast.ToString(StorageToml.Get("kodo.secret_key")),
-		),
-	}
+	KODO = &KODOStruct{}
+	KODO.init()
 
 	// 本地存储
 	LocalStorage = &LocalStorageStruct{}
@@ -263,6 +215,28 @@ func (this *LocalStorageStruct) Path() string {
 // OSSStruct 阿里云对象存储
 type OSSStruct struct {
 	Client *oss.Client
+}
+
+// init 初始化 阿里云对象存储
+func (this *OSSStruct) init() {
+
+	accessKeyId := cast.ToString(StorageToml.Get("oss.access_key_id"))
+	accessKeySecret := cast.ToString(StorageToml.Get("oss.access_key_secret"))
+	endpoint := cast.ToString(StorageToml.Get("oss.endpoint"))
+
+	client, err := oss.New(endpoint, accessKeyId, accessKeySecret)
+
+	if err != nil {
+		Log.Error(map[string]any{
+			"error":     err.Error(),
+			"func_name": utils.Caller().FuncName,
+			"file_name": utils.Caller().FileName,
+			"file_line": utils.Caller().Line,
+		}, "OSS 初始化错误")
+		return
+	}
+
+	this.Client = client
 }
 
 // Bucket - 获取Bucket（存储桶）
@@ -356,6 +330,38 @@ type COSStruct struct {
 	Client *cos.Client
 }
 
+// init 初始化 腾讯云对象存储
+func (this *COSStruct) init() {
+
+	appId := cast.ToString(StorageToml.Get("cos.app_id"))
+	secretId := cast.ToString(StorageToml.Get("cos.secret_id"))
+	secretKey := cast.ToString(StorageToml.Get("cos.secret_key"))
+	bucket := cast.ToString(StorageToml.Get("cos.bucket"))
+	region := cast.ToString(StorageToml.Get("cos.region"))
+
+	cosUrl, err := url.Parse(fmt.Sprintf("https://%s-%s.cos.%s.myqcloud.com", bucket, appId, region))
+	if err != nil {
+		Log.Error(map[string]any{
+			"error":     err.Error(),
+			"func_name": utils.Caller().FuncName,
+			"file_name": utils.Caller().FileName,
+			"file_line": utils.Caller().Line,
+		}, "COS URL 解析错误")
+		return
+	}
+
+	this.Client = cos.NewClient(&cos.BaseURL{
+		BucketURL: cosUrl,
+	}, &http.Client{
+		// 设置超时时间
+		Timeout: 100 * time.Second,
+		Transport: &cos.AuthorizationTransport{
+			SecretID:  secretId,
+			SecretKey: secretKey,
+		},
+	})
+}
+
 // Object - 获取Object（对象存储）
 func (this *COSStruct) Object() *cos.ObjectService {
 
@@ -441,6 +447,15 @@ func (this *COSStruct) Path() string {
 // KODOStruct 七牛云对象存储
 type KODOStruct struct {
 	Client *qbox.Mac
+}
+
+// init 初始化 七牛云对象存储
+func (this *KODOStruct) init() {
+
+	this.Client = qbox.NewMac(
+		cast.ToString(StorageToml.Get("kodo.access_key")),
+		cast.ToString(StorageToml.Get("kodo.secret_key")),
+	)
 }
 
 // IsExist - 存储空间是否存在

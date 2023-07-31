@@ -110,60 +110,17 @@ func initSMSToml() {
 // 初始化SMS
 func initSMS() {
 
-	port := cast.ToInt(SMSToml.Get("email.port"))
-	host := cast.ToString(SMSToml.Get("email.host"))
-	account := cast.ToString(SMSToml.Get("email.account"))
-	password := cast.ToString(SMSToml.Get("email.password"))
-	GoMail = &GoMailRequest{
-		Client: gomail.NewDialer(host, port, account, password),
-	}
+	// 邮件服务
+	GoMail = &GoMailRequest{}
+	GoMail.init()
 
-	aliyunClient, err := AliYunClient.NewClient(&AliYunClient.Config{
-		// 访问的域名
-		Endpoint: tea.String(cast.ToString(SMSToml.Get("aliyun.endpoint", "dysmsapi.aliyuncs.com"))),
-		// 必填，您的 AccessKey ID
-		AccessKeyId: tea.String(cast.ToString(SMSToml.Get("aliyun.access_key_id"))),
-		// 必填，您的 AccessKey Secret
-		AccessKeySecret: tea.String(cast.ToString(SMSToml.Get("aliyun.access_key_secret"))),
-	})
+	// 阿里云短信服务
+	SMSAliYun = &AliYunSMS{}
+	SMSAliYun.init()
 
-	if err != nil {
-		Log.Error(map[string]any{
-			"error":     err,
-			"func_name": utils.Caller().FuncName,
-			"file_name": utils.Caller().FileName,
-			"file_line": utils.Caller().Line,
-		}, "阿里云短信服务初始化错误")
-	}
-
-	SMSAliYun = &AliYunSMS{
-		Client: aliyunClient,
-	}
-
-	credential := common.NewCredential(
-		cast.ToString(SMSToml.Get("tencent.secret_id")),
-		cast.ToString(SMSToml.Get("tencent.secret_key")),
-	)
-	clientProfile := profile.NewClientProfile()
-	clientProfile.HttpProfile.Endpoint = cast.ToString(SMSToml.Get("tencent.endpoint", "sms.tencentcloudapi.com"))
-	tencentClient, err := TencentCloud.NewClient(
-		credential,
-		cast.ToString(SMSToml.Get("tencent.region", "ap-guangzhou")),
-		clientProfile,
-	)
-
-	if err != nil {
-		Log.Error(map[string]any{
-			"error":     err,
-			"func_name": utils.Caller().FuncName,
-			"file_name": utils.Caller().FileName,
-			"file_line": utils.Caller().Line,
-		}, "腾讯云短信服务初始化错误")
-	}
-
-	SMSTencent = &TencentSMS{
-		Client: tencentClient,
-	}
+	// 腾讯云短信服务
+	SMSTencent = &TencentSMS{}
+	SMSTencent.init()
 
 	switch cast.ToString(SMSToml.Get("drive.default")) {
 	case "email":
@@ -225,6 +182,15 @@ type GoMailRequest struct {
 	Template string
 }
 
+// init 初始化 邮件服务
+func (this *GoMailRequest) init() {
+	port       := cast.ToInt(SMSToml.Get("email.port"))
+	host       := cast.ToString(SMSToml.Get("email.host"))
+	account    := cast.ToString(SMSToml.Get("email.account"))
+	password   := cast.ToString(SMSToml.Get("email.password"))
+	this.Client =  gomail.NewDialer(host, port, account, password)
+}
+
 // VerifyCode - 发送验证码
 func (this *GoMailRequest) VerifyCode(phone any, code ...any) (response *SMSResponse) {
 
@@ -276,6 +242,31 @@ func (this *GoMailRequest) VerifyCode(phone any, code ...any) (response *SMSResp
 // AliYunSMS - 阿里云短信
 type AliYunSMS struct {
 	Client *AliYunClient.Client
+}
+
+// init 初始化 阿里云短信
+func (this *AliYunSMS) init() {
+
+	client, err := AliYunClient.NewClient(&AliYunClient.Config{
+		// 访问的域名
+		Endpoint: tea.String(cast.ToString(SMSToml.Get("aliyun.endpoint", "dysmsapi.aliyuncs.com"))),
+		// 必填，您的 AccessKey ID
+		AccessKeyId: tea.String(cast.ToString(SMSToml.Get("aliyun.access_key_id"))),
+		// 必填，您的 AccessKey Secret
+		AccessKeySecret: tea.String(cast.ToString(SMSToml.Get("aliyun.access_key_secret"))),
+	})
+
+	if err != nil {
+		Log.Error(map[string]any{
+			"error":     err.Error(),
+			"func_name": utils.Caller().FuncName,
+			"file_name": utils.Caller().FileName,
+			"file_line": utils.Caller().Line,
+		}, "阿里云短信服务初始化错误")
+		return
+	}
+
+	this.Client = client
 }
 
 // VerifyCode - 发送验证码
@@ -357,6 +348,34 @@ func (this *AliYunSMS) ApiInfo() (result *AliYunClient.Params) {
 // TencentSMS - 腾讯云短信
 type TencentSMS struct {
 	Client *TencentCloud.Client
+}
+
+// init 初始化 腾讯云短信
+func (this *TencentSMS) init() {
+
+	credential := common.NewCredential(
+		cast.ToString(SMSToml.Get("tencent.secret_id")),
+		cast.ToString(SMSToml.Get("tencent.secret_key")),
+	)
+	clientProfile := profile.NewClientProfile()
+	clientProfile.HttpProfile.Endpoint = cast.ToString(SMSToml.Get("tencent.endpoint", "sms.tencentcloudapi.com"))
+	client, err := TencentCloud.NewClient(
+		credential,
+		cast.ToString(SMSToml.Get("tencent.region", "ap-guangzhou")),
+		clientProfile,
+	)
+
+	if err != nil {
+		Log.Error(map[string]any{
+			"error":     err.Error(),
+			"func_name": utils.Caller().FuncName,
+			"file_name": utils.Caller().FileName,
+			"file_line": utils.Caller().Line,
+		}, "腾讯云短信服务初始化错误")
+		return
+	}
+
+	this.Client = client
 }
 
 // VerifyCode - 发送验证码

@@ -21,16 +21,16 @@ type MySqlStruct struct {
 	Conn *gorm.DB
 }
 
-// InitMySQL - 初始化 MySQL 数据库
-func InitMySQL() {
+// init 初始化 MySQL 数据库
+func (this *MySqlStruct) init() {
 
 	hostname := cast.ToString(DBToml.Get("mysql.hostname", "localhost"))
 	hostport := cast.ToString(DBToml.Get("mysql.hostport", "3306"))
 	username := cast.ToString(DBToml.Get("mysql.username", ""))
 	database := cast.ToString(DBToml.Get("mysql.database", ""))
 	password := cast.ToString(DBToml.Get("mysql.password", ""))
-	charset := cast.ToString(DBToml.Get("mysql.charset", "utf8mb4"))
-	prefix := cast.ToString(DBToml.Get("mysql.prefix", "inis_"))
+	charset  := cast.ToString(DBToml.Get("mysql.charset", "utf8mb4"))
+	prefix   := cast.ToString(DBToml.Get("mysql.prefix", "inis_"))
 
 	conn, err := gorm.Open(mysql.New(mysql.Config{
 		DSN: fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=True&loc=Local", username, password, hostname, hostport, database, charset),
@@ -68,9 +68,7 @@ func InitMySQL() {
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
-	MySQL = &MySqlStruct{
-		Conn: conn,
-	}
+	this.Conn = conn
 }
 
 func (this *MySqlStruct) Drive() *gorm.DB {
