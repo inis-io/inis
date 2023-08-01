@@ -13,14 +13,14 @@ import (
 )
 
 type AuthRules struct {
-	Id     int    `gorm:"type:int(32); comment:主键;" json:"id"`
-	Name   string `gorm:"comment:规则名称;" json:"name"`
-	Method string `gorm:"comment:请求类型; default:'GET';" json:"method"`
-	Route  string `gorm:"comment:路由;" json:"route"`
-	Type   string `gorm:"default:'default'; comment:规则类型;" json:"type"`
-	Hash   string `gorm:"comment:哈希值;" json:"hash"`
-	Cost   int    `gorm:"type:int(32); comment:费用; default:1;" json:"cost"`
-	Remark string `gorm:"comment:备注; default:Null;" json:"remark"`
+	Id         int    				 `gorm:"type:int(32); comment:主键;" json:"id"`
+	Name       string 				 `gorm:"comment:规则名称;" json:"name"`
+	Method     string 				 `gorm:"comment:请求类型; default:'GET';" json:"method"`
+	Route      string 				 `gorm:"comment:路由;" json:"route"`
+	Type       string 				 `gorm:"default:'default'; comment:规则类型;" json:"type"`
+	Hash       string 				 `gorm:"comment:哈希值;" json:"hash"`
+	Cost       int    				 `gorm:"type:int(32); comment:费用; default:1;" json:"cost"`
+	Remark     string 				 `gorm:"comment:备注; default:Null;" json:"remark"`
 	// 以下为公共字段
 	Json       any                   `gorm:"type:longtext; comment:用于存储JSON数据;" json:"json"`
 	Text       any                   `gorm:"type:longtext; comment:用于存储文本数据;" json:"text"`

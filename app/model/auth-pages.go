@@ -13,13 +13,14 @@ import (
 )
 
 type AuthPages struct {
-	Id     int    `gorm:"type:int(32); comment:主键;" json:"id"`
-	Name   string `gorm:"comment:名称;" json:"name"`
-	Path   string `gorm:"comment:路径;" json:"path"`
-	Icon   string `gorm:"comment:图标;" json:"icon"`
-	Svg    string `gorm:"type:text; comment:SVG图标;" json:"svg"`
-	Size   string `gorm:"comment:图标大小; default:'16px';" json:"size"`
-	Remark string `gorm:"comment:备注; default:Null;" json:"remark"`
+	Id     	   int    				 `gorm:"type:int(32); comment:主键;" json:"id"`
+	Name   	   string 				 `gorm:"comment:名称;" json:"name"`
+	Path   	   string 				 `gorm:"comment:路径;" json:"path"`
+	Icon   	   string 				 `gorm:"comment:图标;" json:"icon"`
+	Svg    	   string 				 `gorm:"type:text; comment:SVG图标;" json:"svg"`
+	Size   	   string 				 `gorm:"comment:图标大小; default:'16px';" json:"size"`
+	Hash   	   string 				 `gorm:"comment:哈希值;" json:"hash"`
+	Remark 	   string 				 `gorm:"comment:备注; default:Null;" json:"remark"`
 	// 以下为公共字段
 	Json       any                   `gorm:"type:longtext; comment:用于存储JSON数据;" json:"json"`
 	Text       any                   `gorm:"type:longtext; comment:用于存储文本数据;" json:"text"`
@@ -38,13 +39,12 @@ func (this *AuthPages) AfterFind(tx *gorm.DB) (err error) {
 	return
 }
 
-// AfterSave - 保存后的Hook（包括 create update）
-func (this *AuthPages) AfterSave(tx *gorm.DB) (err error) {
+// BeforeCreate - 创建前的Hook
+func (this *AuthPages) BeforeCreate(tx *gorm.DB) (err error) {
 
-	// 检查 path 是否存在
-	exist := facade.DB.Model(&AuthRules{}).Where("path", this.Path).Exist()
-	if exist {
-		return errors.New(fmt.Sprintf("path: %s 已存在", this.Path))
+	// 检查 hash 是否存在
+	if exist := facade.DB.Model(&AuthRules{}).Where("hash", this.Hash).Exist(); exist {
+		return errors.New(fmt.Sprintf("hash: %s 已存在", this.Hash))
 	}
 
 	return
@@ -90,7 +90,9 @@ func InitAuthPages() {
 		go func(item AuthPages, wg *sync.WaitGroup) {
 			defer wg.Done()
 
-			tx := facade.DB.Model(&item).Where("path", item.Path)
+			hash := utils.Hash.Sum32(item.Path)
+
+			tx := facade.DB.Model(&item).Where("hash", hash)
 
 			// 如果存在，就不要再添加了
 			if exist := tx.Exist(); exist {
@@ -98,6 +100,7 @@ func InitAuthPages() {
 			}
 
 			res := tx.Save(&AuthPages{
+				Hash: hash,
 				Name: cast.ToString(item.Name),
 				Path: cast.ToString(item.Path),
 				Icon: cast.ToString(item.Icon),

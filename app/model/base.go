@@ -47,8 +47,8 @@ func InitTable() {
 		InitIpBlack,
 	}
 
-	for _, val := range allow {
-		go val()
+	for _, fn := range allow {
+		go fn()
 	}
 }
 

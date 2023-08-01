@@ -14,28 +14,27 @@ import (
 )
 
 type Users struct {
-	Id          int    `gorm:"type:int(32); comment:主键;" json:"id"`
-	Account     string `gorm:"size:32; comment:帐号; default:Null;" json:"account"`
-	Password    string `gorm:"comment:密码;" json:"password"`
-	Nickname    string `gorm:"size:32; comment:昵称;" json:"nickname"`
-	Email       string `gorm:"size:128; comment:邮箱;" json:"email"`
-	Phone       string `gorm:"size:32; comment:手机号;" json:"phone"`
-	Avatar      string `gorm:"comment:头像; default:Null;" json:"avatar"`
-	Description string `gorm:"comment:描述; default:Null;" json:"description"`
-	Title       string `gorm:"comment:头衔; default:Null;" json:"title"`
-	Gender		string `gorm:"comment:性别; default:Null;" json:"gender"`
-	Exp  		int    `gorm:"type:int(32); comment:经验值; default:0;" json:"exp"`
-	Pages       string `gorm:"comment:页面权限; default:Null;" json:"pages"`
-	Source      string `gorm:"size:32; default:'default'; comment:注册来源;" json:"source"`
-	Remark      string `gorm:"comment:备注; default:Null;" json:"remark"`
+	Id          int    				  `gorm:"type:int(32); comment:主键;" json:"id"`
+	Account     string 				  `gorm:"size:32; comment:帐号; default:Null;" json:"account"`
+	Password    string 				  `gorm:"comment:密码;" json:"password"`
+	Nickname    string 				  `gorm:"size:32; comment:昵称;" json:"nickname"`
+	Email       string 				  `gorm:"size:128; comment:邮箱;" json:"email"`
+	Phone       string 				  `gorm:"size:32; comment:手机号;" json:"phone"`
+	Avatar      string 				  `gorm:"comment:头像; default:Null;" json:"avatar"`
+	Description string 				  `gorm:"comment:描述; default:Null;" json:"description"`
+	Title       string 				  `gorm:"comment:头衔; default:Null;" json:"title"`
+	Gender		string 				  `gorm:"comment:性别; default:Null;" json:"gender"`
+	Exp  		int    				  `gorm:"type:int(32); comment:经验值; default:0;" json:"exp"`
+	Source      string 				  `gorm:"size:32; default:'default'; comment:注册来源;" json:"source"`
+	Remark      string 				  `gorm:"comment:备注; default:Null;" json:"remark"`
 	// 以下为公共字段
-	Json       any                   `gorm:"type:longtext; comment:用于存储JSON数据;" json:"json"`
-	Text       any                   `gorm:"type:longtext; comment:用于存储文本数据;" json:"text"`
-	Result     any                   `gorm:"type:varchar(256); comment:不存储数据，用于封装返回结果;" json:"result"`
-	LoginTime  int64                 `gorm:"size:32; comment:登录时间; default:Null;" json:"login_time"`
-	CreateTime int64                 `gorm:"autoCreateTime; comment:创建时间;" json:"create_time"`
-	UpdateTime int64                 `gorm:"autoUpdateTime; comment:更新时间;" json:"update_time"`
-	DeleteTime soft_delete.DeletedAt `gorm:"comment:删除时间; default:0;" json:"delete_time"`
+	Json        any                   `gorm:"type:longtext; comment:用于存储JSON数据;" json:"json"`
+	Text        any                   `gorm:"type:longtext; comment:用于存储文本数据;" json:"text"`
+	Result      any                   `gorm:"type:varchar(256); comment:不存储数据，用于封装返回结果;" json:"result"`
+	LoginTime   int64                 `gorm:"size:32; comment:登录时间; default:Null;" json:"login_time"`
+	CreateTime  int64                 `gorm:"autoCreateTime; comment:创建时间;" json:"create_time"`
+	UpdateTime  int64                 `gorm:"autoUpdateTime; comment:更新时间;" json:"update_time"`
+	DeleteTime  soft_delete.DeletedAt `gorm:"comment:删除时间; default:0;" json:"delete_time"`
 }
 
 // InitUsers - 初始化Users表
@@ -220,22 +219,37 @@ func (this *Users) Rules(uid any) (slice []any) {
 func (this *Users) getAuthAttr() (result map[string]any) {
 
 	// 查询自己拥有的权限
-	group := facade.DB.Model(&AuthGroup{}).Like("uids", "%|"+cast.ToString(this.Id)+"|%").Column("id", "rules", "name", "root")
+	group := facade.DB.Model(&AuthGroup{}).Like("uids", "%|"+cast.ToString(this.Id)+"|%").Column("id", "rules", "name", "root", "pages")
 
 	var ids []int
 	var rules []string
+	var pages []string
 
 	for _, val := range cast.ToSlice(group) {
 		item := cast.ToStringMap(val)
 		ids   = append(ids, cast.ToInt(item["id"]))
 		// 逗号分隔的权限
 		rules = append(rules, strings.Split(cast.ToString(item["rules"]), ",")...)
+		// 逗号分隔的页面
+		pages = append(pages, strings.Split(cast.ToString(item["pages"]), ",")...)
 	}
+
+	// 去重 去空
+	rules = utils.Array.Filter(cast.ToStringSlice(utils.ArrayUnique[string](rules)))
+	pages = utils.Array.Filter(cast.ToStringSlice(utils.ArrayUnique[string](pages)))
 
 	return map[string]any{
 		"all"  : utils.InArray("all", rules),
-		"group": ids,
-		"list" : group,
+		"group": map[string]any{
+			"ids": ids,
+			"list": group,
+		},
+		"pages": map[string]any{
+			"hash": pages,
+		},
+		"rules": map[string]any{
+			"hash": rules,
+		},
 	}
 }
 

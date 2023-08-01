@@ -15,6 +15,7 @@ type AuthGroup struct {
 	Root	   int    				 `gorm:"type:int(32); comment:'是否拥有越权限操作数据的能力'; default:0;" json:"root"`
 	Rules      string 				 `gorm:"type:text; comment:权限规则;" json:"rules"`
 	Default    int    				 `gorm:"type:int(32); comment:默认权限; default:0;" json:"default"`
+	Pages      string 				 `gorm:"comment:页面权限; default:Null;" json:"pages"`
 	Remark     string 				 `gorm:"comment:备注; default:Null;" json:"remark"`
 	// 以下为公共字段
 	Json       any                   `gorm:"type:longtext; comment:用于存储JSON数据;" json:"json"`
@@ -41,8 +42,9 @@ func InitAuthGroup() {
 	facade.DB.Model(&AuthGroup{}).Create(&AuthGroup{
 		Id: 	 1,
 		Name:    "超级管理员",
-		Rules:   "all",
 		Uids:    "|1|",
+		Rules:   "all",
+		Pages:   "all",
 		Root: 	 1,
 		Default: 1,
 		Remark:  "超级管理员，拥有所有权限！",

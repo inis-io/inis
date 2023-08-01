@@ -274,7 +274,7 @@ func (this *Users) create(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Users{CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
-	allow := []any{"account", "password", "nickname", "email", "phone", "avatar", "description", "source", "pages", "remark", "title", "gender", "json", "text"}
+	allow := []any{"account", "password", "nickname", "email", "phone", "avatar", "description", "source", "remark", "title", "gender", "json", "text"}
 
 	if utils.Is.Empty(params["email"]) {
 		this.json(ctx, nil, facade.Lang(ctx, "邮箱不能为空！"), 400)
@@ -340,7 +340,7 @@ func (this *Users) update(ctx *gin.Context) {
 	root := this.meta.root(ctx)
 	// 越权 - 增加可选字段
 	if root {
-		allow = append(allow, "source", "pages", "remark", "title", "email", "phone")
+		allow = append(allow, "source", "remark", "title", "email", "phone")
 	}
 
 	// 动态给结构体赋值
