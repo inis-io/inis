@@ -7,6 +7,7 @@ import (
 	"gorm.io/plugin/soft_delete"
 	"inis/app/facade"
 	"strings"
+	"sync"
 )
 
 type Article struct {
@@ -45,40 +46,9 @@ func InitArticle() {
 // AfterFind - 查询Hook
 func (this *Article) AfterFind(tx *gorm.DB) (err error) {
 
-	// 作者信息
-	author := make(map[string]any)
-	allow  := []string{"id", "nickname", "avatar", "description", "result"}
-	user   := facade.DB.Model(&Users{}).Find(this.Uid)
-
-	if !utils.Is.Empty(user) {
-		author = utils.Map.WithField(user, allow)
-	}
-	// 标签信息
-	tags  := utils.ArrayUnique(utils.ArrayEmpty(strings.Split(this.Tags, "|")))
-	// 分类信息
-	group := utils.ArrayUnique(utils.ArrayEmpty(strings.Split(this.Group, "|")))
-
-	// 当前的评论配置
-	comment := cast.ToStringMap(cast.ToStringMap(utils.Json.Decode(this.Json))["comment"])
-	config  := this.config("comment")
-
-	// 允许评论选项继承了父级配置
-	if cast.ToInt(comment["allow"]) == 0 {
-		comment["allow"] = config["allow"]
-	}
-	// 显示评论选项继承了父级配置
-	if cast.ToInt(comment["show"]) == 0 {
-		comment["show"]  = config["show"]
-	}
-
-	this.Result = map[string]any{
-		"author" : author,
-		"comment": comment,
-		"group"  : facade.DB.Model(&[]ArticleGroup{}).WhereIn("id", group).Column("id", "pid", "name", "avatar", "description"),
-		"tags"   : facade.DB.Model(&[]Tags{}).WhereIn("id", tags).Column("id", "name", "avatar", "description"),
-	}
-	this.Text = cast.ToString(this.Text)
-	this.Json = utils.Json.Decode(this.Json)
+	this.Result = this.result()
+	this.Text   = cast.ToString(this.Text)
+	this.Json   = utils.Json.Decode(this.Json)
 
 	return
 }
@@ -112,4 +82,109 @@ func (this *Article) config(key ...any) (json map[string]any) {
 	}
 
 	return cast.ToStringMap(config["json"])
+}
+
+// result - 返回结果
+func (this *Article) result() (result map[string]any) {
+
+	where := []any{
+		[]any{"state", "=", 1},
+		[]any{"bind_id", "=", this.Id},
+		[]any{"bind_type", "=", "article"},
+	}
+
+	var like, share, collect, group, tags, author, comment any
+	wg := sync.WaitGroup{}
+	wg.Add(7)
+
+	go this.tags(&wg, &tags)
+	go this.group(&wg, &group)
+	go this.author(&wg, &author)
+	go this.comment(&wg, &comment)
+	go this.exp(&wg, &like, where, "like")
+	go this.exp(&wg, &share, where, "share")
+	go this.exp(&wg, &collect, where, "collect")
+
+	wg.Wait()
+
+	return map[string]any{
+		"like"   : like,
+		"share"  : share,
+		"collect": collect,
+		"tags"   : tags,
+		"group"  : group,
+		"author" : author,
+		"comment": comment,
+	}
+}
+
+// exp - 从EXP表中获取数据
+func (this *Article) exp(wg *sync.WaitGroup, result *any, where []any, field any) {
+
+	defer wg.Done()
+
+	ids := facade.DB.Model(&EXP{}).Where(where).Where("type", field).Column("uid")
+
+	*result = cast.ToIntSlice(ids)
+}
+
+// group - 分类
+func (this *Article) group(wg *sync.WaitGroup, result *any) {
+
+	defer wg.Done()
+
+	// 分类信息
+	group := utils.ArrayUnique(utils.ArrayEmpty(strings.Split(this.Group, "|")))
+	*result = facade.DB.Model(&[]ArticleGroup{}).WhereIn("id", group).Column("id", "pid", "name", "avatar", "description")
+}
+
+// tags - 标签
+func (this *Article) tags(wg *sync.WaitGroup, result *any) {
+
+	defer wg.Done()
+
+	// 标签信息
+	tags  := utils.ArrayUnique(utils.ArrayEmpty(strings.Split(this.Tags, "|")))
+	*result = facade.DB.Model(&[]Tags{}).WhereIn("id", tags).Column("id", "name", "avatar", "description")
+}
+
+// author - 作者信息
+func (this *Article) author(wg *sync.WaitGroup, result *any) {
+
+	defer wg.Done()
+
+	// 作者信息
+	author := make(map[string]any)
+	allow  := []string{"id", "nickname", "avatar", "description", "result", "title"}
+	user   := facade.DB.Model(&Users{}).Find(this.Uid)
+
+	if !utils.Is.Empty(user) {
+		author = utils.Map.WithField(user, allow)
+	}
+
+	*result = author
+}
+
+// comment - 评论
+func (this *Article) comment(wg *sync.WaitGroup, result *any) {
+
+	defer wg.Done()
+
+	// 当前的评论配置
+	comment := cast.ToStringMap(cast.ToStringMap(utils.Json.Decode(this.Json))["comment"])
+	config  := this.config("comment")
+
+	// 允许评论选项继承了父级配置
+	if cast.ToInt(comment["allow"]) == 0 {
+		comment["allow"] = config["allow"]
+	}
+	// 显示评论选项继承了父级配置
+	if cast.ToInt(comment["show"]) == 0 {
+		comment["show"]  = config["show"]
+	}
+
+	// 评论数量
+	comment["count"] = facade.DB.Model(&Comment{}).Where("bind_type", "article").Where("bind_id", this.Id).Count()
+
+	*result = comment
 }

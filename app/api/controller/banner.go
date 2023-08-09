@@ -255,7 +255,7 @@ func (this *Banner) create(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Banner{CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
-	allow := []any{"title", "content", "url", "image", "target", "remark", "json", "text"}
+	allow := []any{"title", "content", "url", "image", "target", "start_time", "end_time", "remark", "json", "text"}
 
 	// 动态给结构体赋值
 	for key, val := range params {
@@ -306,7 +306,7 @@ func (this *Banner) update(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Banner{}
-	allow := []any{"title", "content", "url", "image", "target", "remark", "json", "text"}
+	allow := []any{"title", "content", "url", "image", "target", "start_time", "end_time", "remark", "json", "text"}
 	async := utils.Async[map[string]any]()
 
 	// 动态给结构体赋值

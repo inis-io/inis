@@ -15,6 +15,8 @@ type Banner struct {
 	Url        string 				 `gorm:"size:256; comment:链接; default:Null;" json:"url"`
 	Image      string 				 `gorm:"size:256; comment:图片; default:Null;" json:"image"`
 	Target     string 				 `gorm:"size:32; comment:打开方式; default:'_blank';" json:"target"`
+	StartTime  int64 				 `gorm:"size:32; comment:开始时间; default:Null;" json:"start_time"`
+	EndTime    int64 				 `gorm:"size:32; comment:结束时间; default:Null;" json:"end_time"`
 	Remark     string 				 `gorm:"comment:备注; default:Null;" json:"remark"`
 	// 以下为公共字段
 	Json       any                   `gorm:"type:longtext; comment:用于存储JSON数据;" json:"json"`
