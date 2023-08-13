@@ -43,7 +43,7 @@ func (this *AuthPages) AfterFind(tx *gorm.DB) (err error) {
 func (this *AuthPages) BeforeCreate(tx *gorm.DB) (err error) {
 
 	// 检查 hash 是否存在
-	if exist := facade.DB.Model(&AuthRules{}).Where("hash", this.Hash).Exist(); exist {
+	if exist := facade.DB.Model(&AuthRules{}).WithTrashed().Where("hash", this.Hash).Exist(); exist {
 		return errors.New(fmt.Sprintf("hash: %s 已存在", this.Hash))
 	}
 

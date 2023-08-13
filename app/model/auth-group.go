@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"gorm.io/gorm"
@@ -11,6 +12,7 @@ import (
 type AuthGroup struct {
 	Id         int    				 `gorm:"type:int(32); comment:主键;" json:"id"`
 	Name       string 				 `gorm:"comment:权限名称;" json:"name"`
+	Key        string 				 `gorm:"size:256; comment:唯一键; default:Null;" json:"key"`
 	Uids       string 				 `gorm:"type:text; comment:用户ID;" json:"uids"`
 	Root	   int    				 `gorm:"type:int(32); comment:'是否拥有越权限操作数据的能力'; default:0;" json:"root"`
 	Rules      string 				 `gorm:"type:text; comment:权限规则;" json:"rules"`
@@ -49,6 +51,19 @@ func InitAuthGroup() {
 		Default: 1,
 		Remark:  "超级管理员，拥有所有权限！",
 	})
+}
+
+// AfterSave - 保存后的Hook（包括 create update）
+func (this *AuthGroup) AfterSave(tx *gorm.DB) (err error) {
+
+	// key 唯一处理
+	if !utils.Is.Empty(this.Key) {
+		exist := facade.DB.Model(&AuthGroup{}).WithTrashed().Where("id", "!=", this.Id).Where("key", this.Key).Exist()
+		if exist {
+			return errors.New("key 已存在！")
+		}
+	}
+	return
 }
 
 // AfterFind - 查询Hook

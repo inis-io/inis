@@ -43,7 +43,7 @@ func (this *AuthRules) AfterFind(tx *gorm.DB) (err error) {
 func (this *AuthRules) BeforeCreate(tx *gorm.DB) (err error) {
 
 	// 检查 hash 是否存在
-	if exist := facade.DB.Model(&AuthRules{}).Where("hash", this.Hash).Exist(); exist {
+	if exist := facade.DB.Model(&AuthRules{}).WithTrashed().Where("hash", this.Hash).Exist(); exist {
 		return errors.New(fmt.Sprintf("hash: %s 已存在", this.Hash))
 	}
 
@@ -442,11 +442,14 @@ func createAuthRules() (result []AuthRules) {
 	// 社区接口
 	inis := []AuthRules{
 		{ Method: "POST", Route: "/inis/device/bind", Name : "【社区 API】设备绑定", Type : "default" },
+		{ Method: "DELETE", Route: "/inis/device/bind", Name : "【社区 API】设备解绑", Type : "default" },
 		{ Method: "GET", Route: "/inis/device/user", Name : "【社区 API】绑定的用户信息", Type : "common" },
 		{ Method: "GET", Route: "/inis/theme-version/next", Name : "【社区 API】获取主题下个版本", Type : "common" },
 		{ Method: "GET", Route: "/inis/theme-version/download", Name : "【社区 API】获取主题下载地址", Type : "default" },
 		{ Method: "GET", Route: "/inis/system-version/next", Name : "【社区 API】获取系统下个版本", Type : "common" },
 		{ Method: "GET", Route: "/inis/system-version/download", Name : "【社区 API】获取系统下载地址", Type : "default" },
+		{ Method: "GET", Route: "/inis/order/theme", Name : "【社区 API】查询已购的指定主题", Type : "common" },
+		{ Method: "GET", Route: "/inis/order/themes", Name : "【社区 API】查询已购的全部主题", Type : "common" },
 	}
 
 	return append(result, inis...)

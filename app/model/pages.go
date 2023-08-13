@@ -44,12 +44,11 @@ func (this *Pages) AfterSave(tx *gorm.DB) (err error) {
 
 	// key 唯一处理
 	if !utils.Is.Empty(this.Key) {
-		exist := facade.DB.Model(&Pages{}).Where("id", "!=", this.Id).Where("key", this.Key).Exist()
+		exist := facade.DB.Model(&Pages{}).WithTrashed().Where("id", "!=", this.Id).Where("key", this.Key).Exist()
 		if exist {
 			return errors.New("key 已存在！")
 		}
 	}
-
 	return
 }
 

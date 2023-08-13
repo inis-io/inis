@@ -65,7 +65,9 @@ func (this *Device) IDEL(ctx *gin.Context) {
 	// 转小写
 	method := strings.ToLower(ctx.Param("method"))
 
-	allow := map[string]any{}
+	allow := map[string]any{
+		"bind": this.unbind,
+	}
 	err := this.call(allow, method, ctx)
 
 	if err != nil {
@@ -150,6 +152,43 @@ func (this *Device) bind(ctx *gin.Context) {
 	}
 
 	this.json(ctx, gin.H{ "user": res["user"] }, facade.Lang(ctx, "绑定成功！"), 200)
+}
+
+// unbind - 解绑设备
+func (this *Device) unbind(ctx *gin.Context) {
+
+	user := this.user(ctx)
+	// 即便中间件已经校验过登录了，这里还进行二次校验是未了防止接口权限被改，而 uid 又是强制的，从而导致的意外情况
+	if user.Id == 0 {
+		this.json(ctx, nil, facade.Lang(ctx, "请先登录！"), 401)
+		return
+	}
+
+	// 用户权限
+	auth := cast.ToStringMap(cast.ToStringMap(user.Result)["auth"])
+	if !cast.ToBool(auth["all"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "您非超级管理员，没有权限操作！"), 403)
+		return
+	}
+
+	// 绑定设备
+	item := utils.Curl(utils.CurlRequest{
+		Url:    facade.Uri + "/sn/device/bind",
+		Method: "DELETE",
+		Headers: facade.Comm.Signature(nil),
+	}).Send()
+
+	if item.Error != nil {
+		this.json(ctx, nil, facade.Lang(ctx, "远程服务器错误：%v", item.Error.Error()), 500)
+		return
+	}
+
+	if cast.ToInt(item.Json["code"]) != 200 {
+		this.json(ctx, item.Json["data"], item.Json["msg"], item.Json["code"])
+		return
+	}
+
+	this.json(ctx, nil, facade.Lang(ctx, "解绑成功！"), 200)
 }
 
 // user - 获取用户信息

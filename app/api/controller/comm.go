@@ -244,7 +244,7 @@ func (this *Comm) register(ctx *gin.Context) {
 	}
 
 	// 判断是否已经注册
-	ok := facade.DB.Model(&table).Where([]any{
+	ok := facade.DB.Model(&table).WithTrashed().Where([]any{
 		[]any{"source", "=", params["source"]},
 		[]any{social, "=", params["social"]},
 	}).Exist()
@@ -262,7 +262,7 @@ func (this *Comm) register(ctx *gin.Context) {
 
 	if !utils.Is.Empty(params["account"]) {
 		// 判断账号是否已经注册
-		ok := facade.DB.Model(&table).Where([]any{
+		ok := facade.DB.Model(&table).WithTrashed().Where([]any{
 			[]any{"source", "=", params["source"]},
 			[]any{"account", "=", params["account"]},
 		}).Exist()
@@ -388,7 +388,7 @@ func (this *Comm) socialLogin(ctx *gin.Context) {
 	}
 
 	// 判断是否已经注册
-	ok := facade.DB.Model(&table).Where([]any{
+	ok := facade.DB.Model(&table).WithTrashed().Where([]any{
 		[]any{"source", "=", params["source"]},
 		[]any{social, "=", params["social"]},
 	}).Exist()

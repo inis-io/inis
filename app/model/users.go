@@ -115,7 +115,7 @@ func (this *Users) AfterSave(tx *gorm.DB) (err error) {
 
 	// 账号 唯一处理
 	if !utils.Is.Empty(this.Account) {
-		exist := facade.DB.Model(&Users{}).Where("id", "!=", this.Id).Where("account", this.Account).Exist()
+		exist := facade.DB.Model(&Users{}).WithTrashed().Where("id", "!=", this.Id).Where("account", this.Account).Exist()
 		if exist {
 			return errors.New("账号已存在！")
 		}
@@ -123,7 +123,7 @@ func (this *Users) AfterSave(tx *gorm.DB) (err error) {
 
 	// 邮箱 唯一处理
 	if !utils.Is.Empty(this.Email) {
-		exist := facade.DB.Model(&Users{}).Where("id", "!=", this.Id).Where("email", this.Email).Exist()
+		exist := facade.DB.Model(&Users{}).WithTrashed().Where("id", "!=", this.Id).Where("email", this.Email).Exist()
 		if exist {
 			return errors.New("邮箱已存在！")
 		}
@@ -131,7 +131,7 @@ func (this *Users) AfterSave(tx *gorm.DB) (err error) {
 
 	// 手机号 唯一处理
 	if !utils.Is.Empty(this.Phone) {
-		exist := facade.DB.Model(&Users{}).Where("id", "!=", this.Id).Where("phone", this.Phone).Exist()
+		exist := facade.DB.Model(&Users{}).WithTrashed().Where("id", "!=", this.Id).Where("phone", this.Phone).Exist()
 		if exist {
 			return errors.New("手机号已存在！")
 		}
@@ -219,7 +219,7 @@ func (this *Users) Rules(uid any) (slice []any) {
 func (this *Users) getAuthAttr() (result map[string]any) {
 
 	// 查询自己拥有的权限
-	group := facade.DB.Model(&AuthGroup{}).Like("uids", "%|"+cast.ToString(this.Id)+"|%").Column("id", "rules", "name", "root", "pages")
+	group := facade.DB.Model(&AuthGroup{}).Like("uids", "%|"+cast.ToString(this.Id)+"|%").Column("id", "rules", "name", "root", "pages", "key")
 
 	var ids []int
 	var rules []string
