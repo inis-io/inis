@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"gorm.io/gorm"
@@ -9,11 +10,12 @@ import (
 )
 
 type ArticleGroup struct {
-	Id       	int    `gorm:"type:int(32); comment:主键;" json:"id"`
-	Pid         int    `gorm:"type:int(32); comment:父级ID; default:0;" json:"pid"`
-	Name        string `gorm:"size:32; comment:名称; default:Null;" json:"name"`
-	Description string `gorm:"comment:描述; default:Null;" json:"description"`
-	Avatar      string `gorm:"size:256; comment:头像; default:Null;" json:"avatar"`
+	Id       	int    				 `gorm:"type:int(32); comment:主键;" json:"id"`
+	Pid         int    				 `gorm:"type:int(32); comment:父级ID; default:0;" json:"pid"`
+	Key         string 				 `gorm:"size:256; comment:唯一键; default:Null;" json:"key"`
+	Name        string 				 `gorm:"size:32; comment:名称; default:Null;" json:"name"`
+	Description string 				 `gorm:"comment:描述; default:Null;" json:"description"`
+	Avatar      string 				 `gorm:"size:256; comment:头像; default:Null;" json:"avatar"`
 	// 以下为公共字段
 	Json       any                   `gorm:"type:longtext; comment:用于存储JSON数据;" json:"json"`
 	Text       any                   `gorm:"type:longtext; comment:用于存储文本数据;" json:"text"`
@@ -30,6 +32,19 @@ func InitArticleGroup() {
 		facade.Log.Error(map[string]any{"error": err}, "ArticleGroup表迁移失败")
 		return
 	}
+}
+
+// AfterSave - 保存后的Hook（包括 create update）
+func (this *ArticleGroup) AfterSave(tx *gorm.DB) (err error) {
+
+	// key 唯一处理
+	if !utils.Is.Empty(this.Key) {
+		exist := facade.DB.Model(&ArticleGroup{}).WithTrashed().Where("id", "!=", this.Id).Where("key", this.Key).Exist()
+		if exist {
+			return errors.New("key 已存在！")
+		}
+	}
+	return
 }
 
 // AfterFind - 查询Hook

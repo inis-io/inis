@@ -255,7 +255,7 @@ func (this *ArticleGroup) create(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.ArticleGroup{CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
-	allow := []any{"pid", "name", "description", "avatar", "json", "text"}
+	allow := []any{"pid", "name", "key", "description", "avatar", "json", "text"}
 
 	// 动态给结构体赋值
 	for key, val := range params {
@@ -306,7 +306,7 @@ func (this *ArticleGroup) update(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.ArticleGroup{}
-	allow := []any{"pid", "name", "description", "avatar", "json", "text"}
+	allow := []any{"pid", "name", "key", "description", "avatar", "json", "text"}
 	async := utils.Async[map[string]any]()
 
 	// 动态给结构体赋值

@@ -404,6 +404,7 @@ func (this *Comm) socialLogin(ctx *gin.Context) {
 			Account:  cast.ToString(params["email"]),
 			Nickname: "会员" + utils.Rand.String(4, "0123456789"),
 			Source:   cast.ToString(params["source"]),
+			LoginTime: time.Now().Unix(),
 		}
 
 		switch social {
