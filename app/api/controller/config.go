@@ -155,12 +155,13 @@ func (this *Config) one(ctx *gin.Context) {
 		}
 		item := mold.Where(table).Find()
 
+		// 排除字段
+		data = facade.Comm.WithField(item, params["field"])
+
 		// 缓存数据
 		if this.cache.enable(ctx) {
-			go facade.Cache.Set(cacheName, item)
+			go facade.Cache.Set(cacheName, data)
 		}
-
-		data = item
 	}
 
 	if !utils.Is.Empty(data) {
@@ -222,12 +223,13 @@ func (this *Config) all(ctx *gin.Context) {
 		// 从数据库中获取数据
 		item := mold.Where(table).Limit(limit).Page(page).Order(params["order"]).Select()
 
+		// 排除字段
+		data = utils.ArrayMapWithField(item, params["field"])
+
 		// 缓存数据
 		if this.cache.enable(ctx) {
-			go facade.Cache.Set(cacheName, item)
+			go facade.Cache.Set(cacheName, data)
 		}
-
-		data = item
 	}
 
 	if !utils.Is.Empty(data) {

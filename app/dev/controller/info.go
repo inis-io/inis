@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/shirou/gopsutil/mem"
 	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"inis/app/facade"
@@ -23,6 +24,7 @@ func (this *Info) IGET(ctx *gin.Context) {
 	method := strings.ToLower(ctx.Param("method"))
 
 	allow := map[string]any{
+		"time"   : this.time,
 		"system" : this.system,
 		"device" : this.device,
 		"version": this.version,
@@ -100,6 +102,18 @@ func (this *Info) INDEX(ctx *gin.Context) {
 // system - 系统信息
 func (this *Info) system(ctx *gin.Context) {
 
+	// 内存信息
+	var memory map[string]any
+
+	vm, err := mem.VirtualMemory()
+	if err == nil {
+		memory = map[string]any{
+			"free" : vm.Free,
+			"used" : vm.Used,
+			"total": vm.Total,
+		}
+	}
+
 	info := map[string]any{
 		"path"  : utils.Get.Pwd(),
 		"pid"   : utils.Get.Pid(),
@@ -107,6 +121,7 @@ func (this *Info) system(ctx *gin.Context) {
 			"run" : this.get(ctx, "port"),
 			"real": facade.AppToml.Get("app.port"),
 		},
+		"memory": memory,
 		"domain": this.get(ctx, "domain"),
 		"GOOS"  : runtime.GOOS,
 		"GOARCH": runtime.GOARCH,
@@ -137,6 +152,14 @@ func (this *Info) device(ctx *gin.Context) {
 	}
 
 	this.json(ctx, item.Json["data"], facade.Lang(ctx, "好的！"), 200)
+}
+
+// time - 时间信息
+func (this *Info) time(ctx *gin.Context) {
+	this.json(ctx, map[string]any{
+		"unix": time.Now().Unix(),
+		"date": time.Now().Format("2006-01-02 15:04:05"),
+	}, facade.Lang(ctx, "好的！"), 200)
 }
 
 // renew - 更新

@@ -95,10 +95,8 @@ func (this *Device) bind(ctx *gin.Context) {
 		return
 	}
 
-	// 用户权限
-	auth := cast.ToStringMap(cast.ToStringMap(user.Result)["auth"])
-	if !cast.ToBool(auth["all"]) {
-		this.json(ctx, nil, facade.Lang(ctx, "您非超级管理员，没有权限操作！"), 403)
+	if !this.meta.root(ctx) {
+		this.json(ctx, nil, facade.Lang(ctx, "无权限！"), 403)
 		return
 	}
 
@@ -164,10 +162,8 @@ func (this *Device) unbind(ctx *gin.Context) {
 		return
 	}
 
-	// 用户权限
-	auth := cast.ToStringMap(cast.ToStringMap(user.Result)["auth"])
-	if !cast.ToBool(auth["all"]) {
-		this.json(ctx, nil, facade.Lang(ctx, "您非超级管理员，没有权限操作！"), 403)
+	if !this.meta.root(ctx) {
+		this.json(ctx, nil, facade.Lang(ctx, "无权限！"), 403)
 		return
 	}
 

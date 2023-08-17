@@ -148,8 +148,12 @@ func (this *Comm) login(ctx *gin.Context) {
 		// 1、当前时间戳 - 提交的时间戳 > 60秒 = 过期
 		// 2、如果结果为负数，说明提交的时间戳大于当前时间戳，也是过期
 		diff := time.Now().Unix() - cast.ToInt64(text["unix"])
-		if diff > 60 || diff < 0 {
-			this.json(ctx, nil, facade.Lang(ctx, "账号或密码错误！"), 400)
+		if diff > 60 || diff < -60 {
+			this.json(ctx, gin.H{
+				"diff": diff,
+				"unix": text["unix"],
+				"now":  time.Now().Unix(),
+			}, facade.Lang(ctx, "账号或密码错误！"), 400)
 			return
 		}
 

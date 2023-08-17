@@ -2,6 +2,7 @@ package facade
 
 import (
 	"github.com/denisbrodbeck/machineid"
+	"github.com/shirou/gopsutil/mem"
 	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"runtime"
@@ -16,16 +17,29 @@ var Comm *CommStruct
 // Sn - 获取机器序列号
 func (this *CommStruct) Sn() (result string) {
 
+	mac := utils.Get.Mac()
 	result, err := machineid.ID()
 	if err != nil {
-		return utils.Get.Mac()
+		result = mac
 	}
 
-	return result
+	return utils.Hash.Token(result, 32, mac)
 }
 
 // Device - 设备信息
 func (this *CommStruct) Device() *utils.CurlResponse {
+
+	// 内存信息
+	var memory map[string]any
+
+	vm, err := mem.VirtualMemory()
+	if err == nil {
+		memory = map[string]any{
+			"free" : vm.Free,
+			"used" : vm.Used,
+			"total": vm.Total,
+		}
+	}
 
 	// 1、把原始的 body 传输进行原样传递
 	body := map[string]any{
@@ -35,6 +49,7 @@ func (this *CommStruct) Device() *utils.CurlResponse {
 			"run":  Var.Get("port"),
 			"real": AppToml.Get("app.port"),
 		},
+		"memory": utils.Json.String(memory),
 		"domain": Var.Get("domain"),
 		"goos":   runtime.GOOS,
 		"goarch": runtime.GOARCH,
@@ -93,4 +108,18 @@ func (this *CommStruct) Signature(params map[string]any) (result map[string]any)
 		// X-SS-STUB(MD5) - 用于检查 body 数据是否被篡改
 		"X-SS-STUB": strings.ToUpper(utils.Hash.Token(utils.Map.ToURL(params), 32, unix)),
 	}
+}
+
+// WithField - 保留指定字段
+func (this *CommStruct) WithField(data map[string]any, field any) (result map[string]any) {
+
+	// 参数归一化
+	keys := cast.ToStringSlice(utils.Unity.Keys(field))
+
+	// 如果为空，返回原始数据
+	if utils.Is.Empty(keys) {
+		return data
+	}
+
+	return utils.Map.WithField(data, keys)
 }
