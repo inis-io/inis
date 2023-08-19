@@ -15,7 +15,7 @@ func Cors() gin.HandlerFunc {
 		// ctx.Header("Access-Control-Allow-Credentials", "true")
 		ctx.Header("Content-Type", "application/json; charset=utf-8")
 		ctx.Header("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS, PATCH")
-		ctx.Header("Access-Control-Allow-Headers", "Token, Authorization, i-api-key, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, X-CSRF-TOKEN, X-Requested-With")
+		ctx.Header("Access-Control-Allow-Headers", "X-Khronos, X-Gorgon, X-Argus, X-Ss-Stub, Token, Authorization, i-api-key, Content-Type, If-Match, If-Modified-Since, If-None-Match, If-Unmodified-Since, X-CSRF-TOKEN, X-Requested-With")
 		ctx.Header("Access-Control-Expose-Headers", "Content-Type, Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers")
 
 		// 放行所有OPTIONS方法
