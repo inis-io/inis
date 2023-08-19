@@ -26,6 +26,7 @@ func (this *Users) IGET(ctx *gin.Context) {
 	allow := map[string]any{
 		"one":    this.one,
 		"all":    this.all,
+		"rand":   this.rand,
 		"count":  this.count,
 		"column": this.column,
 	}
@@ -245,6 +246,51 @@ func (this *Users) all(ctx *gin.Context) {
 		"count": count,
 		"page":  math.Ceil(float64(count) / float64(limit)),
 	}, facade.Lang(ctx, strings.Join(msg, "")), code)
+}
+
+// rand 随机获取
+func (this *Users) rand(ctx *gin.Context) {
+
+	// 请求参数
+	params := this.params(ctx)
+
+	// 限制最大数量
+	limit := this.meta.limit(ctx)
+
+	// 排除的 id 列表
+	except := utils.Unity.Ids(params["except"])
+
+	onlyTrashed := cast.ToBool(params["onlyTrashed"])
+	withTrashed := cast.ToBool(params["withTrashed"])
+
+	item := facade.DB.Model(&model.Users{}).OnlyTrashed(onlyTrashed).WithTrashed(withTrashed)
+	if !utils.Is.Empty(except) {
+		item = item.Where("id", "NOT IN", except)
+	}
+
+	// 从全部的 id 中随机选取指定数量的 id
+	ids := utils.Rand.Slice(utils.Unity.Ids(item.Column("id")), limit)
+
+	// 查询条件
+	mold := facade.DB.Model(&[]model.Users{}).Where("id", "IN", ids)
+	mold.OnlyTrashed(onlyTrashed).WithTrashed(withTrashed).IWhere(params["where"]).IOr(params["or"])
+	mold.ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
+	mold.WithoutField("password")
+
+	// 越权 - 没有管理权限
+	if !this.meta.root(ctx) {
+		mold.WithoutField("account", "email", "phone")
+	}
+
+	// 查询并打乱顺序
+	data := utils.Array.MapWithField(utils.Rand.MapSlice(mold.Select()), params["field"])
+
+	if utils.Is.Empty(data) {
+		this.json(ctx, nil, facade.Lang(ctx, "无数据！"), 204)
+		return
+	}
+
+	this.json(ctx, data, facade.Lang(ctx, "数据请求成功！"), 200)
 }
 
 // save 保存数据 - 包含创建和更新

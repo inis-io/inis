@@ -21,14 +21,14 @@ require (
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/qiniu/go-sdk/v7 v7.17.0
 	github.com/radovskyb/watcher v1.0.7
-	github.com/redis/go-redis/v9 v9.0.5
+	github.com/redis/go-redis/v9 v9.1.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/spf13/cast v1.5.1
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.725
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.725
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.726
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.726
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.42
 	github.com/unrolled/secure v1.13.0
-	github.com/unti-io/go-utils v1.2.5
+	github.com/unti-io/go-utils v1.2.6
 	go.uber.org/zap v1.25.0
 	golang.org/x/time v0.3.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
@@ -56,7 +56,7 @@ require (
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.15.0 // indirect
+	github.com/go-playground/validator/v10 v10.15.1 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
