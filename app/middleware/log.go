@@ -16,27 +16,8 @@ import (
 // GinLogger 接收gin框架默认的日志
 func GinLogger() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-
-		start := time.Now()
-
 		ctx.Next()
-
-		params, _ := ctx.Get("params")
-
-		if cast.ToBool(facade.LogToml.Get("on", true)) {
-			facade.Log.Info(map[string]any{
-				"path":   ctx.Request.URL.Path,
-				"method": ctx.Request.Method,
-				// "headers": ctx.Request.Header,
-				// "query":      ctx.Request.URL.RawQuery,
-				// "params":     ctx.Request.Form,
-				"params":     params,
-				"ip":         ctx.ClientIP(),
-				"user-agent": ctx.Request.UserAgent(),
-				"errors":     ctx.Errors.ByType(gin.ErrorTypePrivate).String(),
-				"cost":       time.Since(start).String(),
-			}, "middleware")
-		}
+		go log(ctx)
 	}
 }
 
@@ -104,5 +85,33 @@ func GinRecovery(debug ...bool) gin.HandlerFunc {
 			}
 		}()
 		ctx.Next()
+	}
+}
+
+// 记录日志
+func log(ctx *gin.Context) {
+
+	start := time.Now()
+	params, _ := ctx.Get("params")
+
+	path   := ctx.Request.URL.Path
+	method := ctx.Request.Method
+
+	// 如果是静态文件 或 / 不记录日志
+	if strings.Contains(path, ".") || path == "/" {
+		return
+	}
+
+	if cast.ToBool(facade.LogToml.Get("on", true)) {
+		facade.Log.Info(map[string]any{
+			"path":   path,
+			"method": method,
+			// "headers": ctx.Request.Header,
+			"params":     params,
+			"ip":         ctx.ClientIP(),
+			"user-agent": ctx.Request.UserAgent(),
+			"errors":     ctx.Errors.ByType(gin.ErrorTypePrivate).String(),
+			"cost":       time.Since(start).String(),
+		}, "middleware")
 	}
 }

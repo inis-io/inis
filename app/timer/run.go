@@ -12,6 +12,7 @@ func init() {
 
 func Run() {
 
+	Log.Run()
 	Device.Run()
 
 	go func() {

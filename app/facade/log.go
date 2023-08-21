@@ -42,13 +42,13 @@ func init() {
 	// 初始化配置文件
 	initLogToml()
 	// 初始化缓存
-	initLog()
+	InitLog()
 
 	// 监听配置文件变化
 	LogToml.Viper.WatchConfig()
 	// 配置文件变化时，重新初始化配置文件
 	LogToml.Viper.OnConfigChange(func(event fsnotify.Event) {
-		initLog()
+InitLog()
 	})
 }
 
@@ -151,8 +151,8 @@ func logLevel(Level string) *zap.Logger {
 	return zap.New(core)
 }
 
-// initLog - 初始化日志
-func initLog() {
+// InitLog - 初始化日志
+func InitLog() {
 	LogInfo = logLevel("info")
 	LogWarn = logLevel("warn")
 	LogError = logLevel("error")
