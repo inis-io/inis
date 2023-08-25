@@ -78,30 +78,9 @@ func (this *Users) AfterFind(tx *gorm.DB) (err error) {
 	// 替换 url 中的域名
 	this.Avatar = utils.Replace(this.Avatar, DomainTemp1())
 
-	wg := sync.WaitGroup{}
-	wg.Add(2)
-
-	var auth, level map[string]any
-
-	go func() {
-		defer wg.Done()
-		auth = this.getAuthAttr()
-	}()
-
-	go func() {
-		defer wg.Done()
-		level = this.getLevelAttr()
-	}()
-
-	wg.Wait()
-
-	this.Result = map[string]any{
-		"auth" : auth,
-		"level": level,
-	}
-	this.Text = cast.ToString(this.Text)
-	this.Json = utils.Json.Decode(this.Json)
-
+	this.Result = this.result()
+	this.Text   = cast.ToString(this.Text)
+	this.Json   = utils.Json.Decode(this.Json)
 	return
 }
 
@@ -215,8 +194,29 @@ func (this *Users) Rules(uid any) (slice []any) {
 	return rules
 }
 
-// getAuthAttr - 解析用户权限
-func (this *Users) getAuthAttr() (result map[string]any) {
+// result - 返回结果
+func (this *Users) result() (result map[string]any) {
+
+	var auth, level any
+
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	go this.auth(&wg, &auth)
+	go this.level(&wg, &level)
+
+	wg.Wait()
+
+	return map[string]any{
+		"auth": auth,
+		"level": level,
+	}
+}
+
+// auth - 解析用户权限
+func (this *Users) auth(wg *sync.WaitGroup, result *any) {
+
+	defer wg.Done()
 
 	// 查询自己拥有的权限
 	group := facade.DB.Model(&AuthGroup{}).Like("uids", "%|"+cast.ToString(this.Id)+"|%").Column("id", "rules", "name", "root", "pages", "key")
@@ -238,7 +238,7 @@ func (this *Users) getAuthAttr() (result map[string]any) {
 	rules = utils.Array.Filter(cast.ToStringSlice(utils.ArrayUnique[string](rules)))
 	pages = utils.Array.Filter(cast.ToStringSlice(utils.ArrayUnique[string](pages)))
 
-	return map[string]any{
+	*result = map[string]any{
 		"all"  : utils.InArray("all", rules),
 		"group": map[string]any{
 			"ids": ids,
@@ -253,19 +253,19 @@ func (this *Users) getAuthAttr() (result map[string]any) {
 	}
 }
 
-// getLevelAttr - 解析用户等级
-func (this *Users) getLevelAttr() (result map[string]any) {
+// level - 解析用户等级
+func (this *Users) level(wg *sync.WaitGroup, result *any) {
+
+	defer wg.Done()
 
 	// 查询字段
 	field := []string{"name", "value", "description", "exp"}
 
 	// 查询当前等级
-	item1 := facade.DB.Model(&Level{}).Field(field).Limit(1)
-	item1.Where("exp", "<=", this.Exp).Order("exp desc")
+	item1 := facade.DB.Model(&Level{}).Field(field).Limit(1).Where("exp", "<=", this.Exp).Order("exp desc")
 
 	// 查询下一等级
-	item2 := facade.DB.Model(&Level{}).Field(field).Limit(1)
-	item2.Where("exp", ">", this.Exp).Order("exp asc")
+	item2 := facade.DB.Model(&Level{}).Field(field).Limit(1).Where("exp", ">", this.Exp).Order("exp asc").Debug()
 
 	currents := cast.ToSlice(item1.Column())
 	var current any
@@ -279,7 +279,7 @@ func (this *Users) getLevelAttr() (result map[string]any) {
 		next = nexts[0]
 	}
 
-	return map[string]any{
+	*result = map[string]any{
 		"current": current,
 		"next"   : next,
 	}
