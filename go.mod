@@ -7,15 +7,15 @@ require (
 	github.com/alibabacloud-go/openapi-util v0.1.0
 	github.com/alibabacloud-go/tea v1.2.1
 	github.com/alibabacloud-go/tea-utils/v2 v2.0.4
-	github.com/aliyun/aliyun-oss-go-sdk v2.2.8+incompatible
+	github.com/aliyun/aliyun-oss-go-sdk v2.2.9+incompatible
 	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/disintegration/imaging v1.6.2
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/gin-gonic/gin v1.9.1
-	github.com/go-pay/gopay v1.5.95
+	github.com/go-pay/gopay v1.5.96
 	github.com/golang-jwt/jwt/v5 v5.0.0
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/gorilla/websocket v1.5.0
 	github.com/jasonlvhit/gocron v0.0.1
 	github.com/natefinch/lumberjack v2.0.0+incompatible
@@ -24,16 +24,16 @@ require (
 	github.com/redis/go-redis/v9 v9.1.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/spf13/cast v1.5.1
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.726
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.726
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.731
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.731
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.42
 	github.com/unrolled/secure v1.13.0
-	github.com/unti-io/go-utils v1.2.6
+	github.com/unti-io/go-utils v1.3.0
 	go.uber.org/zap v1.25.0
 	golang.org/x/time v0.3.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gorm.io/driver/mysql v1.5.1
-	gorm.io/gorm v1.25.3
+	gorm.io/gorm v1.25.4
 	gorm.io/plugin/soft_delete v1.2.1
 )
 
@@ -82,7 +82,6 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
-	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.4.0 // indirect
 	golang.org/x/crypto v0.12.0 // indirect

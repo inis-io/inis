@@ -158,11 +158,11 @@ func (this *ModelStruct) IWhere(where any) *ModelStruct {
 		return this
 	}
 
-	if utils.IsString(where) {
+	if utils.Is.String(where) {
 
 		this.Where(where)
 
-	} else if utils.IsSlice(where) {
+	} else if utils.Is.Slice(where) {
 
 		var slice []any
 		// ToStringSlice
@@ -173,7 +173,7 @@ func (this *ModelStruct) IWhere(where any) *ModelStruct {
 
 		this.Where(slice)
 
-	} else if utils.IsMapAny(where) {
+	} else if utils.Is.MapAny(where) {
 
 		for _, val := range cast.ToStringMap(where) {
 			this.Where(val)
@@ -235,7 +235,7 @@ func (this *ModelStruct) IWhereIn(where any) *ModelStruct {
 		return this
 	}
 
-	if utils.IsMapAny(where) {
+	if utils.Is.MapAny(where) {
 		for key, val := range cast.ToStringMap(where) {
 			this.WhereIn(key, val)
 		}
@@ -303,11 +303,11 @@ func (this *ModelStruct) INot(where any) *ModelStruct {
 		return this
 	}
 
-	if utils.IsString(where) {
+	if utils.Is.String(where) {
 
 		this.Not(where)
 
-	} else if utils.IsSlice(where) {
+	} else if utils.Is.Slice(where) {
 
 		var slice []any
 		for _, val := range cast.ToStringSlice(where) {
@@ -315,7 +315,7 @@ func (this *ModelStruct) INot(where any) *ModelStruct {
 		}
 		this.Not(slice)
 
-	} else if utils.IsMapAny(where) {
+	} else if utils.Is.MapAny(where) {
 
 		for _, val := range cast.ToStringMap(where) {
 			this.Not(val)
@@ -384,11 +384,11 @@ func (this *ModelStruct) IOr(where any) *ModelStruct {
 		return this
 	}
 
-	if utils.IsString(where) {
+	if utils.Is.String(where) {
 
 		this.Or(where)
 
-	} else if utils.IsSlice(where) {
+	} else if utils.Is.Slice(where) {
 
 		var slice []any
 		for _, val := range cast.ToStringSlice(where) {
@@ -396,7 +396,7 @@ func (this *ModelStruct) IOr(where any) *ModelStruct {
 		}
 		this.Or(slice)
 
-	} else if utils.IsMapAny(where) {
+	} else if utils.Is.MapAny(where) {
 
 		for _, val := range cast.ToStringMap(where) {
 			this.Or(val)
@@ -450,11 +450,11 @@ func (this *ModelStruct) ILike(where any) *ModelStruct {
 		return this
 	}
 
-	if utils.IsString(where) {
+	if utils.Is.String(where) {
 
 		this.Like(where)
 
-	} else if utils.IsSlice(where) {
+	} else if utils.Is.Slice(where) {
 
 		var slice []any
 		for _, val := range cast.ToStringSlice(where) {
@@ -462,7 +462,7 @@ func (this *ModelStruct) ILike(where any) *ModelStruct {
 		}
 		this.Like(slice)
 
-	} else if utils.IsMapAny(where) {
+	} else if utils.Is.MapAny(where) {
 
 		var sql string
 		for _, val := range cast.ToStringMap(where) {
@@ -510,11 +510,11 @@ func (this *ModelStruct) INull(where any) *ModelStruct {
 		return this
 	}
 
-	if utils.IsString(where) {
+	if utils.Is.String(where) {
 
 		this.Null(where)
 
-	} else if utils.IsSlice(where) {
+	} else if utils.Is.Slice(where) {
 
 		var slice []any
 		for _, val := range cast.ToStringSlice(where) {
@@ -522,7 +522,7 @@ func (this *ModelStruct) INull(where any) *ModelStruct {
 		}
 		this.Null(slice)
 
-	} else if utils.IsMapAny(where) {
+	} else if utils.Is.MapAny(where) {
 
 		for _, val := range cast.ToStringMap(where) {
 			this.Null(val)
@@ -566,11 +566,11 @@ func (this *ModelStruct) INotNull(where any) *ModelStruct {
 		return this
 	}
 
-	if utils.IsString(where) {
+	if utils.Is.String(where) {
 
 		this.NotNull(where)
 
-	} else if utils.IsSlice(where) {
+	} else if utils.Is.Slice(where) {
 
 		var slice []any
 		for _, val := range cast.ToStringSlice(where) {
@@ -578,7 +578,7 @@ func (this *ModelStruct) INotNull(where any) *ModelStruct {
 		}
 		this.NotNull(slice)
 
-	} else if utils.IsMapAny(where) {
+	} else if utils.Is.MapAny(where) {
 
 		for _, val := range cast.ToStringMap(where) {
 			this.NotNull(val)

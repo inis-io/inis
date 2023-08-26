@@ -265,7 +265,7 @@ func (this *Users) level(wg *sync.WaitGroup, result *any) {
 	item1 := facade.DB.Model(&Level{}).Field(field).Limit(1).Where("exp", "<=", this.Exp).Order("exp desc")
 
 	// 查询下一等级
-	item2 := facade.DB.Model(&Level{}).Field(field).Limit(1).Where("exp", ">", this.Exp).Order("exp asc").Debug()
+	item2 := facade.DB.Model(&Level{}).Field(field).Limit(1).Where("exp", ">", this.Exp).Order("exp asc")
 
 	currents := cast.ToSlice(item1.Column())
 	var current any

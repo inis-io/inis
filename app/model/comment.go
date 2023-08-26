@@ -41,45 +41,63 @@ func InitComment() {
 // AfterFind - 查询Hook
 func (this *Comment) AfterFind(tx *gorm.DB) (err error) {
 
+	this.Result = this.result()
+	this.Text   = cast.ToString(this.Text)
+	this.Json   = utils.Json.Decode(this.Json)
+	return
+}
+
+// result - 返回结果
+func (this *Comment) result() (result map[string]any) {
+
+	var page, author, article any
+
 	wg := sync.WaitGroup{}
 	wg.Add(3)
 
-	var page    map[string]any
-	var author  map[string]any
-	var article map[string]any
-
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		// 作者信息
-		user    := facade.DB.Model(&Users{}).Find(this.Uid)
-		author  = utils.Map.WithField(user, []string{"id", "nickname", "avatar", "description", "result"})
-	}(&wg)
-
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		if this.BindType == "page" {
-			// 页面信息
-			page = utils.Map.WithField(facade.DB.Model(&Pages{}).Find(this.BindId), []string{"id", "title"})
-		}
-	}(&wg)
-
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		if this.BindType == "article" {
-			// 文章信息
-			article = utils.Map.WithField(facade.DB.Model(&Article{}).Find(this.BindId), []string{"id", "title"})
-		}
-	}(&wg)
+	go this.page(&wg, &page)
+	go this.author(&wg, &author)
+	go this.article(&wg, &article)
 
 	wg.Wait()
 
-	this.Result = map[string]any{
-		"page"   : page,
-		"author" : author,
+	return map[string]any{
+		"page":   page,
+		"author": author,
 		"article": article,
 	}
-	this.Text = cast.ToString(this.Text)
-	this.Json = utils.Json.Decode(this.Json)
+}
 
-	return
+// author - 解析作者信息
+func (this *Comment) author(wg *sync.WaitGroup, result *any) {
+
+	defer wg.Done()
+
+	// 作者信息
+	user := facade.DB.Model(&Users{}).Find(this.Uid)
+	*result = utils.Map.WithField(user, []string{"id", "nickname", "avatar", "description", "result"})
+}
+
+// article - 解析文章信息
+func (this *Comment) article(wg *sync.WaitGroup, result *any) {
+
+	defer wg.Done()
+
+	if this.BindType != "article" {
+		return
+	}
+
+	*result = utils.Map.WithField(facade.DB.Model(&Article{}).Find(this.BindId), []string{"id", "title"})
+}
+
+// page - 解析页面信息
+func (this *Comment) page(wg *sync.WaitGroup, result *any) {
+
+	defer wg.Done()
+
+	if this.BindType != "page" {
+		return
+	}
+
+	*result = utils.Map.WithField(facade.DB.Model(&Pages{}).Find(this.BindId), []string{"id", "key", "title"})
 }

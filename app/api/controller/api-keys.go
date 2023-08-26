@@ -404,7 +404,7 @@ func (this *ApiKeys) update(ctx *gin.Context) {
 	item := facade.DB.Model(&table).Where("value", key).Find()
 
 	// 检查 value 唯一性
-	if !utils.IsEmpty(item) && item["value"] != key {
+	if !utils.Is.Empty(item) && item["value"] != key {
 		this.json(ctx, nil, facade.Lang(ctx, "%s 已经存在！", key), 400)
 		return
 	}

@@ -20,7 +20,7 @@ func Lang(ctx *gin.Context, key string, args ...any) (result string) {
 	}
 
 	// 设置语言
-	if !utils.IsEmpty(lang) {
+	if !utils.Is.Empty(lang) {
 		model.Lang = lang
 	}
 
