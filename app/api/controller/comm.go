@@ -92,9 +92,9 @@ func (this *Comm) INDEX(ctx *gin.Context) {
 func (this *Comm) login(ctx *gin.Context) {
 
 	// 表数据结构体
-	table   := model.Users{}
+	table := model.Users{}
 	// 请求参数
-	params  := this.params(ctx, map[string]any{
+	params := this.params(ctx, map[string]any{
 		"source": "default",
 	})
 	// 请求头信息
@@ -205,6 +205,8 @@ func (this *Comm) login(ctx *gin.Context) {
 
 	// 往客户端写入cookie - 存储登录token
 	setToken(ctx, jwt.Text)
+	// 登录增加经验
+	go this.loginExp(item["id"])
 
 	this.json(ctx, result, facade.Lang(ctx, "登录成功！"), 200)
 }
@@ -282,14 +284,14 @@ func (this *Comm) register(ctx *gin.Context) {
 	if utils.Is.Empty(params["code"]) {
 
 		drives := cast.ToStringMap(facade.SMSToml.Get("drive"))
-		drive  := utils.Ternary(social == "email", "email", "sms")
+		drive := utils.Ternary(social == "email", "email", "sms")
 
 		if utils.Is.Empty(drives[drive]) {
 			this.json(ctx, nil, facade.Lang(ctx, "发送验证码失败！管理员未开启短信服务！"), 400)
 			return
 		}
 
-		sms    := facade.NewSMS(drives[drive]).VerifyCode(params["social"])
+		sms := facade.NewSMS(drives[drive]).VerifyCode(params["social"])
 		if sms.Error != nil {
 			this.json(ctx, nil, sms.Error.Error(), 400)
 			return
@@ -339,7 +341,7 @@ func (this *Comm) register(ctx *gin.Context) {
 	}
 
 	// 删除验证码
-	facade.Cache.Del(cacheName)
+	go facade.Cache.Del(cacheName)
 
 	jwt := facade.Jwt().Create(facade.H{
 		"uid":  table.Id,
@@ -356,6 +358,10 @@ func (this *Comm) register(ctx *gin.Context) {
 
 	// 往客户端写入cookie - 存储登录token
 	setToken(ctx, jwt.Text)
+	// 登录增加经验
+	go this.loginExp(table.Id)
+	// 添加默认权限
+	go this.auth(table.Id)
 
 	this.json(ctx, result, facade.Lang(ctx, "注册成功！"), 200)
 }
@@ -419,6 +425,8 @@ func (this *Comm) socialLogin(ctx *gin.Context) {
 		}
 
 		facade.DB.Model(&table).Create(user)
+		// 添加默认权限
+		go this.auth(table.Id)
 	}
 
 	cacheName := fmt.Sprintf("[login][%v=%v]", social, params["social"])
@@ -427,13 +435,13 @@ func (this *Comm) socialLogin(ctx *gin.Context) {
 	if utils.Is.Empty(params["code"]) {
 
 		drive := utils.Ternary(social == "email", "email", "sms")
-		sms   := facade.NewSMS(drive).VerifyCode(params["social"])
+		sms := facade.NewSMS(drive).VerifyCode(params["social"])
 		if sms.Error != nil {
 			this.json(ctx, nil, sms.Error.Error(), 400)
 			return
 		}
 		// 缓存验证码 - 5分钟
-		facade.Cache.Set(cacheName, sms.VerifyCode, 5*time.Minute)
+		facade.Cache.Set(cacheName, sms.VerifyCode, 5 * time.Minute)
 		this.json(ctx, nil, facade.Lang(ctx, "验证码发送成功！"), 201)
 		return
 	}
@@ -447,7 +455,7 @@ func (this *Comm) socialLogin(ctx *gin.Context) {
 	}
 
 	// 删除验证码
-	facade.Cache.Del(cacheName)
+	go facade.Cache.Del(cacheName)
 
 	// 查询用户
 	item := facade.DB.Model(&table).Where(social, params["social"]).Find()
@@ -472,6 +480,8 @@ func (this *Comm) socialLogin(ctx *gin.Context) {
 
 	// 往客户端写入cookie - 存储登录token
 	setToken(ctx, jwt.Text)
+	// 登录增加经验
+	go this.loginExp(item["id"])
 
 	this.json(ctx, result, facade.Lang(ctx, "登录成功！"), 200)
 }
@@ -555,15 +565,15 @@ func (this *Comm) password(ctx *gin.Context, user map[string]any) {
 
 	// 邮箱驱动 - 次之
 	if !utils.Is.Empty(drives["email"]) && !utils.Is.Empty(user["email"]) {
-		mode   = "email"
-		drive  = cast.ToString(drives["email"])
+		mode = "email"
+		drive = cast.ToString(drives["email"])
 		social = cast.ToString(user["email"])
 	}
 
 	// SMS驱动 - 优先 - 覆盖
 	if !utils.Is.Empty(drives["sms"]) && !utils.Is.Empty(user["phone"]) {
-		mode   = "sms"
-		drive  = cast.ToString(drives["sms"])
+		mode = "sms"
+		drive = cast.ToString(drives["sms"])
 		social = cast.ToString(user["phone"])
 	}
 
@@ -588,9 +598,9 @@ func (this *Comm) password(ctx *gin.Context, user map[string]any) {
 		}
 		// 如果驱动存在，且提交的 social 也存在
 		if !utils.Is.Empty(drives[mode]) && !utils.Is.Empty(unknown) {
-			mode   = unknown
+			mode = unknown
 			social = cast.ToString(params["social"])
-			drive  = cast.ToString(drives[mode])
+			drive = cast.ToString(drives[mode])
 		}
 	}
 
@@ -629,7 +639,7 @@ func (this *Comm) password(ctx *gin.Context, user map[string]any) {
 			return
 		}
 		// 缓存验证码 - 5分钟
-		go facade.Cache.Set(cacheName, sms.VerifyCode, 5 * time.Minute)
+		go facade.Cache.Set(cacheName, sms.VerifyCode, 5*time.Minute)
 
 		msg := fmt.Sprintf("验证码发送至您的%v：%s，请注意查收！", utils.Ternary(mode == "email", "邮箱", "手机"), social)
 		this.json(ctx, nil, facade.Lang(ctx, msg), 201)
@@ -760,4 +770,44 @@ func (this *Comm) signInConfig() (result map[string]any) {
 	go facade.Cache.Set(cacheRegister, result)
 
 	return result
+}
+
+// 登录增加经验值
+func (this *Comm) loginExp(uid any) {
+	_ = (&model.EXP{}).Add(model.EXP{
+		Type:        "login",
+		Uid:         cast.ToInt(uid),
+		Description: "登录奖励！",
+	})
+}
+
+// 添加默认权限
+func (this *Comm) auth(uid any) {
+
+	// 获取注册配置
+	config := facade.DB.Model(&model.Config{}).Where("key", "ALLOW_REGISTER").Find()
+	// 配置不存在 - 跳过
+	if utils.Is.Empty(config) {
+		return
+	}
+
+	// 默认权限
+	ids := utils.Unity.Ids(config["text"])
+
+	for _, id := range ids {
+		// 查找权限分组数据
+		item := facade.DB.Model(&model.AuthGroup{}).WithTrashed().Where("id", id).Find()
+		// 分组不存在 - 跳过
+		if utils.Is.Empty(item) {
+			return
+		}
+		uids := utils.Unity.Ids(item["uids"])
+		// 如果分组中没有该用户
+		if !utils.In.Array(uid, uids) {
+			uids = append(uids, uid)
+			go facade.DB.Model(&model.AuthGroup{}).Where("id", id).Update(map[string]any{
+				"uids": fmt.Sprintf("|%v|", strings.Join(cast.ToStringSlice(utils.ArrayUnique(utils.ArrayEmpty(uids))), "|")),
+			})
+		}
+	}
 }

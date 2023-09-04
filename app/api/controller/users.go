@@ -653,11 +653,6 @@ func (this *Users) email(ctx *gin.Context) {
 		return
 	}
 
-	if !utils.Is.Email(params["email"]) {
-		this.json(ctx, nil, facade.Lang(ctx, "邮箱格式错误！"), 400)
-		return
-	}
-
 	user := this.meta.user(ctx)
 	// 即便中间件已经校验过登录了，这里还进行二次校验是未了防止接口权限被改，而 uid 又是强制的，从而导致的意外情况
 	if user.Id == 0 {
@@ -729,11 +724,6 @@ func (this *Users) phone(ctx *gin.Context) {
 
 	if utils.Is.Empty(params["phone"]) {
 		this.json(ctx, nil, facade.Lang(ctx, "手机号不能为空！"), 400)
-		return
-	}
-
-	if !utils.Is.Phone(params["phone"]) {
-		this.json(ctx, nil, facade.Lang(ctx, "手机号格式错误！"), 400)
 		return
 	}
 
