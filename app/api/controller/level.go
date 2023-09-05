@@ -395,19 +395,17 @@ func (this *Level) count(ctx *gin.Context) {
 // column 获取单列数据
 func (this *Level) column(ctx *gin.Context) {
 
+	code := 204
+	msg := []string{"无数据！", ""}
+	var data any
+
 	// 表数据结构体
-	table := model.Level{}
+	var table []model.Level
 	// 获取请求参数
-	params := this.params(ctx, map[string]any{
-		"field": "*",
-	})
+	params := this.params(ctx)
 
-	item := facade.DB.Model(&table).Order(params["order"])
+	item := facade.DB.Model(&table).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"])).Order(params["order"])
 	item.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
-
-	if !strings.Contains(cast.ToString(params["field"]), "*") {
-		item.Field(params["field"])
-	}
 
 	// id 数组 - 参数归一化
 	ids := utils.Unity.Keys(params["ids"])
@@ -415,16 +413,31 @@ func (this *Level) column(ctx *gin.Context) {
 		item.WhereIn("id", ids)
 	}
 
-	code := 200
-	data := item.Column()
-	msg  := facade.Lang(ctx, "查询成功！")
+	cacheName := this.cache.name(ctx)
+	// 开启了缓存 并且 缓存中有数据
+	if this.cache.enable(ctx) && facade.Cache.Has(cacheName) {
 
-	if utils.Is.Empty(data) {
-		code = 204
-		msg  = facade.Lang(ctx, "无数据！")
+		// 从缓存中获取数据
+		msg[1] = "（来自缓存）"
+		data = facade.Cache.Get(cacheName)
+
+	} else {
+
+		// 从数据库中获取数据 - 排除字段
+		data = utils.ArrayMapWithField(item.Select(), params["field"])
+
+		// 缓存数据
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, data)
+		}
 	}
 
-	this.json(ctx, data, msg, code)
+	if !utils.Is.Empty(data) {
+		code = 200
+		msg[0] = "数据请求成功！"
+	}
+
+	this.json(ctx, data, facade.Lang(ctx, strings.Join(msg, "")), code)
 }
 
 // remove 软删除
