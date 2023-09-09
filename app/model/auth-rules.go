@@ -142,6 +142,9 @@ func createAuthRules() (result []AuthRules) {
 			"GET":    {
 				"path=one&type=common",
 				"path=all&type=common",
+				"path=sum&type=common",
+				"path=min&type=common",
+				"path=max&type=common",
 				"path=rand&type=common",
 				"path=count&type=common",
 				"path=column&type=common",
@@ -154,6 +157,9 @@ func createAuthRules() (result []AuthRules) {
 			"GET":    {
 				"path=one&type=common",
 				"path=all&type=common",
+				"path=sum&type=common",
+				"path=min&type=common",
+				"path=max&type=common",
 				"path=rand&type=common",
 				"path=count&type=common",
 				"path=column&type=common",
@@ -173,6 +179,9 @@ func createAuthRules() (result []AuthRules) {
 			"GET":    {
 				"path=one&type=common",
 				"path=all&type=common",
+				"path=sum&type=common",
+				"path=min&type=common",
+				"path=max&type=common",
 				"path=rand&type=common",
 				"path=count&type=common",
 				"path=column&type=common",
@@ -192,6 +201,9 @@ func createAuthRules() (result []AuthRules) {
 			"GET":    {
 				"path=one&type=common",
 				"path=all&type=common",
+				"path=sum&type=common",
+				"path=min&type=common",
+				"path=max&type=common",
 				"path=rand&type=common",
 				"path=count&type=common",
 				"path=column&type=common",
@@ -204,6 +216,9 @@ func createAuthRules() (result []AuthRules) {
 			"GET":    {
 				"path=one&type=common",
 				"path=all&type=common",
+				"path=sum&type=common",
+				"path=min&type=common",
+				"path=max&type=common",
 				"path=rand&type=common",
 				"path=count&type=common",
 				"path=column&type=common",
@@ -216,6 +231,9 @@ func createAuthRules() (result []AuthRules) {
 			"GET":    {
 				"path=one&type=common",
 				"path=all&type=common",
+				"path=sum&type=common",
+				"path=min&type=common",
+				"path=max&type=common",
 				"path=rand&type=common",
 				"path=count&type=common",
 				"path=column&type=common",
@@ -239,6 +257,9 @@ func createAuthRules() (result []AuthRules) {
 			"GET":    {
 				"path=one&type=common",
 				"path=all&type=common",
+				"path=sum&type=common",
+				"path=min&type=common",
+				"path=max&type=common",
 				"path=rand&type=common",
 				"path=count&type=common",
 				"path=column&type=common",
@@ -251,6 +272,9 @@ func createAuthRules() (result []AuthRules) {
 			"GET":    {
 				"path=one&type=common",
 				"path=all&type=common",
+				"path=sum&type=common",
+				"path=min&type=common",
+				"path=max&type=common",
 				"path=rand&type=common",
 				"path=count&type=common",
 				"path=column&type=common",
@@ -263,6 +287,9 @@ func createAuthRules() (result []AuthRules) {
 			"GET":    {
 				"path=one&type=common",
 				"path=all&type=common",
+				"path=sum&type=common",
+				"path=min&type=common",
+				"path=max&type=common",
 				"path=rand&type=common",
 				"path=count&type=common",
 				"path=column&type=common",
@@ -272,19 +299,19 @@ func createAuthRules() (result []AuthRules) {
 			"DELETE": {"path=remove&type=login", "path=delete&type=login", "path=clear&type=login"},
 		},
 		"api-keys": {
-			"GET":    {"one", "all", "count", "column", "rand"},
+			"GET":    {"one", "all", "sum", "min", "max", "count", "column", "rand"},
 			"PUT":    {"update","restore"},
 			"POST":   {"save", "create"},
 			"DELETE": {"remove", "delete", "clear"},
 		},
 		"auth-group":{
-			"GET":    {"one", "all", "count", "column", "rand"},
+			"GET":    {"one", "all", "sum", "min", "max", "count", "column", "rand"},
 			"PUT":    {"update", "restore", "path=uids&name=更改用户权限"},
 			"POST":   {"save", "create"},
 			"DELETE": {"remove", "delete", "clear"},
 		},
 		"auth-rules":{
-			"GET":    {"one", "all", "count", "column", "rand"},
+			"GET":    {"one", "all", "sum", "min", "max", "count", "column", "rand"},
 			"PUT":    {"update","restore"},
 			"POST":   {"save", "create"},
 			"DELETE": {"remove", "delete", "clear"},
@@ -293,6 +320,9 @@ func createAuthRules() (result []AuthRules) {
 			"GET":    {
 				"path=one&type=common",
 				"path=all&type=common",
+				"path=sum&type=common",
+				"path=min&type=common",
+				"path=max&type=common",
 				"path=rand&type=common",
 				"path=count&type=common",
 				"path=column&type=common",
@@ -305,6 +335,9 @@ func createAuthRules() (result []AuthRules) {
 			"GET":    {
 				"path=one&type=common",
 				"path=all&type=common",
+				"path=sum&type=common",
+				"path=min&type=common",
+				"path=max&type=common",
 				"path=rand&type=common",
 				"path=count&type=common",
 				"path=column&type=common",
@@ -317,6 +350,9 @@ func createAuthRules() (result []AuthRules) {
 			"GET":    {
 				"path=one&type=common",
 				"path=all&type=common",
+				"path=sum&type=common",
+				"path=min&type=common",
+				"path=max&type=common",
 				"path=rand&type=common",
 				"path=count&type=common",
 				"path=column&type=common",
@@ -329,9 +365,13 @@ func createAuthRules() (result []AuthRules) {
 			"GET":    {
 				"path=one&type=common",
 				"path=all&type=common",
+				"path=sum&type=common",
+				"path=min&type=common",
+				"path=max&type=common",
 				"path=rand&type=common",
 				"path=count&type=common",
 				"path=column&type=common",
+				"path=active&type=common&name=活跃度排行",
 			},
 			"PUT":    {"update","restore"},
 			"POST":   {
@@ -345,13 +385,13 @@ func createAuthRules() (result []AuthRules) {
 			"DELETE": {"remove", "delete", "clear"},
 		},
 		"qps-warn": {
-			"GET":    {"one", "all", "count", "column", "rand"},
+			"GET":    {"one", "all", "sum", "min", "max", "count", "column", "rand"},
 			"PUT":    {"update","restore"},
 			"POST":   {"save", "create"},
 			"DELETE": {"remove", "delete", "clear"},
 		},
 		"ip-black": {
-			"GET":    {"one", "all", "count", "column", "rand"},
+			"GET":    {"one", "all", "sum", "min", "max", "count", "column", "rand"},
 			"PUT":    {"update","restore"},
 			"POST":   {"save", "create"},
 			"DELETE": {"remove", "delete", "clear"},
@@ -395,6 +435,9 @@ func createAuthRules() (result []AuthRules) {
 		"GET": {
 			"one":    "获取指定",
 			"all":    "获取全部",
+			"sum":    "求和",
+			"min":    "最小值",
+			"max":    "最大值",
 			"rand":   "随机获取",
 			"count":  "查询数量",
 			"column": "列查询",

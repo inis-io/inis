@@ -214,7 +214,7 @@ func (this *Comm) login(ctx *gin.Context) {
 // 注册
 func (this *Comm) register(ctx *gin.Context) {
 
-	if !cast.ToBool(this.signInConfig()["value"]) {
+	if !cast.ToBool(this.signInConfig(ctx)["value"]) {
 		this.json(ctx, nil, "管理员关闭了注册功能！", 403)
 		return
 	}
@@ -405,7 +405,7 @@ func (this *Comm) socialLogin(ctx *gin.Context) {
 	// 未注册 - 自动注册
 	if !ok {
 
-		if !cast.ToBool(this.signInConfig()["value"]) {
+		if !cast.ToBool(this.signInConfig(ctx)["value"]) {
 			this.json(ctx, nil, "请联系管理员为您手动开通账号！", 400)
 			return
 		}
@@ -754,20 +754,20 @@ func setToken(ctx *gin.Context, token any) {
 }
 
 // 获取注册配置
-func (this *Comm) signInConfig() (result map[string]any) {
+func (this *Comm) signInConfig(ctx *gin.Context) (result map[string]any) {
 
 	// 是否允许注册
-	cacheRegister := "[GET]config[ALLOW_REGISTER]"
+	cacheName := "[GET]config[ALLOW_REGISTER]"
 
 	// 如果缓存中存在，则直接使用缓存中的数据
-	if facade.Cache.Has(cacheRegister) {
-		return cast.ToStringMap(facade.Cache.Get(cacheRegister))
+	if this.cache.enable(ctx) && facade.Cache.Has(cacheName) {
+		return cast.ToStringMap(facade.Cache.Get(cacheName))
 	}
 
 	// 不存在则查询数据库
 	result = facade.DB.Model(&model.Config{}).Where("key", "ALLOW_REGISTER").Find()
 	// 写入缓存
-	go facade.Cache.Set(cacheRegister, result)
+	go facade.Cache.Set(cacheName, result)
 
 	return result
 }

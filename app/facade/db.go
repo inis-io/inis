@@ -141,6 +141,8 @@ type ModelInterface interface {
 	Dec(column any, step ...int) *ModelStruct
 	// UpdateColumn - 更新单个字段
 	UpdateColumn(column any, value any) (tx *gorm.DB)
+	// Query - 原生查询
+	Query(sql any, args ...any) *ModelStruct
 }
 
 // WatchDB - 初始化数据库 - 顺便监听配置文件变化

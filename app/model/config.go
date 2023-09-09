@@ -44,9 +44,12 @@ func InitConfig() {
 			}), Remark: "满足QPS阈值后自动拦截"},
 			{Key: "SYSTEM_PAGE_LIMIT", Value: "1", Text: "50", Remark: "限制分页查询单次最大数据量"},
 			{Key: "ALLOW_REGISTER", Value: "1", Remark: "是否允许用户自行注册"},
+			{Key: "PAGE", Json: utils.Json.Encode(facade.H{
+				"editor": "tinymce", "comment": facade.H{"allow": 1, "show": 1}, "audit": 1,
+			}), Remark: "页面配置"},
 			{Key: "ARTICLE", Json: utils.Json.Encode(facade.H{
-				"editor": "tinymce", "comment": facade.H{ "allow": 1, "show": 1 },
-			}), Remark: "文章配置"},
+				"editor": "tinymce", "comment": facade.H{"allow": 1, "show": 1}, "audit": 1,
+			}), Remark: "主题配置"},
 		}
 
 		for _, item := range configs {

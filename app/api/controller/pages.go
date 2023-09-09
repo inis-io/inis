@@ -25,6 +25,9 @@ func (this *Pages) IGET(ctx *gin.Context) {
 	allow := map[string]any{
 		"one":    this.one,
 		"all":    this.all,
+		"sum":    this.sum,
+		"min":    this.min,
+		"max":    this.max,
 		"rand":   this.rand,
 		"count":  this.count,
 		"column": this.column,
@@ -325,6 +328,16 @@ func (this *Pages) create(ctx *gin.Context) {
 	table := model.Pages{Uid: uid, CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix(), LastUpdate: time.Now().Unix()}
 	allow := []any{"key", "title", "content", "remark", "tags", "editor", "json", "text"}
 
+	// 越权 - 增加可选字段
+	if this.meta.root(ctx) {
+		allow = append(allow, "audit")
+	}
+
+	// 是否开启了审核
+	audit := cast.ToBool(cast.ToStringMap(this.config(ctx)["json"])["audit"])
+	// 更新审核状态
+	utils.Struct.Set(&table, "audit", cast.ToInt(!audit))
+
 	// 动态给结构体赋值
 	for key, val := range params {
 		// 防止恶意传入字段
@@ -377,6 +390,16 @@ func (this *Pages) update(ctx *gin.Context) {
 	allow := []any{"key", "title", "content", "remark", "tags", "editor", "json", "text"}
 	async := utils.Async[map[string]any]()
 
+	// 越权 - 增加可选字段
+	if this.meta.root(ctx) {
+		allow = append(allow, "audit")
+	}
+
+	// 是否开启了审核
+	audit := cast.ToBool(cast.ToStringMap(this.config(ctx)["json"])["audit"])
+	// 更新审核状态
+	utils.Struct.Set(&table, "audit", cast.ToInt(!audit))
+
 	// 动态给结构体赋值
 	for key, val := range params {
 		// 防止恶意传入字段
@@ -419,6 +442,192 @@ func (this *Pages) count(ctx *gin.Context) {
 	item.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
 
 	this.json(ctx, item.Count(), facade.Lang(ctx, "查询成功！"), 200)
+}
+
+// sum 求和
+func (this *Pages) sum(ctx *gin.Context) {
+
+	code := 204
+	msg := []string{"无数据！", ""}
+	var data any
+
+	// 表数据结构体
+	var table model.Pages
+	// 获取请求参数
+	params := this.params(ctx)
+
+	item := facade.DB.Model(&table).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"])).Order(params["order"])
+	item.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
+
+	// id 数组 - 参数归一化
+	ids := utils.Unity.Keys(params["ids"])
+	if !utils.Is.Empty(ids) {
+		item.WhereIn("id", ids)
+	}
+
+	// field 数组 - 参数归一化
+	fields := utils.Unity.Keys(params["field"])
+
+	if utils.Is.Empty(fields) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "field"), 400)
+		return
+	}
+
+	cacheName := this.cache.name(ctx)
+	// 开启了缓存 并且 缓存中有数据
+	if this.cache.enable(ctx) && facade.Cache.Has(cacheName) {
+
+		// 从缓存中获取数据
+		msg[1] = "（来自缓存）"
+		data = facade.Cache.Get(cacheName)
+
+	} else {
+
+		result := make(map[string]any)
+
+		for _, val := range fields {
+			result[cast.ToString(val)] = item.Sum(val)
+		}
+
+		// 从数据库中获取数据 - 排除字段
+		data = result
+
+		// 缓存数据
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, data)
+		}
+	}
+
+	if !utils.Is.Empty(data) {
+		code = 200
+		msg[0] = "数据请求成功！"
+	}
+
+	this.json(ctx, data, facade.Lang(ctx, strings.Join(msg, "")), code)
+}
+
+// min 求最小值
+func (this *Pages) min(ctx *gin.Context) {
+
+	code := 204
+	msg := []string{"无数据！", ""}
+	var data any
+
+	// 表数据结构体
+	var table model.Pages
+	// 获取请求参数
+	params := this.params(ctx)
+
+	item := facade.DB.Model(&table).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"])).Order(params["order"])
+	item.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
+
+	// id 数组 - 参数归一化
+	ids := utils.Unity.Keys(params["ids"])
+	if !utils.Is.Empty(ids) {
+		item.WhereIn("id", ids)
+	}
+
+	// field 数组 - 参数归一化
+	fields := utils.Unity.Keys(params["field"])
+
+	if utils.Is.Empty(fields) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "field"), 400)
+		return
+	}
+
+	cacheName := this.cache.name(ctx)
+	// 开启了缓存 并且 缓存中有数据
+	if this.cache.enable(ctx) && facade.Cache.Has(cacheName) {
+
+		// 从缓存中获取数据
+		msg[1] = "（来自缓存）"
+		data = facade.Cache.Get(cacheName)
+
+	} else {
+
+		result := make(map[string]any)
+
+		for _, val := range fields {
+			result[cast.ToString(val)] = item.Min(val)
+		}
+
+		// 从数据库中获取数据 - 排除字段
+		data = result
+
+		// 缓存数据
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, data)
+		}
+	}
+
+	if !utils.Is.Empty(data) {
+		code = 200
+		msg[0] = "数据请求成功！"
+	}
+
+	this.json(ctx, data, facade.Lang(ctx, strings.Join(msg, "")), code)
+}
+
+// max 求最大值
+func (this *Pages) max(ctx *gin.Context) {
+
+	code := 204
+	msg := []string{"无数据！", ""}
+	var data any
+
+	// 表数据结构体
+	var table model.Pages
+	// 获取请求参数
+	params := this.params(ctx)
+
+	item := facade.DB.Model(&table).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"])).Order(params["order"])
+	item.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
+
+	// id 数组 - 参数归一化
+	ids := utils.Unity.Keys(params["ids"])
+	if !utils.Is.Empty(ids) {
+		item.WhereIn("id", ids)
+	}
+
+	// field 数组 - 参数归一化
+	fields := utils.Unity.Keys(params["field"])
+
+	if utils.Is.Empty(fields) {
+		this.json(ctx, nil, facade.Lang(ctx, "%s 不能为空！", "field"), 400)
+		return
+	}
+
+	cacheName := this.cache.name(ctx)
+	// 开启了缓存 并且 缓存中有数据
+	if this.cache.enable(ctx) && facade.Cache.Has(cacheName) {
+
+		// 从缓存中获取数据
+		msg[1] = "（来自缓存）"
+		data = facade.Cache.Get(cacheName)
+
+	} else {
+
+		result := make(map[string]any)
+
+		for _, val := range fields {
+			result[cast.ToString(val)] = item.Max(val)
+		}
+
+		// 从数据库中获取数据 - 排除字段
+		data = result
+
+		// 缓存数据
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, data)
+		}
+	}
+
+	if !utils.Is.Empty(data) {
+		code = 200
+		msg[0] = "数据请求成功！"
+	}
+
+	this.json(ctx, data, facade.Lang(ctx, strings.Join(msg, "")), code)
 }
 
 // column 获取单列数据
@@ -608,4 +817,23 @@ func (this *Pages) restore(ctx *gin.Context) {
 	}
 
 	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "恢复成功！"), 200)
+}
+
+// 获取配置
+func (this *Pages) config(ctx *gin.Context) (result map[string]any) {
+
+	// 是否允许注册
+	cacheName := "[GET]config[PAGE]"
+
+	// 如果缓存中存在，则直接使用缓存中的数据
+	if this.cache.enable(ctx) && facade.Cache.Has(cacheName) {
+		return cast.ToStringMap(facade.Cache.Get(cacheName))
+	}
+
+	// 不存在则查询数据库
+	result = facade.DB.Model(&model.Config{}).Where("key", "PAGE").Find()
+	// 写入缓存
+	go facade.Cache.Set(cacheName, result)
+
+	return result
 }

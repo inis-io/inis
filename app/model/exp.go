@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/plugin/soft_delete"
 	"inis/app/facade"
+	"sync"
 	"time"
 )
 
@@ -42,9 +43,9 @@ func InitEXP() {
 // AfterFind - 查询Hook
 func (this *EXP) AfterFind(tx *gorm.DB) (err error) {
 
-	this.Text = cast.ToString(this.Text)
-	this.Json = utils.Json.Decode(this.Json)
-
+	this.Result = this.result()
+	this.Text   = cast.ToString(this.Text)
+	this.Json   = utils.Json.Decode(this.Json)
 	return
 }
 
@@ -102,4 +103,37 @@ func (this *EXP) Add(table EXP) (err error) {
 	facade.DB.Model(&Users{}).Where("id", table.Uid).Inc("exp", table.Value)
 
 	return err
+}
+
+// result - 返回结果
+func (this *EXP) result() (result map[string]any) {
+
+	var author any
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	go this.author(&wg, &author)
+
+	wg.Wait()
+
+	return map[string]any{
+		"author"   : author,
+	}
+}
+
+// tags - 标签
+func (this *EXP) author(wg *sync.WaitGroup, result *any) {
+
+	defer wg.Done()
+
+	// 作者信息
+	author := make(map[string]any)
+	allow  := []string{"id", "nickname", "avatar", "description", "result", "title"}
+	user   := facade.DB.Model(&Users{}).Find(this.Uid)
+
+	if !utils.Is.Empty(user) {
+		author = utils.Map.WithField(user, allow)
+	}
+
+	*result = author
 }

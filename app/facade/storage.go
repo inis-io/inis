@@ -203,7 +203,7 @@ func (this *LocalStorageStruct) Path() string {
 	dir := time.Now().Format("2006-01/02/")
 	// 生成文件名 - 年月日+毫秒时间戳
 	name := cast.ToString(time.Now().UnixNano() / 1e6)
-	path := cast.ToString(StorageToml.Get("oss.path"))
+	path := cast.ToString(StorageToml.Get("local.path"))
 	if !strings.HasSuffix(path, "/") {
 		path += "/"
 	}
@@ -435,7 +435,7 @@ func (this *COSStruct) Path() string {
 	dir := time.Now().Format("2006-01/02/")
 	// 生成文件名 - 年月日+毫秒时间戳
 	name := cast.ToString(time.Now().UnixNano() / 1e6)
-	path := cast.ToString(StorageToml.Get("oss.path"))
+	path := cast.ToString(StorageToml.Get("cos.path"))
 	if !strings.HasSuffix(path, "/") {
 		path += "/"
 	}

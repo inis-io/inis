@@ -848,30 +848,30 @@ func (this *ModelStruct) Column(args ...any) (result any) {
 }
 
 // Sum - 求和
-func (this *ModelStruct) Sum(field string) (result int64) {
+func (this *ModelStruct) Sum(field any) (result int64) {
 
 	var sum int64
-	this.model.Select("sum(" + field + ") as sum").Scan(&sum)
+	this.model.Select("sum(" + cast.ToString(field) + ") as sum").Scan(&sum)
 
 	return sum
 }
 
 // Max - 最大值
-func (this *ModelStruct) Max(field string) (result int64) {
+func (this *ModelStruct) Max(field any) (result int64) {
 
-	var max int64
-	this.model.Select("max(" + field + ") as max").Scan(&max)
+	var sum int64
+	this.model.Select("max(" + cast.ToString(field) + ") as max").Scan(&sum)
 
-	return max
+	return sum
 }
 
 // Min - 最小值
-func (this *ModelStruct) Min(field string) (result int64) {
+func (this *ModelStruct) Min(field any) (result int64) {
 
-	var min int64
-	this.model.Select("min(" + field + ") as min").Scan(&min)
+	var sum int64
+	this.model.Select("min(" + cast.ToString(field) + ") as min").Scan(&sum)
 
-	return min
+	return sum
 }
 
 // Create - 创建
@@ -1012,4 +1012,10 @@ func (this *ModelStruct) Restore(args ...any) (tx *gorm.DB) {
 
 	// 恢复
 	return this.model.Unscoped().UpdateColumn(this.softDelete, this.defaultSoftDelete)
+}
+
+// Query - 原生查询
+func (this *ModelStruct) Query(sql any, args ...any) *ModelStruct {
+	this.model.Raw(cast.ToString(sql), args...)
+	return this
 }
