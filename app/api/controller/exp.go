@@ -1173,7 +1173,7 @@ func (this *EXP) active(ctx *gin.Context) {
 			go func(key int, val any) {
 				defer wg.Done()
 				value      := cast.ToStringMap(val)
-				field      := []string{"id", "nickname", "avatar", "login_time", "title", "gender", "result"}
+				field      := []string{"id", "nickname", "avatar", "description", "login_time", "title", "gender", "result"}
 				author     := facade.DB.Model(&model.Users{}).Where("id", value["uid"]).Find()
 				item       :=  facade.Comm.WithField(author, field)
 				item["exp"] = cast.ToInt(value["total"])
