@@ -1,0 +1,1 @@
+import{r as a,h as s,o as t,c as n}from"./1694758814.index.js";const i={class:"container-fluid container-box"},e={__name:"test",setup(e){a({}),s((async()=>{await o.init()}));const o={init:async()=>{}};return(a,s)=>(t(),n("div",i))}};export{e as default};

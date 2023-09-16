@@ -1,0 +1,1 @@
+import{_ as o,c as n,o as e,b as r}from"./1694758814.index.js";const s={},a={class:"error"},t=[r("h1",null,"404",-1),r("h2",null,"Page not found",-1),r("p",null,"The page you are looking for does not exist.",-1)];const l=o(s,[["render",function(o,r){return e(),n("div",a,t)}]]);export{l as default};
