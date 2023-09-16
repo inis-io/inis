@@ -1150,8 +1150,8 @@ func (this *EXP) active(ctx *gin.Context) {
 	// 表数据结构体
 	var table []model.EXP
 
-	sql   := "SELECT uid, SUM(value) AS total FROM inis_exp WHERE create_time >= ? AND create_time <= ? GROUP BY uid ORDER BY SUM(value) DESC LIMIT ?"
-	total := facade.DB.Model(&table).Query(sql, params["start"], params["end"], this.meta.limit(ctx)).Column("uid", "total")
+	sql   := "SELECT uid, SUM(value) AS total, COUNT(id) as number FROM inis_exp WHERE create_time >= ? AND create_time <= ? GROUP BY uid ORDER BY SUM(value) DESC LIMIT ?"
+	total := facade.DB.Model(&table).Query(sql, params["start"], params["end"], this.meta.limit(ctx)).Column("uid", "total", "number")
 	list  := cast.ToSlice(total)
 
 	cacheName := this.cache.name(ctx)
@@ -1177,6 +1177,7 @@ func (this *EXP) active(ctx *gin.Context) {
 				author     := facade.DB.Model(&model.Users{}).Where("id", value["uid"]).Find()
 				item       :=  facade.Comm.WithField(author, field)
 				item["exp"] = cast.ToInt(value["total"])
+				item["count"] = value["number"]
 				result[key] = item
 			}(key, val)
 		}

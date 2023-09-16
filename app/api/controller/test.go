@@ -3,10 +3,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"github.com/spf13/cast"
-	"github.com/unti-io/go-utils/utils"
-	"reflect"
-
 	// JWT "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-pay/gopay"
@@ -91,73 +87,28 @@ func (this *Test) IDEL(ctx *gin.Context) {
 	}
 }
 
-func checkIsMultiDimensionalArray(data any) bool {
-
-	value := reflect.ValueOf(data)
-	if value.Kind() != reflect.Slice {
-		return false
-	}
-
-	// 遍历所有元素
-	for i := 0; i < value.Len(); i++ {
-		elem := reflect.ValueOf(value.Index(i).Interface())
-		if elem.Kind() == reflect.Map {
-			return true
-		}
-	}
-
-	return false
-}
-
 // INDEX - GET请求本体
 func (this *Test) INDEX(ctx *gin.Context) {
 
 	// 请求参数
 	params := this.params(ctx)
 
-	result := make(map[string]any)
-
-	// 重构这里 =============================
-	for key, val := range params {
-		switch utils.Get.Type(val) {
-		case "map":
-			result[key] = utils.Json.Encode(val)
-		case "slice":
-			result[key] = strings.Join(cast.ToStringSlice(val), ",")
-		case "2d slice":
-			result[key] = utils.Json.Encode(val)
-		default:
-			result[key] = val
-		}
+	limit := map[string][]any{
+		"like":     {"点赞", 1, 10},	// 点赞 - 每天10次，一次1经验值
+		"collect":  {"收藏", 1, 10},	// 收藏 - 每天10次，一次1经验值
+		"visit":    {"访问", 1, 10},	// 访问 - 每天10次，一次1经验值
+		"share":    {"分享", 1, 10},	// 分享 - 每天10次，一次1经验值
+		"login":    {"登录", 5, 1},	// 登录 - 每天1次，一次5经验值
+		"comment":  {"评论", 1, 10},	// 评论 - 每天10次，一次1经验值
+		"check-in": {"签到", 30, 1},	// 签到 - 每天1次，一次30经验值
 	}
 
-	// for _, val := range params {
-	// 	switch utils.Get.Type(val) {
-	// 	case "map":
-	// 		val = utils.Json.Encode(val)
-	// 	case "slice":
-	// 		val = strings.Join(cast.ToStringSlice(val), ",")
-	// 	case "2d slice":
-	// 		val = utils.Json.Encode(val)
-	// 	}
-	// }
+	// 检查 limit[table.Type] 是否存在
+	if _, ok := limit["share"]; !ok {
+		fmt.Println("未知的经验值类型！")
+	}
 
-	// if utils.Is.Map(val) {
-	// 	val = utils.Json.Encode(val)
-	// } else if utils.Is.Slice(val) {
-	// 	val = strings.Join(cast.ToStringSlice(val), ",")
-	// }
-
-	// result := gin.H{
-	// 	// "root" : this.meta.root(ctx),
-	// 	// "user" : this.meta.user(ctx),
-	// 	// "route": this.meta.route(ctx),
-	// 	// "rules": this.meta.rules(ctx),
-	// 	// "json" : utils.Json.Encode(params["json"]),
-	// 	// "rsa": RSA.Generate(2048),
-	// }
-
-	this.json(ctx, result, facade.Lang(ctx, "好的！"), 200)
+	this.json(ctx, params, facade.Lang(ctx, "好的！"), 200)
 }
 
 // INDEX - GET请求本体

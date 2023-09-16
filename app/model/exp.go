@@ -52,6 +52,14 @@ func (this *EXP) AfterFind(tx *gorm.DB) (err error) {
 // Add - 增加经验值
 func (this *EXP) Add(table EXP) (err error) {
 
+	// 拦截异常
+	defer func() {
+		if bug := recover(); bug != nil {
+			facade.Log.Error(map[string]any{"error": bug}, "增加经验值失败")
+
+		}
+	}()
+
 	if table.Uid == 0 {
 		return errors.New("请先登录！")
 	}
@@ -61,6 +69,7 @@ func (this *EXP) Add(table EXP) (err error) {
 		"collect":  {"收藏", 1, 10},	// 收藏 - 每天10次，一次1经验值
 		"visit":    {"访问", 1, 10},	// 访问 - 每天10次，一次1经验值
 		"share":    {"分享", 1, 10},	// 分享 - 每天10次，一次1经验值
+		"login":    {"登录", 5, 1},	// 登录 - 每天1次，一次5经验值
 		"comment":  {"评论", 1, 10},	// 评论 - 每天10次，一次1经验值
 		"check-in": {"签到", 30, 1},	// 签到 - 每天1次，一次30经验值
 	}
@@ -75,6 +84,11 @@ func (this *EXP) Add(table EXP) (err error) {
 		[]any{"type", "=", table.Type},
 		[]any{"create_time", ">=", today.Unix()},
 	}).Count()
+
+	// 检查 limit[table.Type] 是否存在
+	if _, ok := limit[table.Type]; !ok {
+		return errors.New("未知的经验值类型！")
+	}
 
 	// 如果超过了限制，不增加经验值
 	if count >= cast.ToInt64(limit[table.Type][2]) {
