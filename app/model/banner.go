@@ -10,6 +10,7 @@ import (
 
 type Banner struct {
 	Id         int    				 `gorm:"type:int(32); comment:主键;" json:"id"`
+	Uid        int    				 `gorm:"type:int(32); comment:用户ID; default:0;" json:"uid"`
 	Title      string 				 `gorm:"size:32; comment:标题; default:Null;" json:"title"`
 	Content    string 				 `gorm:"comment:内容; default:Null;" json:"content"`
 	Url        string 				 `gorm:"size:256; comment:链接; default:Null;" json:"url"`

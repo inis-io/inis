@@ -110,7 +110,7 @@ func (this *Banner) INDEX(ctx *gin.Context) {
 // 删除缓存
 func (this *Banner) delCache() {
 	// 删除缓存
-	facade.Cache.DelTags([]any{"[GET]","banner"})
+	facade.Cache.DelTags([]any{"[GET]", "banner"})
 }
 
 // one 获取指定数据
@@ -175,8 +175,8 @@ func (this *Banner) all(ctx *gin.Context) {
 
 	// 获取请求参数
 	params := this.params(ctx, map[string]any{
-		"page":        1,
-		"order":       "create_time desc",
+		"page":  1,
+		"order": "create_time desc",
 	})
 
 	// 表数据结构体
@@ -239,7 +239,7 @@ func (this *Banner) rand(ctx *gin.Context) {
 	params := this.params(ctx)
 
 	// 限制最大数量
-	limit  := this.meta.limit(ctx)
+	limit := this.meta.limit(ctx)
 
 	// 排除的 id 列表
 	except := utils.Unity.Ids(params["except"])
@@ -268,7 +268,7 @@ func (this *Banner) rand(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, data, facade.Lang(ctx, "好的！"), 200)
+	this.json(ctx, data, facade.Lang(ctx, "数据请求成功！"), 200)
 }
 
 // save 保存数据 - 包含创建和更新
@@ -298,8 +298,11 @@ func (this *Banner) create(ctx *gin.Context) {
 		return
 	}
 
+	// 获取当前登录用户
+	user := this.meta.user(ctx)
+
 	// 表数据结构体
-	table := model.Banner{CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix()}
+	table := model.Banner{CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix(), Uid: user.Id}
 	allow := []any{"title", "content", "url", "image", "target", "start_time", "end_time", "remark", "json", "text"}
 
 	// 动态给结构体赋值
@@ -326,7 +329,7 @@ func (this *Banner) create(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, gin.H{ "id": table.Id }, facade.Lang(ctx, "创建成功！"), 200)
+	this.json(ctx, gin.H{"id": table.Id}, facade.Lang(ctx, "创建成功！"), 200)
 }
 
 // update 更新数据
@@ -378,7 +381,7 @@ func (this *Banner) update(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, gin.H{ "id": table.Id }, facade.Lang(ctx, "更新成功！"), 200)
+	this.json(ctx, gin.H{"id": table.Id}, facade.Lang(ctx, "更新成功！"), 200)
 }
 
 // count 统计数据
@@ -647,6 +650,11 @@ func (this *Banner) remove(ctx *gin.Context) {
 
 	item := facade.DB.Model(&table)
 
+	// 越权 - 既没有管理权限，只能删除自己的数据
+	if !this.meta.root(ctx) {
+		item.Where("uid", this.user(ctx).Id)
+	}
+
 	// 得到允许操作的 id 数组
 	ids = utils.Unity.Ids(item.WhereIn("id", ids).Column("id"))
 
@@ -664,7 +672,7 @@ func (this *Banner) remove(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "删除成功！"), 200)
+	this.json(ctx, gin.H{"ids": ids}, facade.Lang(ctx, "删除成功！"), 200)
 }
 
 // delete 真实删除
@@ -685,6 +693,11 @@ func (this *Banner) delete(ctx *gin.Context) {
 
 	item := facade.DB.Model(&table).WithTrashed()
 
+	// 越权 - 既没有管理权限，只能删除自己的数据
+	if !this.meta.root(ctx) {
+		item.Where("uid", this.user(ctx).Id)
+	}
+
 	// 得到允许操作的 id 数组
 	ids = utils.Unity.Ids(item.WhereIn("id", ids).Column("id"))
 
@@ -702,7 +715,7 @@ func (this *Banner) delete(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "删除成功！"), 200)
+	this.json(ctx, gin.H{"ids": ids}, facade.Lang(ctx, "删除成功！"), 200)
 }
 
 // clear 清空回收站
@@ -711,7 +724,12 @@ func (this *Banner) clear(ctx *gin.Context) {
 	// 表数据结构体
 	table := model.Banner{}
 
-	item  := facade.DB.Model(&table).OnlyTrashed()
+	item := facade.DB.Model(&table).OnlyTrashed()
+
+	// 越权 - 既没有管理权限，只能删除自己的数据
+	if !this.meta.root(ctx) {
+		item.Where("uid", this.user(ctx).Id)
+	}
 
 	ids := utils.Unity.Ids(item.Column("id"))
 
@@ -729,7 +747,7 @@ func (this *Banner) clear(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "清空成功！"), 200)
+	this.json(ctx, gin.H{"ids": ids}, facade.Lang(ctx, "清空成功！"), 200)
 }
 
 // restore 恢复数据
@@ -750,6 +768,11 @@ func (this *Banner) restore(ctx *gin.Context) {
 
 	item := facade.DB.Model(&table).OnlyTrashed().WhereIn("id", ids)
 
+	// 越权 - 既没有管理权限，只能删除自己的数据
+	if !this.meta.root(ctx) {
+		item.Where("uid", this.user(ctx).Id)
+	}
+
 	// 得到允许操作的 id 数组
 	ids = utils.Unity.Ids(item.Column("id"))
 
@@ -767,5 +790,5 @@ func (this *Banner) restore(ctx *gin.Context) {
 		return
 	}
 
-	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "恢复成功！"), 200)
+	this.json(ctx, gin.H{"ids": ids}, facade.Lang(ctx, "恢复成功！"), 200)
 }

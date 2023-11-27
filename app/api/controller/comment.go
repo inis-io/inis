@@ -32,6 +32,7 @@ func (this *Comment) IGET(ctx *gin.Context) {
 		"rand":   this.rand,
 		"count":  this.count,
 		"column": this.column,
+		"flat":   this.flat,
 	}
 	err := this.call(allow, method, ctx)
 
@@ -352,7 +353,7 @@ func (this *Comment) create(ctx *gin.Context) {
 		Ip: cast.ToString(this.get(ctx, "ip")),
 		CreateTime: time.Now().Unix(), UpdateTime: time.Now().Unix(),
 	}
-	allow := []any{"pid", "content", "bind_id", "bind_type", "json", "text"}
+	allow := []any{"pid", "content", "bind_id", "bind_type", "editor", "json", "text"}
 
 	// 动态给结构体赋值
 	for key, val := range params {
@@ -413,7 +414,7 @@ func (this *Comment) update(ctx *gin.Context) {
 
 	// 表数据结构体
 	table := model.Comment{}
-	allow := []any{"content", "json", "text"}
+	allow := []any{"content", "editor", "json", "text"}
 	async := utils.Async[map[string]any]()
 
 	root := this.meta.root(ctx)
@@ -865,6 +866,111 @@ func (this *Comment) restore(ctx *gin.Context) {
 	}
 
 	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "恢复成功！"), 200)
+}
+
+// replies 递归获取子评论的 id 列表
+func (this *Comment) replies(pid any, ctx *gin.Context) (ids []int) {
+
+	// 获取请求参数
+	params := this.params(ctx)
+
+	var result []model.Comment
+	mold := facade.DB.Model(&result).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"]))
+	mold.Where("pid", pid).Column("id")
+	mold.Select()
+
+	for _, val := range result {
+		ids = append(ids, val.Id)
+		ids = append(ids, this.replies(val.Id, ctx)...)
+	}
+
+	return ids
+}
+
+// flat 扁平化数据
+func (this *Comment) flat(ctx *gin.Context) {
+
+	code := 204
+	msg := []string{"无数据！", ""}
+	var data any
+
+	// 获取请求参数
+	params := this.params(ctx, map[string]any{
+		"page":        1,
+		"bind_type":   "article",
+		"order":       "create_time desc",
+	})
+
+	if utils.Is.Empty(params["bind_id"]) {
+		this.json(ctx, nil, facade.Lang(ctx, "bind_id 不能为空！"), 400)
+		return
+	}
+
+	// 表数据结构体
+	table := model.Comment{}
+	// 允许查询的字段
+	allow := []any{"bind_id", "bind_type"}
+	// 动态给结构体赋值
+	for key, val := range params {
+		// 防止恶意传入字段
+		if utils.In.Array(key, allow) {
+			utils.Struct.Set(&table, key, val)
+		}
+	}
+
+	page := cast.ToInt(params["page"])
+	limit := this.meta.limit(ctx)
+	var result []model.Comment
+	mold := facade.DB.Model(&result).Where("pid", 0).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"]))
+	mold.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
+	count := mold.Where(table).Count()
+
+	cacheName := this.cache.name(ctx)
+	// 开启了缓存 并且 缓存中有数据
+	if this.cache.enable(ctx) && facade.Cache.Has(cacheName) {
+
+		// 从缓存中获取数据
+		msg[1] = "（来自缓存）"
+		data = facade.Cache.Get(cacheName)
+
+	} else {
+
+		// 从数据库中获取数据
+		item := mold.Where(table).Limit(limit).Page(page).Order(params["order"]).Select()
+
+		// 排除字段
+		data = utils.ArrayMapWithField(item, params["field"])
+
+		list := cast.ToSlice(data)
+
+		// 根据 pid 递归获取子评论的 id 列表
+		for key, val := range list {
+
+			ids := this.replies(cast.ToStringMap(val)["id"], ctx)
+			replies := facade.DB.Model(&[]model.Comment{}).WhereIn("id", ids).Order("create_time asc").Select()
+
+			// 排除字段
+			cast.ToStringMap(list[key])["replies"] = utils.ArrayMapWithField(replies, params["field"])
+		}
+
+		data = list
+
+		// 缓存数据
+		if this.cache.enable(ctx) {
+			go facade.Cache.Set(cacheName, data)
+		}
+	}
+
+	if !utils.Is.Empty(data) {
+		code = 200
+		msg[0] = "数据请求成功！"
+	}
+
+	this.json(ctx, gin.H{
+		"data":  data,
+		"count": count,
+		"page":  math.Ceil(float64(count) / float64(limit)),
+	}, facade.Lang(ctx, strings.Join(msg, "")), code)
 }
 
 // config 配置

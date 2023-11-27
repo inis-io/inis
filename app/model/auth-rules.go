@@ -99,7 +99,7 @@ func createAuthRules() (result []AuthRules) {
 				"path=social-login&name=验证码登录&type=common",
 				"path=register&name=注册账户&type=common",
 				"path=check-token&name=校验登录&type=common",
-				"path=reset-passowd&name=重置密码&type=common",
+				"path=reset-password&name=重置密码&type=common",
 			},
 			"DELETE": {"path=logout&name=退出登录&type=common"},
 		},
@@ -173,7 +173,7 @@ func createAuthRules() (result []AuthRules) {
 			"POST":   {
 				"create", "save",
 			},
-			"DELETE": {"remove", "delete", "clear"},
+			"DELETE": {"remove", "delete", "clear", "path=destroy&type=login&name=注销账户"},
 		},
 		"links":{
 			"GET":    {
@@ -293,6 +293,7 @@ func createAuthRules() (result []AuthRules) {
 				"path=rand&type=common",
 				"path=count&type=common",
 				"path=column&type=common",
+				"path=flat&type=common&name=扁平化",
 			},
 			"PUT":    {"path=update&type=login","path=restore&type=login"},
 			"POST":   {"path=save&type=login", "path=create&type=login"},
@@ -356,6 +357,7 @@ func createAuthRules() (result []AuthRules) {
 				"path=rand&type=common",
 				"path=count&type=common",
 				"path=column&type=common",
+				"path=tree&type=common&name=树形结构",
 			},
 			"PUT":    {"update","restore"},
 			"POST":   {"save", "create"},
@@ -498,15 +500,16 @@ func createAuthRules() (result []AuthRules) {
 
 	// 社区接口
 	inis := []AuthRules{
-		{ Method: "POST", Route: "/inis/device/bind", Name : "【社区 API】设备绑定", Type : "default" },
-		{ Method: "DELETE", Route: "/inis/device/bind", Name : "【社区 API】设备解绑", Type : "default" },
-		{ Method: "GET", Route: "/inis/device/user", Name : "【社区 API】绑定的用户信息", Type : "common" },
-		{ Method: "GET", Route: "/inis/theme-version/next", Name : "【社区 API】获取主题下个版本", Type : "common" },
-		{ Method: "GET", Route: "/inis/theme-version/download", Name : "【社区 API】获取主题下载地址", Type : "default" },
-		{ Method: "GET", Route: "/inis/system-version/next", Name : "【社区 API】获取系统下个版本", Type : "common" },
-		{ Method: "GET", Route: "/inis/system-version/download", Name : "【社区 API】获取系统下载地址", Type : "default" },
-		{ Method: "GET", Route: "/inis/order/theme", Name : "【社区 API】查询已购的指定主题", Type : "common" },
-		{ Method: "GET", Route: "/inis/order/themes", Name : "【社区 API】查询已购的全部主题", Type : "common" },
+		{ Method: "POST", Route: "/inis/device/bind", Name: "【社区 API】设备绑定", Type: "default" },
+		{ Method: "DELETE", Route: "/inis/device/bind", Name: "【社区 API】设备解绑", Type: "default" },
+		{ Method: "GET", Route: "/inis/device/user", Name: "【社区 API】绑定的用户信息", Type: "common" },
+		{ Method: "GET", Route: "/inis/theme-version/next", Name: "【社区 API】获取主题下个版本", Type: "common" },
+		{ Method: "GET", Route: "/inis/theme-version/download", Name: "【社区 API】获取主题下载地址", Type: "default" },
+		{ Method: "GET", Route: "/inis/system-version/next", Name: "【社区 API】获取系统下个版本", Type: "common" },
+		{ Method: "GET", Route: "/inis/system-version/download", Name: "【社区 API】获取系统下载地址", Type: "default" },
+		{ Method: "GET", Route: "/inis/order/theme", Name: "【社区 API】查询已购的指定主题", Type: "common" },
+		{ Method: "GET", Route: "/inis/order/themes", Name: "【社区 API】查询已购的全部主题", Type: "common" },
+		{ Method: "GET", Route: "/inis/users/access-token", Name: "【社区 API】获取访问令牌", Type: "default" },
 	}
 
 	return append(result, inis...)

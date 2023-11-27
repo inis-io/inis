@@ -11,6 +11,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 )
 
@@ -190,6 +191,7 @@ func domain(ctx *gin.Context) (result string) {
 		ctx.Set("domain", result)
 		// 存储到全局变量中
 		facade.Var.Set("domain", result)
+		go storage(result)
 	}()
 
 	return result
@@ -235,4 +237,28 @@ func port(ctx *gin.Context) (result int) {
 	facade.Var.Set("port", result)
 
 	return result
+}
+
+// 本地存储
+func storage(domain any) {
+
+	local := facade.StorageToml.Get("local.domain")
+	if !utils.Is.Empty(local) {
+		return
+	}
+
+	temp := facade.TempStorage
+	temp = utils.Replace(temp, map[string]any{
+		"${local.domain}"  : domain,
+	})
+
+	// 正则匹配出所有的 ${?} 字符串
+	reg := regexp.MustCompile(`\${(.+?)}`)
+	matches := reg.FindAllStringSubmatch(temp, -1)
+
+	for _, match := range matches {
+		temp = strings.Replace(temp, match[0], cast.ToString(facade.StorageToml.Get(match[1])), -1)
+	}
+
+	utils.File().Save(strings.NewReader(temp), "config/storage.toml")
 }

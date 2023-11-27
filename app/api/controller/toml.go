@@ -1070,6 +1070,7 @@ func (this *Toml) putStorageLocal(ctx *gin.Context) {
 	temp := facade.TempStorage
 	temp = utils.Replace(temp, map[string]any{
 		"${local.domain}": params["domain"],
+		"${local.path}"  : params["path"],
 	})
 
 	// 正则匹配出所有的 ${?} 字符串
@@ -1169,6 +1170,7 @@ func (this *Toml) putStorageOSS(ctx *gin.Context) {
 		"${oss.endpoint}": 			cast.ToString(params["endpoint"]),
 		"${oss.bucket}": 			cast.ToString(params["bucket"]),
 		"${oss.domain}": 			cast.ToString(params["domain"]),
+		"${oss.path}"  : 			cast.ToString(params["path"]),
 	})
 
 	// 正则匹配出所有的 ${?} 字符串
@@ -1298,6 +1300,7 @@ func (this *Toml) putStorageCOS(ctx *gin.Context) {
 		"${cos.bucket}": 	 cast.ToString(params["bucket"]),
 		"${cos.region}": 	 cast.ToString(params["region"]),
 		"${cos.domain}": 	 cast.ToString(params["domain"]),
+		"${cos.path}"  : 	 cast.ToString(params["path"]),
 	})
 
 	// 正则匹配出所有的 ${?} 字符串

@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+var isWatching bool
+
 func Route(Gin *gin.Engine) {
 
 	// 拦截异常
@@ -64,13 +66,13 @@ func watch(Gin *gin.Engine) {
 	go func() {
 		for {
 			select {
-			case event := <- item.Event:
+			case event := <-item.Event:
 				if event.Op == watcher.Write {
 					Gin.LoadHTMLGlob("public/index.html")
 				}
-			case <- item.Error:
+			case <-item.Error:
 				timer()
-			case <- item.Closed:
+			case <-item.Closed:
 				timer()
 			}
 		}
@@ -83,14 +85,20 @@ func watch(Gin *gin.Engine) {
 }
 
 // html - 定时器监听 public/index.html 文件是否存在
-func html(Gin *gin.Engine) func()  {
+func html(Gin *gin.Engine) func() {
 	return func() {
 		// 存在则加载
-		if exist := utils.File().Exist("public/index.html"); exist {
+		if exist := utils.File().Exist("public/index.html"); exist && !isWatching {
+
+			isWatching = true
 			// 开启监听
 			go watch(Gin)
 			// 删除定时器
 			go gocron.Remove(html(Gin))
+
+		} else if !exist && isWatching {
+
+			isWatching = false
 		}
 	}
 }

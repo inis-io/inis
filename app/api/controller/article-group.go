@@ -29,6 +29,7 @@ func (this *ArticleGroup) IGET(ctx *gin.Context) {
 		"min":    this.min,
 		"max":    this.max,
 		"rand":   this.rand,
+		"tree":   this.tree,
 		"count":  this.count,
 		"column": this.column,
 	}
@@ -581,7 +582,6 @@ func (this *ArticleGroup) max(ctx *gin.Context) {
 	this.json(ctx, data, facade.Lang(ctx, strings.Join(msg, "")), code)
 }
 
-
 // column 获取单列数据
 func (this *ArticleGroup) column(ctx *gin.Context) {
 
@@ -769,4 +769,46 @@ func (this *ArticleGroup) restore(ctx *gin.Context) {
 	}
 
 	this.json(ctx, gin.H{ "ids": ids }, facade.Lang(ctx, "恢复成功！"), 200)
+}
+
+type treeStruct struct {
+	Value    int    	  `json:"value"`
+	Label    string 	  `json:"label"`
+	Data     any		  `json:"data"`
+	Children []treeStruct `json:"children"`
+}
+
+// 递归查儿子
+func (this *ArticleGroup) children(pid any, ctx *gin.Context) []treeStruct {
+
+	var result []treeStruct
+	// 获取请求参数
+	params := this.params(ctx)
+	var table []model.ArticleGroup
+	item := facade.DB.Model(&table).OnlyTrashed(cast.ToBool(params["onlyTrashed"])).WithTrashed(cast.ToBool(params["withTrashed"])).Order(params["order"])
+	item.IWhere(params["where"]).IOr(params["or"]).ILike(params["like"]).INot(params["not"]).INull(params["null"]).INotNull(params["notNull"])
+
+	item.Where("pid", pid).Select()
+
+	for _, val := range table {
+		result = append(result, treeStruct{
+			Data : val,
+			Value: val.Id,
+			Label: val.Name,
+			Children: this.children(val.Id, ctx),
+		})
+	}
+
+	return result
+}
+
+// tree 树形结构
+func (this *ArticleGroup) tree(ctx *gin.Context) {
+
+	// 获取请求参数
+	params := this.params(ctx, map[string]any{
+		"pid":  0,
+	})
+
+	this.json(ctx, this.children(params["pid"], ctx), facade.Lang(ctx, "数据请求成功！"), 200)
 }

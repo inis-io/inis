@@ -259,7 +259,7 @@ func (this *Users) level(wg *sync.WaitGroup, result *any) {
 	defer wg.Done()
 
 	// 查询字段
-	field := []string{"name", "value", "description", "exp"}
+	field := []string{"name", "value", "description", "exp", "text", "json"}
 
 	// 查询当前等级
 	item1 := facade.DB.Model(&Level{}).Field(field).Limit(1).Where("exp", "<=", this.Exp).Order("exp desc")
@@ -282,5 +282,28 @@ func (this *Users) level(wg *sync.WaitGroup, result *any) {
 	*result = map[string]any{
 		"current": current,
 		"next"   : next,
+	}
+}
+
+// Destroy - 注销后，清空用户数据
+func (this *Users) Destroy(uid any) {
+
+	// 清空权限
+	if ids := facade.DB.Model(&[]AuthGroup{}).WithTrashed().Like("uids", "|" + cast.ToString(uid) + "|").Column("id"); !utils.Is.Empty(ids) {
+		go (&AuthGroup{}).Auth(uid, ids, true)
+	}
+
+	// 表名
+	tables := []any{
+		Article{},	// 文章
+		Comment{},	// 评论
+		EXP{},		// 经验值
+		Links{},	// 友链
+		Pages{},	// 页面
+		Banner{},	// 轮播
+	}
+
+	for _, table := range tables {
+		go facade.DB.Model(&table).WithTrashed().Where("uid", uid).Delete()
 	}
 }

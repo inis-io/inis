@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"github.com/spf13/cast"
 	"github.com/unti-io/go-utils/utils"
 	"gorm.io/gorm"
@@ -101,4 +102,45 @@ func (this *AuthGroup) users(wg *sync.WaitGroup, result *any) {
 	// 标签信息
 	tags  := utils.ArrayUnique(utils.ArrayEmpty(strings.Split(this.Uids, "|")))
 	*result = facade.DB.Model(&[]Users{}).WhereIn("id", tags).Column("id", "nickname", "avatar", "account")
+}
+
+// Auth 应用权限
+func (this *AuthGroup) Auth(uid any, group any, isRemove bool) {
+
+	for _, id := range utils.Unity.Ids(group) {
+
+		item := facade.DB.Model(&AuthGroup{}).WithTrashed().Where("id", id).Find()
+		if utils.Is.Empty(item) {
+			continue
+		}
+
+		uids := utils.Unity.Ids(item["uids"])
+
+		// 移除权限
+		if isRemove {
+			// 判断 uid 是否在数组中
+			if utils.InArray(cast.ToInt(uid), cast.ToIntSlice(uids)) {
+				// 原生 Go 语言删除数组元素
+				for key, val := range uids {
+					if cast.ToInt(val) == cast.ToInt(uid) {
+						uids = append(uids[:key], uids[key+1:]...)
+					}
+				}
+			}
+		} else {
+			uids = append(uids, uid)
+		}
+
+		// 去重 - 去空
+		uids = utils.Unity.Ids(uids)
+
+		var result string
+		if len(uids) > 0 {
+			result = fmt.Sprintf("|%v|", strings.Join(cast.ToStringSlice(uids), "|"))
+		}
+		// 更新数据
+		facade.DB.Model(&AuthGroup{}).WithTrashed().Where("id", id).Update(map[string]any{
+			"uids": result,
+		})
+	}
 }

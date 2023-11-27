@@ -90,9 +90,10 @@ func (this *Users) IDEL(ctx *gin.Context) {
 	method := strings.ToLower(ctx.Param("method"))
 
 	allow := map[string]any{
-		"remove": this.remove,
-		"delete": this.delete,
-		"clear":  this.clear,
+		"remove":  this.remove,
+		"delete":  this.delete,
+		"clear":   this.clear,
+		"destroy": this.destroy,
 	}
 	err := this.call(allow, method, ctx)
 
@@ -638,7 +639,6 @@ func (this *Users) max(ctx *gin.Context) {
 	this.json(ctx, data, facade.Lang(ctx, strings.Join(msg, "")), code)
 }
 
-
 // column 获取单列数据
 func (this *Users) column(ctx *gin.Context) {
 
@@ -991,4 +991,77 @@ func (this *Users) phone(ctx *gin.Context) {
 	go facade.Cache.Del(cacheName)
 
 	this.json(ctx, gin.H{ "id": user.Id }, facade.Lang(ctx, "修改成功！"), 200)
+}
+
+// 注销 - 邮箱、手机号
+func (this *Users) destroy(ctx *gin.Context) {
+
+	table := model.Users{}
+	params := this.params(ctx, map[string]any{
+		"source": "default",
+	})
+
+	user := this.meta.user(ctx)
+	// 即便中间件已经校验过登录了，这里还进行二次校验是未了防止接口权限被改，而 uid 又是强制的，从而导致的意外情况
+	if user.Id == 0 {
+		this.json(ctx, nil, facade.Lang(ctx, "请先登录！"), 401)
+		return
+	}
+
+	var social string
+	social = utils.Ternary(utils.Is.Email(user.Email), "email", social)
+	social = utils.Ternary(utils.Is.Phone(user.Phone), "phone", social)
+
+	if utils.Is.Empty(social) {
+		this.json(ctx, nil, facade.Lang(ctx, "您未绑定手机或邮箱，无法验证注销安全性！"), 400)
+		return
+	}
+
+	var contact string
+	if social == "email" {
+		contact = user.Email
+	} else {
+		contact = user.Phone
+	}
+
+	cacheName := fmt.Sprintf("[login][%v=%v]", social, contact)
+
+	// 验证码为空 - 发送验证码
+	if utils.Is.Empty(params["code"]) {
+
+		drive := utils.Ternary(social == "email", "email", "sms")
+		sms := facade.NewSMS(drive).VerifyCode(contact)
+		if sms.Error != nil {
+			this.json(ctx, nil, sms.Error.Error(), 400)
+			return
+		}
+		// 缓存验证码 - 5分钟
+		facade.Cache.Set(cacheName, sms.VerifyCode, 5 * time.Minute)
+		this.json(ctx, nil, facade.Lang(ctx, "验证码发送成功！"), 201)
+		return
+	}
+
+	// 获取缓存里面的验证码
+	cacheCode := facade.Cache.Get(cacheName)
+
+	if cast.ToString(params["code"]) != cacheCode {
+		this.json(ctx, nil, facade.Lang(ctx, "验证码错误！"), 400)
+		return
+	}
+
+	// 删除验证码
+	go facade.Cache.Del(cacheName)
+
+	// 清空数据
+	(&model.Users{}).Destroy(user.Id)
+
+	// 删除用户
+	tx := facade.DB.Model(&table).Force().Delete(user.Id)
+
+	if tx.Error != nil {
+		this.json(ctx, nil, tx.Error.Error(), 400)
+		return
+	}
+
+	this.json(ctx, nil, facade.Lang(ctx, "注销成功！"), 200)
 }

@@ -89,26 +89,7 @@ func (this *Test) IDEL(ctx *gin.Context) {
 
 // INDEX - GET请求本体
 func (this *Test) INDEX(ctx *gin.Context) {
-
-	// 请求参数
-	params := this.params(ctx)
-
-	limit := map[string][]any{
-		"like":     {"点赞", 1, 10},	// 点赞 - 每天10次，一次1经验值
-		"collect":  {"收藏", 1, 10},	// 收藏 - 每天10次，一次1经验值
-		"visit":    {"访问", 1, 10},	// 访问 - 每天10次，一次1经验值
-		"share":    {"分享", 1, 10},	// 分享 - 每天10次，一次1经验值
-		"login":    {"登录", 5, 1},	// 登录 - 每天1次，一次5经验值
-		"comment":  {"评论", 1, 10},	// 评论 - 每天10次，一次1经验值
-		"check-in": {"签到", 30, 1},	// 签到 - 每天1次，一次30经验值
-	}
-
-	// 检查 limit[table.Type] 是否存在
-	if _, ok := limit["share"]; !ok {
-		fmt.Println("未知的经验值类型！")
-	}
-
-	this.json(ctx, params, facade.Lang(ctx, "好的！"), 200)
+	this.json(ctx, nil, facade.Lang(ctx, "好的！"), 200)
 }
 
 // INDEX - GET请求本体

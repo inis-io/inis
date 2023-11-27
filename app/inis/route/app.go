@@ -25,6 +25,7 @@ func Route(Gin *gin.Engine) {
 	allow := map[string]controller.ApiInterface{
 		"test":           &controller.Test{},
 		"order":          &controller.Order{},
+		"users":          &controller.Users{},
 		"device":         &controller.Device{},
 		"theme-version":  &controller.ThemeVersion{},
 		"system-version": &controller.SystemVersion{},

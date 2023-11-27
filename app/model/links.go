@@ -9,24 +9,24 @@ import (
 )
 
 type Links struct {
-	Id          int    `gorm:"type:int(32); comment:主键;" json:"id"`
-	Uid         int    `gorm:"type:int(32); comment:用户ID; default:0;" json:"uid"`
-	Nickname    string `gorm:"size:32; comment:昵称; default:Null;" json:"nickname"`
-	Description string `gorm:"comment:描述; default:Null;" json:"description"`
-	Url         string `gorm:"size:256; comment:链接; default:Null;" json:"url"`
-	Avatar      string `gorm:"size:256; comment:头像; default:Null;" json:"avatar"`
-	Target      string `gorm:"size:32; comment:打开方式; default:'_blank';" json:"target"`
-	Check 	 	string `gorm:"size:32; comment:审核; default:'wait';" json:"check"`
-	State       string `gorm:"size:32; comment:状态; default:'wait';" json:"state"`
-	Remark      string `gorm:"comment:备注; default:Null;" json:"remark"`
-	Group       int    `gorm:"size:32; comment:分组; default:0;" json:"group"`
+	Id          int    				  `gorm:"type:int(32); comment:主键;" json:"id"`
+	Uid         int    				  `gorm:"type:int(32); comment:用户ID; default:0;" json:"uid"`
+	Nickname    string 				  `gorm:"size:32; comment:昵称; default:Null;" json:"nickname"`
+	Description string 				  `gorm:"comment:描述; default:Null;" json:"description"`
+	Url         string 				  `gorm:"size:256; comment:链接; default:Null;" json:"url"`
+	Avatar      string 				  `gorm:"size:256; comment:头像; default:Null;" json:"avatar"`
+	Target      string 				  `gorm:"size:32; comment:打开方式; default:'_blank';" json:"target"`
+	Check 	 	string 				  `gorm:"size:32; comment:审核; default:'wait';" json:"check"`
+	State       string 				  `gorm:"size:32; comment:状态; default:'wait';" json:"state"`
+	Remark      string 				  `gorm:"comment:备注; default:Null;" json:"remark"`
+	Group       int    				  `gorm:"size:32; comment:分组; default:0;" json:"group"`
 	// 以下为公共字段
-	Json       any                   `gorm:"type:longtext; comment:用于存储JSON数据;" json:"json"`
-	Text       any                   `gorm:"type:longtext; comment:用于存储文本数据;" json:"text"`
-	Result     any                   `gorm:"type:varchar(256); comment:不存储数据，用于封装返回结果;" json:"result"`
-	CreateTime int64                 `gorm:"autoCreateTime; comment:创建时间;" json:"create_time"`
-	UpdateTime int64                 `gorm:"autoUpdateTime; comment:更新时间;" json:"update_time"`
-	DeleteTime soft_delete.DeletedAt `gorm:"comment:删除时间; default:0;" json:"delete_time"`
+	Json        any                   `gorm:"type:longtext; comment:用于存储JSON数据;" json:"json"`
+	Text        any                   `gorm:"type:longtext; comment:用于存储文本数据;" json:"text"`
+	Result      any                   `gorm:"type:varchar(256); comment:不存储数据，用于封装返回结果;" json:"result"`
+	CreateTime  int64                 `gorm:"autoCreateTime; comment:创建时间;" json:"create_time"`
+	UpdateTime  int64                 `gorm:"autoUpdateTime; comment:更新时间;" json:"update_time"`
+	DeleteTime  soft_delete.DeletedAt `gorm:"comment:删除时间; default:0;" json:"delete_time"`
 }
 
 // InitLinks - 初始化Links表

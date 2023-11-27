@@ -10,15 +10,15 @@ import (
 )
 
 type Comment struct {
-	Id       int     `gorm:"type:int(32); comment:主键;" json:"id"`
-	Pid		 int     `gorm:"type:int(32); comment:父级ID; default:0;" json:"pid"`
-	Uid		 int     `gorm:"type:int(32); comment:用户ID; default:0;" json:"uid"`
-	Content  string  `gorm:"type:varchar(1024); comment:内容; default:Null;" json:"content"`
-	Ip       string  `gorm:"comment:IP; default:Null;" json:"ip"`
-	Agent    string  `gorm:"type:varchar(512); comment:浏览器信息; default:Null;" json:"agent"`
-	BindId 	 int     `gorm:"type:int(32); comment:绑定ID; default:0;" json:"bind_id"`
-	BindType string  `gorm:"comment:绑定类型; default:'article';" json:"bind_type"`
-	Like     string  `gorm:"type:text; comment:点赞; default:Null;" json:"like"`
+	Id         int     				 `gorm:"type:int(32); comment:主键;" json:"id"`
+	Pid		   int     				 `gorm:"type:int(32); comment:父级ID; default:0;" json:"pid"`
+	Uid		   int     				 `gorm:"type:int(32); comment:用户ID; default:0;" json:"uid"`
+	Content    string  				 `gorm:"type:varchar(1024); comment:内容; default:Null;" json:"content"`
+	Ip         string  				 `gorm:"comment:IP; default:Null;" json:"ip"`
+	Agent      string  				 `gorm:"type:varchar(512); comment:浏览器信息; default:Null;" json:"agent"`
+	BindId 	   int     				 `gorm:"type:int(32); comment:绑定ID; default:0;" json:"bind_id"`
+	BindType   string  				 `gorm:"comment:绑定类型; default:'article';" json:"bind_type"`
+	Editor     string 				 `gorm:"comment:编辑器; default:'text';" json:"editor"`
 	// 以下为公共字段
 	Json       any                   `gorm:"type:longtext; comment:用于存储JSON数据;" json:"json"`
 	Text       any                   `gorm:"type:longtext; comment:用于存储文本数据;" json:"text"`

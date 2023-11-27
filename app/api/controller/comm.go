@@ -43,7 +43,7 @@ func (this *Comm) IPOST(ctx *gin.Context) {
 		"register":      this.register,
 		"social-login":  this.socialLogin,
 		"check-token":   this.checkToken,
-		"reset-passowd": this.resetPassword,
+		"reset-password": this.resetPassword,
 	}
 	err := this.call(allow, method, ctx)
 
@@ -482,6 +482,8 @@ func (this *Comm) socialLogin(ctx *gin.Context) {
 	setToken(ctx, jwt.Text)
 	// 登录增加经验
 	go this.loginExp(item["id"])
+	// 添加默认权限
+	go this.auth(table.Id)
 
 	this.json(ctx, result, facade.Lang(ctx, "登录成功！"), 200)
 }
